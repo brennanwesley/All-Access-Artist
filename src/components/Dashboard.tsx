@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useState } from "react";
 import { 
   TrendingUp, 
   Calendar, 
@@ -11,10 +12,49 @@ import {
   Music,
   Video,
   Target,
-  Plus
+  Plus,
+  CheckCircle2,
+  Circle
 } from "lucide-react";
 
 export const Dashboard = () => {
+  const [dailyTasks, setDailyTasks] = useState([
+    { id: 1, task: "Post TikTok video from content calendar", completed: false, priority: "high" },
+    { id: 2, task: "Check streaming numbers on Spotify for Artists", completed: false, priority: "medium" },
+    { id: 3, task: "Respond to fan comments on Instagram", completed: true, priority: "medium" },
+    { id: 4, task: "Upload behind-the-scenes content", completed: false, priority: "low" },
+    { id: 5, task: "Review and approve press release draft", completed: false, priority: "high" }
+  ]);
+
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const dateOptions: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    const timeOptions: Intl.DateTimeFormatOptions = { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    };
+    
+    return {
+      date: now.toLocaleDateString('en-US', dateOptions),
+      time: now.toLocaleTimeString('en-US', timeOptions)
+    };
+  };
+
+  const toggleTask = (taskId: number) => {
+    setDailyTasks(tasks => 
+      tasks.map(task => 
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    );
+  };
+
+  const { date, time } = getCurrentDateTime();
   const upcomingReleases = [
     { title: "Summer Vibes EP", date: "Aug 15", status: "In Progress", progress: 75 },
     { title: "Midnight Dreams", date: "Sep 2", status: "Planning", progress: 25 },
@@ -35,20 +75,69 @@ export const Dashboard = () => {
 
   return (
     <div className="space-y-8">
+      {/* Date/Time Banner */}
+      <Card className="bg-gradient-primary text-white border-0">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">{date}</h2>
+              <p className="text-lg opacity-90">{time}</p>
+            </div>
+            <Clock className="h-12 w-12 opacity-75" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Daily Tasks */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5" />
+            Today's Tasks
+          </CardTitle>
+          <CardDescription>
+            Stay on track with your daily music career goals
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {dailyTasks.map((task) => (
+            <div 
+              key={task.id} 
+              className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                task.completed ? 'bg-secondary/50 opacity-75' : 'hover:bg-secondary/30'
+              }`}
+            >
+              <button onClick={() => toggleTask(task.id)}>
+                {task.completed ? (
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                ) : (
+                  <Circle className="h-5 w-5 text-muted-foreground hover:text-primary" />
+                )}
+              </button>
+              <span className={`flex-1 ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
+                {task.task}
+              </span>
+              <Badge 
+                variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'outline'}
+                className="text-xs"
+              >
+                {task.priority}
+              </Badge>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       {/* Welcome Section */}
-      <div className="bg-gradient-accent rounded-xl p-8 shadow-glow">
-        <h2 className="text-3xl font-bold text-primary-foreground mb-2">
-          Welcome back, Artist! 🎵
-        </h2>
-        <p className="text-primary-foreground/80 mb-6">
-          Your music career is taking off. Here's what's happening today.
-        </p>
+      <div className="bg-gradient-primary rounded-xl p-8 text-white">
+        <h1 className="text-4xl font-bold mb-4">Welcome back!</h1>
+        <p className="text-xl opacity-90 mb-6">Ready to take your music career to the next level?</p>
         <div className="flex gap-4">
-          <Button variant="hero" size="lg">
-            <Plus className="mr-2 h-5 w-5" />
+          <Button size="lg" variant="secondary">
+            <Music className="mr-2 h-5 w-5" />
             New Release
           </Button>
-          <Button variant="outline" size="lg" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+          <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary">
             <Video className="mr-2 h-5 w-5" />
             Create Content
           </Button>

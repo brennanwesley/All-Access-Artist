@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { 
   Video, 
   Plus, 
@@ -14,11 +15,26 @@ import {
   Play,
   Edit,
   Share,
-  BarChart3
+  BarChart3,
+  Home,
+  TrendingUp,
+  Heart,
+  Users,
+  Zap
 } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 export const ContentCalendar = () => {
-  const scheduledContent = [
+  const { toast } = useToast();
+  const [brandPillars, setBrandPillars] = useState([
+    "Upcoming Release",
+    "New Songs I'm Working On", 
+    "Covers of Songs I Love",
+    "Personality/Lifestyle"
+  ]);
+  
+  const [scheduledContent, setScheduledContent] = useState([
     {
       id: 1,
       title: "Behind the Scenes - Studio Session",
@@ -27,7 +43,8 @@ export const ContentCalendar = () => {
       status: "Scheduled",
       engagement: "High",
       content: "Recording new single 🎵",
-      hashtags: "#newmusic #studio #artist"
+      hashtags: "#newmusic #studio #artist",
+      pillar: "New Songs I'm Working On"
     },
     {
       id: 2,
@@ -37,7 +54,8 @@ export const ContentCalendar = () => {
       status: "Draft",
       engagement: "Medium",
       content: "Get ready for something special...",
-      hashtags: "#comingsoon #newmusic #teaser"
+      hashtags: "#comingsoon #newmusic #teaser",
+      pillar: "Upcoming Release"
     },
     {
       id: 3,
@@ -47,7 +65,8 @@ export const ContentCalendar = () => {
       status: "Posted",
       engagement: "High",
       content: "Watch me create magic in the studio",
-      hashtags: "#youtube #studio #process"
+      hashtags: "#youtube #studio #process",
+      pillar: "New Songs I'm Working On"
     },
     {
       id: 4,
@@ -57,9 +76,10 @@ export const ContentCalendar = () => {
       status: "Scheduled",
       engagement: "Very High",
       content: "Stripped down version of my new song",
-      hashtags: "#acoustic #live #music"
+      hashtags: "#acoustic #live #music",
+      pillar: "Covers of Songs I Love"
     }
-  ];
+  ]);
 
   const platforms = [
     { name: "TikTok", icon: Video, color: "bg-pink-500", connected: true },
@@ -85,6 +105,21 @@ export const ContentCalendar = () => {
       case "Low": return "text-red-500";
       default: return "text-muted-foreground";
     }
+  };
+
+  const getPillarDistribution = () => {
+    const distribution = brandPillars.reduce((acc, pillar) => {
+      acc[pillar] = scheduledContent.filter(content => content.pillar === pillar).length;
+      return acc;
+    }, {} as Record<string, number>);
+    return distribution;
+  };
+
+  const handlePostAtPeak = () => {
+    toast({
+      title: "Peak Time Analysis",
+      description: "Analyzing your linked accounts for optimal posting times...",
+    });
   };
 
   return (
@@ -135,6 +170,75 @@ export const ContentCalendar = () => {
         </CardContent>
       </Card>
 
+      {/* Brand Pillars House */}
+      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Home className="h-5 w-5 text-primary" />
+            Your Content House
+          </CardTitle>
+          <CardDescription>
+            Build a strong content foundation with your four brand pillars
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="text-center">
+            <div className="mx-auto w-64 h-48 relative">
+              {/* House Roof */}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-32 border-r-32 border-b-16 border-l-transparent border-r-transparent border-b-primary"></div>
+              
+              {/* House Foundation */}
+              <div className="absolute bottom-0 w-full h-32 bg-gradient-to-t from-secondary to-secondary/50 rounded-lg border-2 border-border">
+                
+                {/* Four Pillars */}
+                <div className="grid grid-cols-4 h-full">
+                  {brandPillars.map((pillar, index) => {
+                    const pillarCount = getPillarDistribution()[pillar] || 0;
+                    const pillarHeight = Math.min(100, (pillarCount / 5) * 100); // Scale to max 100%
+                    
+                    return (
+                      <div key={index} className="flex flex-col items-center justify-end p-1">
+                        <div 
+                          className={`w-6 bg-primary/80 rounded-sm transition-all duration-500 ${pillarHeight < 20 ? 'animate-pulse' : ''}`}
+                          style={{ height: `${Math.max(20, pillarHeight)}%` }}
+                        ></div>
+                        <span className="text-xs mt-1 text-center font-medium truncate w-full">
+                          {pillar.split(' ')[0]}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {brandPillars.map((pillar, index) => (
+              <div key={index} className="space-y-2">
+                <Label htmlFor={`pillar-${index}`}>Pillar {index + 1}</Label>
+                <Input 
+                  id={`pillar-${index}`}
+                  value={pillar}
+                  onChange={(e) => {
+                    const newPillars = [...brandPillars];
+                    newPillars[index] = e.target.value;
+                    setBrandPillars(newPillars);
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {getPillarDistribution()[pillar] || 0} posts this week
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center text-sm text-muted-foreground">
+            <p>Keep your content balanced across all pillars for authentic growth</p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Content Creation */}
       <Card className="bg-card/50 backdrop-blur-sm border-border/50">
         <CardHeader>
@@ -154,7 +258,7 @@ export const ContentCalendar = () => {
                 <Input placeholder="Enter content title..." />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Content Description</label>
+                <label className="text-sm font-medium mb-2 block">Content Caption</label>
                 <Textarea placeholder="What's this content about?" rows={3} />
               </div>
               <div>
@@ -178,11 +282,33 @@ export const ContentCalendar = () => {
                 </Select>
               </div>
               <div>
+                <label className="text-sm font-medium mb-2 block">Content Pillar</label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select content pillar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brandPillars.map((pillar, index) => (
+                      <SelectItem key={index} value={pillar}>{pillar}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <label className="text-sm font-medium mb-2 block">Schedule Time</label>
                 <div className="grid grid-cols-2 gap-2">
                   <Input type="date" />
                   <Input type="time" />
                 </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-2"
+                  onClick={handlePostAtPeak}
+                >
+                  <Zap className="mr-2 h-3 w-3" />
+                  Post at Peak
+                </Button>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1">

@@ -2,10 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Plus, Clock, Music, CheckCircle, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar, Plus, Clock, Music, CheckCircle, AlertCircle, ExternalLink, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 export const ReleaseCalendar = () => {
-  const releases = [
+  const { toast } = useToast();
+  const [releases, setReleases] = useState([
     {
       id: 1,
       title: "Summer Vibes EP",
@@ -14,6 +19,9 @@ export const ReleaseCalendar = () => {
       progress: 75,
       tracks: 4,
       distributors: ["Spotify", "Apple Music", "YouTube Music"],
+      presaves: 245,
+      presaveGoal: 500,
+      featureFmLink: "https://feature.fm/summer-vibes-ep",
       tasks: [
         { task: "Master Tracks", completed: true },
         { task: "Album Artwork", completed: true },
@@ -29,6 +37,9 @@ export const ReleaseCalendar = () => {
       progress: 25,
       tracks: 1,
       distributors: ["TBD"],
+      presaves: 0,
+      presaveGoal: 300,
+      featureFmLink: "",
       tasks: [
         { task: "Recording", completed: false },
         { task: "Mixing", completed: false },
@@ -44,6 +55,9 @@ export const ReleaseCalendar = () => {
       progress: 10,
       tracks: 6,
       distributors: ["TBD"],
+      presaves: 0,
+      presaveGoal: 400,
+      featureFmLink: "",
       tasks: [
         { task: "Song Selection", completed: false },
         { task: "Studio Booking", completed: false },
@@ -51,7 +65,7 @@ export const ReleaseCalendar = () => {
         { task: "Post-Production", completed: false },
       ]
     }
-  ];
+  ]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -111,7 +125,7 @@ export const ReleaseCalendar = () => {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-6">
-                {/* Progress Section */}
+                 {/* Progress Section */}
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between text-sm mb-2">
@@ -119,6 +133,35 @@ export const ReleaseCalendar = () => {
                       <span>{release.progress}%</span>
                     </div>
                     <Progress value={release.progress} className="h-3" />
+                  </div>
+
+                  {/* Presave Section */}
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="font-medium">Presaves</span>
+                      <span>{release.presaves}/{release.presaveGoal}</span>
+                    </div>
+                    <Progress value={(release.presaves / release.presaveGoal) * 100} className="h-3" />
+                    {release.featureFmLink ? (
+                      <div className="mt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full text-xs"
+                          onClick={() => window.open(release.featureFmLink, '_blank')}
+                        >
+                          <ExternalLink className="mr-2 h-3 w-3" />
+                          View on feature.fm
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="mt-2">
+                        <Button variant="outline" size="sm" className="w-full text-xs">
+                          <TrendingUp className="mr-2 h-3 w-3" />
+                          Set up Presave
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   
                   <div>

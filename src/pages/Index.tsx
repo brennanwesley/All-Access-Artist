@@ -4,6 +4,8 @@ import { Dashboard } from "@/components/Dashboard";
 import { ReleaseCalendar } from "@/components/ReleaseCalendar";
 import { ContentCalendar } from "@/components/ContentCalendar";
 import { RoyaltyDashboard } from "@/components/RoyaltyDashboard";
+import { Fans } from "@/components/Fans";
+import { Create } from "@/components/Create";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -18,6 +20,10 @@ const Index = () => {
         return <ContentCalendar />;
       case "royalties":
         return <RoyaltyDashboard />;
+      case "fans":
+        return <Fans />;
+      case "create":
+        return <Create />;
       case "metadata":
         return (
           <div className="text-center py-20">
@@ -43,7 +49,7 @@ const Index = () => {
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold mb-4">Settings</h2>
-            <p className="text-muted-foreground">Coming soon - Customize your mic drop experience</p>
+            <p className="text-muted-foreground">Coming soon - Customize your All Access Artist experience</p>
           </div>
         );
       default:

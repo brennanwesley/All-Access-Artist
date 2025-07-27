@@ -8,7 +8,9 @@ import {
   DollarSign, 
   Settings,
   Home,
-  BarChart3
+  BarChart3,
+  Users,
+  Palette
 } from "lucide-react";
 
 interface NavigationProps {
@@ -23,6 +25,8 @@ export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) 
     { id: "metadata", label: "Metadata Prep", icon: Music },
     { id: "content", label: "Content Calendar", icon: Video },
     { id: "pitch", label: "DSP Pitch Tool", icon: TrendingUp },
+    { id: "fans", label: "Fans", icon: Users },
+    { id: "create", label: "Create", icon: Palette },
     { id: "royalties", label: "Royalty Dashboard", icon: DollarSign },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "settings", label: "Settings", icon: Settings },
@@ -32,9 +36,9 @@ export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) 
     <nav className="bg-card/50 backdrop-blur-sm border-r border-border h-screen w-64 p-6 fixed left-0 top-0 z-40">
       <div className="mb-8">
         <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          mic drop
+          All Access Artist
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Music Career Hub</p>
+        <p className="text-sm text-muted-foreground mt-1">giving you all access to build a career you're proud of</p>
       </div>
       
       <div className="space-y-2">
