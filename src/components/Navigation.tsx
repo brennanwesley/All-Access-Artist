@@ -32,7 +32,7 @@ export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) 
     <nav className="bg-card/50 backdrop-blur-sm border-r border-border h-screen w-64 p-6 fixed left-0 top-0 z-40">
       <div className="mb-8">
         <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          ArtistRocket
+          mic drop
         </h1>
         <p className="text-sm text-muted-foreground mt-1">Music Career Hub</p>
       </div>

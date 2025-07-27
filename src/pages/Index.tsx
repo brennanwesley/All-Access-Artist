@@ -43,7 +43,7 @@ const Index = () => {
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold mb-4">Settings</h2>
-            <p className="text-muted-foreground">Coming soon - Customize your ArtistRocket experience</p>
+            <p className="text-muted-foreground">Coming soon - Customize your mic drop experience</p>
           </div>
         );
       default:
