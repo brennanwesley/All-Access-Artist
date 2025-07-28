@@ -150,21 +150,35 @@ export const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Welcome Section */}
-      <div className="bg-gradient-primary rounded-xl p-8 text-white">
-        <h1 className="text-4xl font-bold mb-4">Welcome back!</h1>
-        <p className="text-xl opacity-90 mb-6">Ready to take your music career to the next level?</p>
-        <div className="flex gap-4">
-          <Button size="lg" variant="secondary">
-            <Music className="mr-2 h-5 w-5" />
-            New Release
-          </Button>
-          <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary">
-            <Video className="mr-2 h-5 w-5" />
-            Create Content
-          </Button>
-        </div>
-      </div>
+      {/* Quick Actions */}
+      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>
+            Jump into your most used tools
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button variant="outline" className="h-20 flex-col gap-2">
+              <Clock className="h-6 w-6" />
+              <span className="text-xs">Schedule Post</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col gap-2">
+              <Music className="h-6 w-6" />
+              <span className="text-xs">Upload Track</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col gap-2">
+              <Target className="h-6 w-6" />
+              <span className="text-xs">Pitch to DSP</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col gap-2">
+              <TrendingUp className="h-6 w-6" />
+              <span className="text-xs">View Analytics</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -266,35 +280,6 @@ export const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>
-            Jump into your most used tools
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex-col gap-2">
-              <Clock className="h-6 w-6" />
-              <span className="text-xs">Schedule Post</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2">
-              <Music className="h-6 w-6" />
-              <span className="text-xs">Upload Track</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2">
-              <Target className="h-6 w-6" />
-              <span className="text-xs">Pitch to DSP</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2">
-              <TrendingUp className="h-6 w-6" />
-              <span className="text-xs">View Analytics</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
