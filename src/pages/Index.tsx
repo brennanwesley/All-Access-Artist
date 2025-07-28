@@ -7,83 +7,72 @@ import { ContentCalendar } from "@/components/ContentCalendar";
 import { RoyaltyDashboard } from "@/components/RoyaltyDashboard";
 import { Fans } from "@/components/Fans";
 import { Create } from "@/components/Create";
-import { Analytics } from "@/components/Analytics";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
   const renderActiveSection = () => {
-    console.log("Rendering section:", activeSection);
-    
-    try {
-      switch (activeSection) {
-        case "dashboard":
-          console.log("About to render Dashboard");
-          return <Dashboard />;
-        case "releases":
-          return <ReleaseCalendar />;
-        case "content":
-          return <ContentCalendar />;
-        case "royalties":
-          return <RoyaltyDashboard />;
-        case "fans":
-          return <Fans />;
-        case "create":
-          return <Create />;
-        case "metadata":
-          return (
-            <div className="text-center py-20">
-              <h2 className="text-2xl font-bold mb-4">Metadata Prep Tool</h2>
-              <p className="text-muted-foreground mb-6">Coming soon - Streamline your track metadata for all DSPs</p>
-              <div className="flex gap-4 justify-center">
-                <Button variant="default">Create My Label Copy</Button>
-                <Button variant="outline">Lyric Sheet</Button>
-              </div>
+    switch (activeSection) {
+      case "dashboard":
+        return <Dashboard />;
+      case "releases":
+        return <ReleaseCalendar />;
+      case "content":
+        return <ContentCalendar />;
+      case "royalties":
+        return <RoyaltyDashboard />;
+      case "fans":
+        return <Fans />;
+      case "create":
+        return <Create />;
+      case "metadata":
+        return (
+          <div className="text-center py-20">
+            <h2 className="text-2xl font-bold mb-4">Metadata Prep Tool</h2>
+            <p className="text-muted-foreground mb-6">Coming soon - Streamline your track metadata for all DSPs</p>
+            <div className="flex gap-4 justify-center">
+              <Button variant="default">Create My Label Copy</Button>
+              <Button variant="outline">Lyric Sheet</Button>
             </div>
-          );
-        case "pitch":
-          return (
-            <div className="text-center py-20">
-              <h2 className="text-2xl font-bold mb-4">DSP Pitch Tool</h2>
-              <p className="text-muted-foreground mb-6">Coming soon - One-click playlist pitching to Spotify, Apple Music & more</p>
-              <div className="flex gap-4 justify-center">
-                <Button 
-                  variant="default" 
-                  onClick={() => window.open('https://artists.spotify.com/c/music', '_blank')}
-                >
-                  Spotify
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.open('https://artists.apple.com/', '_blank')}
-                >
-                  Apple Music
-                </Button>
-              </div>
+          </div>
+        );
+      case "pitch":
+        return (
+          <div className="text-center py-20">
+            <h2 className="text-2xl font-bold mb-4">DSP Pitch Tool</h2>
+            <p className="text-muted-foreground mb-6">Coming soon - One-click playlist pitching to Spotify, Apple Music & more</p>
+            <div className="flex gap-4 justify-center">
+              <Button 
+                variant="default" 
+                onClick={() => window.open('https://artists.spotify.com/c/music', '_blank')}
+              >
+                Spotify
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => window.open('https://artists.apple.com/', '_blank')}
+              >
+                Apple Music
+              </Button>
             </div>
-          );
-        case "analytics":
-          console.log("About to render Analytics");
-          return <Analytics />;
-        case "settings":
-          return (
-            <div className="text-center py-20">
-              <h2 className="text-2xl font-bold mb-4">Settings</h2>
-              <p className="text-muted-foreground">Coming soon - Customize your All Access Artist experience</p>
-            </div>
-          );
-        default:
-          console.log("Rendering default Dashboard");
-          return <Dashboard />;
-      }
-    } catch (error) {
-      console.error("Error rendering section:", error);
-      return (
-        <div className="text-center py-20">
-          <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
-          <p className="text-muted-foreground">Please try refreshing the page</p>
-        </div>
-      );
+          </div>
+        );
+      case "analytics":
+        return (
+          <div className="text-center py-20">
+            <h2 className="text-2xl font-bold mb-4">Advanced Analytics</h2>
+            <p className="text-muted-foreground">Coming soon - Deep insights into your music performance</p>
+          </div>
+        );
+      case "settings":
+        return (
+          <div className="text-center py-20">
+            <h2 className="text-2xl font-bold mb-4">Settings</h2>
+            <p className="text-muted-foreground">Coming soon - Customize your All Access Artist experience</p>
+          </div>
+        );
+      default:
+        return <Dashboard />;
     }
   };
 
