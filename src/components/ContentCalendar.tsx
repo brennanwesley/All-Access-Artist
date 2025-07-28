@@ -33,6 +33,30 @@ export const ContentCalendar = () => {
     "Covers of Songs I Love",
     "Personality/Lifestyle"
   ]);
+
+  const [releases] = useState([
+    {
+      id: 1,
+      title: "Summer Vibes EP",
+      releaseDate: "2024-08-15",
+      status: "In Progress",
+      tracks: 4
+    },
+    {
+      id: 2,
+      title: "Midnight Dreams",
+      releaseDate: "2024-09-02",
+      status: "Planning",
+      tracks: 1
+    },
+    {
+      id: 3,
+      title: "Acoustic Sessions Vol. 1",
+      releaseDate: "2024-09-20",
+      status: "Idea",
+      tracks: 6
+    }
+  ]);
   
   const [scheduledContent, setScheduledContent] = useState([
     {
@@ -295,6 +319,27 @@ export const ContentCalendar = () => {
                   <SelectContent>
                     {brandPillars.map((pillar, index) => (
                       <SelectItem key={index} value={pillar}>{pillar}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Related Release</label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Link to a release (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {releases.map((release) => (
+                      <SelectItem key={release.id} value={release.id.toString()}>
+                        <div className="flex items-center gap-2">
+                          <Music className="h-3 w-3" />
+                          <span>{release.title}</span>
+                          <Badge variant="outline" className="text-xs ml-auto">
+                            {release.status}
+                          </Badge>
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
