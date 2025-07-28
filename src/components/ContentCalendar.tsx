@@ -242,13 +242,18 @@ export const ContentCalendar = () => {
       {/* Content Creation */}
       <Card className="bg-card/50 backdrop-blur-sm border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Video className="h-5 w-5 text-primary" />
-            Quick Content Creator
-          </CardTitle>
-          <CardDescription>
-            Create and schedule content for multiple platforms at once
-          </CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Video className="h-5 w-5 text-primary" />
+                Quick Content Creator
+              </CardTitle>
+              <CardDescription>
+                Create and schedule content for multiple platforms at once
+              </CardDescription>
+            </div>
+            <Button variant="default">Upload Content</Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">

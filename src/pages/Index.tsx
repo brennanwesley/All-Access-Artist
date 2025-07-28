@@ -24,18 +24,7 @@ const Index = () => {
       case "fans":
         return <Fans />;
       case "create":
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-3xl font-bold">Quick Content Creator</h2>
-                <p className="text-muted-foreground">Create engaging content for your music</p>
-              </div>
-              <Button variant="default">Upload Content</Button>
-            </div>
-            <Create />
-          </div>
-        );
+        return <Create />;
       case "metadata":
         return (
           <div className="text-center py-20">
