@@ -14,8 +14,41 @@ import {
   BarChart3,
   FileText
 } from "lucide-react";
+import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
+import { useState } from "react";
 
 export const RoyaltyDashboard = () => {
+  const [tooltipContent, setTooltipContent] = useState("");
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
+  // Country data with listening statistics
+  const countryData = {
+    "United States": { listeners: 45620, streams: 2340000, socialViews: 890000, earnings: 2340.50 },
+    "United Kingdom": { listeners: 23450, streams: 1200000, socialViews: 450000, earnings: 1200.30 },
+    "Canada": { listeners: 12340, streams: 634000, socialViews: 234000, earnings: 634.20 },
+    "Germany": { listeners: 18900, streams: 945000, socialViews: 380000, earnings: 945.80 },
+    "France": { listeners: 15600, streams: 780000, socialViews: 320000, earnings: 780.40 },
+    "Australia": { listeners: 8900, streams: 445000, socialViews: 189000, earnings: 445.60 },
+    "Japan": { listeners: 21000, streams: 1050000, socialViews: 520000, earnings: 1050.75 },
+    "Brazil": { listeners: 34500, streams: 1725000, socialViews: 680000, earnings: 1725.90 },
+    "Mexico": { listeners: 19800, streams: 990000, socialViews: 420000, earnings: 990.35 },
+    "Sweden": { listeners: 5600, streams: 280000, socialViews: 125000, earnings: 280.15 },
+    "Norway": { listeners: 3400, streams: 170000, socialViews: 89000, earnings: 170.25 },
+    "Netherlands": { listeners: 8200, streams: 410000, socialViews: 180000, earnings: 410.80 },
+    "Spain": { listeners: 14300, streams: 715000, socialViews: 295000, earnings: 715.45 },
+    "Italy": { listeners: 11700, streams: 585000, socialViews: 240000, earnings: 585.90 },
+    "South Korea": { listeners: 16800, streams: 840000, socialViews: 420000, earnings: 840.60 }
+  };
+
+  // Top performing countries for markers
+  const topCountries = [
+    { name: "United States", coordinates: [-95.7, 37.1], ...countryData["United States"] },
+    { name: "Brazil", coordinates: [-47.9, -15.8], ...countryData["Brazil"] },
+    { name: "United Kingdom", coordinates: [-2.0, 54.0], ...countryData["United Kingdom"] },
+    { name: "Germany", coordinates: [10.0, 51.0], ...countryData["Germany"] },
+    { name: "Japan", coordinates: [139.0, 36.0], ...countryData["Japan"] }
+  ];
   const monthlyEarnings = [
     { month: "Jan", amount: 234, streams: 12500 },
     { month: "Feb", amount: 456, streams: 18900 },
@@ -60,9 +93,9 @@ export const RoyaltyDashboard = () => {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold">Royalty Dashboard</h2>
+          <h2 className="text-3xl font-bold">Royalties & Analytics</h2>
           <p className="text-muted-foreground mt-2">
-            Track your music earnings and streaming performance
+            Track your music earnings, streaming performance, and global audience insights
           </p>
         </div>
         <div className="flex gap-3">
@@ -219,6 +252,125 @@ export const RoyaltyDashboard = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Global Analytics Map */}
+      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
+            Global Analytics
+          </CardTitle>
+          <CardDescription>
+            Interactive world map showing your audience distribution and engagement
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="relative">
+          <div className="relative w-full h-96">
+            <ComposableMap
+              projectionConfig={{
+                scale: 147,
+                center: [0, 20]
+              }}
+              className="w-full h-full"
+            >
+              <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@3/countries-50m.json">
+                {({ geographies }) =>
+                  geographies.map(geo => {
+                    const countryName = geo.properties.NAME;
+                    const hasData = countryData[countryName];
+                    
+                    return (
+                      <Geography
+                        key={geo.rsmKey}
+                        geography={geo}
+                        fill={hasData ? "hsl(var(--primary))" : "hsl(var(--muted))"}
+                        stroke="hsl(var(--border))"
+                        strokeWidth={0.5}
+                        style={{
+                          default: { outline: "none" },
+                          hover: { 
+                            outline: "none", 
+                            fill: hasData ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))",
+                            cursor: hasData ? "pointer" : "default"
+                          },
+                          pressed: { outline: "none" }
+                        }}
+                        onMouseEnter={(e) => {
+                          if (hasData) {
+                            const data = countryData[countryName];
+                            setTooltipContent(`
+                              ${countryName}
+                              ${data.listeners.toLocaleString()} listeners
+                              ${data.streams.toLocaleString()} streams
+                              ${data.socialViews.toLocaleString()} social views
+                              $${data.earnings.toFixed(2)} earnings
+                            `);
+                            setTooltipPosition({ x: e.clientX, y: e.clientY });
+                            setShowTooltip(true);
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          setShowTooltip(false);
+                        }}
+                        onMouseMove={(e) => {
+                          if (hasData) {
+                            setTooltipPosition({ x: e.clientX, y: e.clientY });
+                          }
+                        }}
+                      />
+                    );
+                  })
+                }
+              </Geographies>
+              
+              {/* Markers for top countries */}
+              {topCountries.map(({ name, coordinates, listeners }) => (
+                <Marker key={name} coordinates={coordinates}>
+                  <circle 
+                    r={Math.sqrt(listeners / 1000)} 
+                    fill="hsl(var(--primary))" 
+                    fillOpacity={0.7}
+                    stroke="hsl(var(--background))"
+                    strokeWidth={1}
+                  />
+                </Marker>
+              ))}
+            </ComposableMap>
+            
+            {/* Tooltip */}
+            {showTooltip && (
+              <div
+                className="absolute z-50 bg-popover border border-border rounded-lg p-3 text-sm shadow-lg pointer-events-none"
+                style={{
+                  left: tooltipPosition.x - 100,
+                  top: tooltipPosition.y - 120,
+                  transform: 'translate(-50%, 0)'
+                }}
+              >
+                <div className="whitespace-pre-line text-popover-foreground">
+                  {tooltipContent}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Legend */}
+          <div className="mt-6 flex flex-wrap gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(var(--primary))" }}></div>
+              <span>Countries with listeners</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-muted"></div>
+              <span>No data available</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--primary))" }}></div>
+              <span>Top markets (circle size = listeners)</span>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -57,13 +57,6 @@ const Index = () => {
             </div>
           </div>
         );
-      case "analytics":
-        return (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-bold mb-4">Advanced Analytics</h2>
-            <p className="text-muted-foreground">Coming soon - Deep insights into your music performance</p>
-          </div>
-        );
       case "settings":
         return (
           <div className="text-center py-20">

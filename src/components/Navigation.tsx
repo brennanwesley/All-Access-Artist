@@ -27,8 +27,7 @@ export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) 
     { id: "pitch", label: "DSP Pitch Tool", icon: TrendingUp },
     { id: "fans", label: "Fans", icon: Users },
     { id: "create", label: "Create", icon: Palette },
-    { id: "royalties", label: "Royalty Dashboard", icon: DollarSign },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
+    { id: "royalties", label: "Royalties & Analytics", icon: DollarSign },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
