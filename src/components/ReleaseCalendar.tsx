@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Calendar, Plus, Clock, Music, CheckCircle, AlertCircle, ExternalLink, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { ReleaseDetail } from "./ReleaseDetail";
 
 export const ReleaseCalendar = () => {
   const { toast } = useToast();
+  const [selectedRelease, setSelectedRelease] = useState<number | null>(null);
   const [releases, setReleases] = useState([
     {
       id: 1,
@@ -85,6 +87,10 @@ export const ReleaseCalendar = () => {
     });
   };
 
+  if (selectedRelease) {
+    return <ReleaseDetail releaseId={selectedRelease} onBack={() => setSelectedRelease(null)} />;
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -103,7 +109,11 @@ export const ReleaseCalendar = () => {
       {/* Timeline View */}
       <div className="grid gap-6">
         {releases.map((release) => (
-          <Card key={release.id} className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-elegant transition-all duration-300">
+          <Card 
+            key={release.id} 
+            className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-elegant transition-all duration-300 cursor-pointer"
+            onClick={() => setSelectedRelease(release.id)}
+          >
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
@@ -148,7 +158,10 @@ export const ReleaseCalendar = () => {
                           variant="outline" 
                           size="sm" 
                           className="w-full text-xs"
-                          onClick={() => window.open(release.featureFmLink, '_blank')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(release.featureFmLink, '_blank');
+                          }}
                         >
                           <ExternalLink className="mr-2 h-3 w-3" />
                           View on feature.fm
@@ -156,7 +169,12 @@ export const ReleaseCalendar = () => {
                       </div>
                     ) : (
                       <div className="mt-2">
-                        <Button variant="outline" size="sm" className="w-full text-xs">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full text-xs"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <TrendingUp className="mr-2 h-3 w-3" />
                           Set up Presave
                         </Button>
@@ -204,10 +222,10 @@ export const ReleaseCalendar = () => {
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
                     Edit Details
                   </Button>
-                  <Button variant="default" size="sm">
+                  <Button variant="default" size="sm" onClick={(e) => e.stopPropagation()}>
                     Manage Tasks
                   </Button>
                 </div>

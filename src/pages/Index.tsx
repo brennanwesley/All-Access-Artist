@@ -24,19 +24,48 @@ const Index = () => {
       case "fans":
         return <Fans />;
       case "create":
-        return <Create />;
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-3xl font-bold">Quick Content Creator</h2>
+                <p className="text-muted-foreground">Create engaging content for your music</p>
+              </div>
+              <Button variant="default">Upload Content</Button>
+            </div>
+            <Create />
+          </div>
+        );
       case "metadata":
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold mb-4">Metadata Prep Tool</h2>
-            <p className="text-muted-foreground">Coming soon - Streamline your track metadata for all DSPs</p>
+            <p className="text-muted-foreground mb-6">Coming soon - Streamline your track metadata for all DSPs</p>
+            <div className="flex gap-4 justify-center">
+              <Button variant="default">Create My Label Copy</Button>
+              <Button variant="outline">Lyric Sheet</Button>
+            </div>
           </div>
         );
       case "pitch":
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold mb-4">DSP Pitch Tool</h2>
-            <p className="text-muted-foreground">Coming soon - One-click playlist pitching to Spotify, Apple Music & more</p>
+            <p className="text-muted-foreground mb-6">Coming soon - One-click playlist pitching to Spotify, Apple Music & more</p>
+            <div className="flex gap-4 justify-center">
+              <Button 
+                variant="default" 
+                onClick={() => window.open('https://artists.spotify.com/c/music', '_blank')}
+              >
+                Spotify
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => window.open('https://artists.apple.com/', '_blank')}
+              >
+                Apple Music
+              </Button>
+            </div>
           </div>
         );
       case "analytics":

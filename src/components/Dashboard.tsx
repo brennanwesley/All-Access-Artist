@@ -46,6 +46,25 @@ export const Dashboard = () => {
     };
   };
 
+  const getQuoteOfTheDay = () => {
+    const quotes = [
+      "It does not matter how slowly you go as long as you do not stop. - Confucius",
+      "It is better to fail in originality than to succeed in imitation. - Herman Melville",
+      "The way to get started is to quit talking and begin doing. - Walt Disney",
+      "Creativity takes courage. - Henri Matisse",
+      "Innovation distinguishes between a leader and a follower. - Steve Jobs",
+      "You can't use up creativity. The more you use, the more you have. - Maya Angelou",
+      "The secret to creativity is knowing how to hide your sources. - Einstein",
+      "Don't be afraid to give up the good to go for the great. - John D. Rockefeller",
+      "Success is going from failure to failure without losing your enthusiasm. - Winston Churchill",
+      "The only way to do great work is to love what you do. - Steve Jobs"
+    ];
+    
+    const today = new Date();
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    return quotes[dayOfYear % quotes.length];
+  };
+
   const toggleTask = (taskId: number) => {
     setDailyTasks(tasks => 
       tasks.map(task => 
@@ -79,9 +98,12 @@ export const Dashboard = () => {
       <Card className="bg-gradient-primary text-white border-0">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <h2 className="text-2xl font-bold">{date}</h2>
-              <p className="text-lg opacity-90">{time}</p>
+              <p className="text-lg opacity-90 mb-3">{time}</p>
+              <p className="text-sm italic opacity-80 border-l-2 border-white/30 pl-3">
+                {getQuoteOfTheDay()}
+              </p>
             </div>
             <Clock className="h-12 w-12 opacity-75" />
           </div>
