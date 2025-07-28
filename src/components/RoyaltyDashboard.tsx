@@ -256,6 +256,73 @@ export const RoyaltyDashboard = () => {
         </CardContent>
       </Card>
 
+      {/* Payment Schedule */}
+      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            Payment Schedule
+          </CardTitle>
+          <CardDescription>
+            Upcoming royalty payments and payment history
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium mb-3">Upcoming Payments</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/20 border border-border/50">
+                  <div>
+                    <div className="font-medium">Spotify</div>
+                    <div className="text-sm text-muted-foreground">Payment for June</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">$678.45</div>
+                    <div className="text-xs text-muted-foreground">Aug 15</div>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/20 border border-border/50">
+                  <div>
+                    <div className="font-medium">Apple Music</div>
+                    <div className="text-sm text-muted-foreground">Payment for June</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">$345.23</div>
+                    <div className="text-xs text-muted-foreground">Aug 20</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-medium mb-3">Recent Payments</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <div>
+                    <div className="font-medium">Spotify</div>
+                    <div className="text-sm text-muted-foreground">Payment for May</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-green-500">$623.12</div>
+                    <div className="text-xs text-muted-foreground">Paid Jul 15</div>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <div>
+                    <div className="font-medium">Apple Music</div>
+                    <div className="text-sm text-muted-foreground">Payment for May</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-green-500">$298.67</div>
+                    <div className="text-xs text-muted-foreground">Paid Jul 20</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Global Analytics Map */}
       <Card className="bg-card/50 backdrop-blur-sm border-border/50">
         <CardHeader>
@@ -370,73 +437,6 @@ export const RoyaltyDashboard = () => {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--primary))" }}></div>
               <span>Top markets (circle size = listeners)</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Payment Schedule */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Payment Schedule
-          </CardTitle>
-          <CardDescription>
-            Upcoming royalty payments and payment history
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium mb-3">Upcoming Payments</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/20 border border-border/50">
-                  <div>
-                    <div className="font-medium">Spotify</div>
-                    <div className="text-sm text-muted-foreground">Payment for June</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold">$678.45</div>
-                    <div className="text-xs text-muted-foreground">Aug 15</div>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/20 border border-border/50">
-                  <div>
-                    <div className="font-medium">Apple Music</div>
-                    <div className="text-sm text-muted-foreground">Payment for June</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold">$345.23</div>
-                    <div className="text-xs text-muted-foreground">Aug 20</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-medium mb-3">Recent Payments</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <div>
-                    <div className="font-medium">Spotify</div>
-                    <div className="text-sm text-muted-foreground">Payment for May</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-green-500">$623.12</div>
-                    <div className="text-xs text-muted-foreground">Paid Jul 15</div>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <div>
-                    <div className="font-medium">Apple Music</div>
-                    <div className="text-sm text-muted-foreground">Payment for May</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-green-500">$298.67</div>
-                    <div className="text-xs text-muted-foreground">Paid Jul 20</div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </CardContent>

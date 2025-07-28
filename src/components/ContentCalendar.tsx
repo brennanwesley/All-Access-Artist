@@ -150,7 +150,7 @@ export const ContentCalendar = () => {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold">Content Calendar</h2>
+          <h2 className="text-3xl font-bold">Content Planner</h2>
           <p className="text-muted-foreground mt-2">
             Create, schedule, and manage content across all platforms
           </p>

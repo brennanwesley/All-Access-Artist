@@ -23,7 +23,7 @@ export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) 
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "releases", label: "Release Calendar", icon: Calendar },
     { id: "metadata", label: "Metadata Prep", icon: Music },
-    { id: "content", label: "Content Calendar", icon: Video },
+    { id: "content", label: "Content Planner", icon: Video },
     { id: "pitch", label: "DSP Pitch Tool", icon: TrendingUp },
     { id: "fans", label: "Fans", icon: Users },
     { id: "create", label: "Create", icon: Palette },
