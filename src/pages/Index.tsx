@@ -7,6 +7,7 @@ import { ContentCalendar } from "@/components/ContentCalendar";
 import { RoyaltyDashboard } from "@/components/RoyaltyDashboard";
 import { Fans } from "@/components/Fans";
 import { Create } from "@/components/Create";
+import { Analytics } from "@/components/Analytics";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -58,12 +59,7 @@ const Index = () => {
           </div>
         );
       case "analytics":
-        return (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-bold mb-4">Advanced Analytics</h2>
-            <p className="text-muted-foreground">Coming soon - Deep insights into your music performance</p>
-          </div>
-        );
+        return <Analytics />;
       case "settings":
         return (
           <div className="text-center py-20">
