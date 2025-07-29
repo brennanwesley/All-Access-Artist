@@ -217,6 +217,39 @@ export const ReleaseDetail = ({ releaseId, onBack }: ReleaseDetailProps) => {
         </Card>
       </div>
 
+      {/* DSP Pitch Tool and Metadata */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+          <CardHeader>
+            <CardTitle>DSP Pitch Tool</CardTitle>
+            <CardDescription>Submit your track to DSP playlists and curators</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button className="w-full">
+              Start Playlist Pitch
+            </Button>
+            <p className="text-sm text-muted-foreground text-center">
+              Pitch to Spotify, Apple Music, and other DSP playlists
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+          <CardHeader>
+            <CardTitle>Metadata</CardTitle>
+            <CardDescription>Manage track metadata and generate label copy</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button variant="outline" className="w-full">
+              Edit Metadata
+            </Button>
+            <p className="text-sm text-muted-foreground text-center">
+              Update track information, lyrics, and export sheets
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Social Media Performance */}
       <Card className="bg-card/50 backdrop-blur-sm border-border/50">
         <CardHeader>

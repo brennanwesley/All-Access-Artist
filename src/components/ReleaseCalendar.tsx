@@ -178,7 +178,7 @@ export const ReleaseCalendar = () => {
                           }}
                         >
                           <ExternalLink className="mr-2 h-3 w-3" />
-                          View on feature.fm
+                          View Info
                         </Button>
                       </div>
                     ) : (
@@ -210,7 +210,7 @@ export const ReleaseCalendar = () => {
 
                 {/* Tasks Section */}
                 <div className="md:col-span-2">
-                  <h4 className="font-medium mb-3 text-sm">Tasks & Milestones</h4>
+                  <h4 className="font-medium mb-3 text-sm">To Do List</h4>
                   <div className="grid md:grid-cols-2 gap-2">
                     {release.tasks.map((task, index) => (
                       <div key={index} className="flex items-center gap-3 p-2 rounded-md bg-secondary/20">

@@ -29,8 +29,6 @@ const Index = () => {
         return <Community />;
       case "create":
         return <Create />;
-      case "metadata":
-        return <MetadataPrep />;
       case "pitch":
         return (
           <div className="text-center py-20">
