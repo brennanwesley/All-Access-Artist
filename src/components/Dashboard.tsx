@@ -110,6 +110,48 @@ export const Dashboard = () => {
         </CardContent>
       </Card>
 
+      {/* Daily Leaderboard */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Daily Leaderboard
+          </CardTitle>
+          <CardDescription>
+            Top 5 artists today by social engagement and streams
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[
+            { rank: 1, name: "Maya Chen", streams: "15.2K", engagement: "8.9K", change: "+23%" },
+            { rank: 2, name: "Alex Rivera", streams: "12.8K", engagement: "7.2K", change: "+18%" },
+            { rank: 3, name: "Jordan Kim", streams: "11.4K", engagement: "6.8K", change: "+15%" },
+            { rank: 4, name: "Sam Taylor", streams: "9.7K", engagement: "5.9K", change: "+12%" },
+            { rank: 5, name: "Casey Morgan", streams: "8.3K", engagement: "5.1K", change: "+8%" }
+          ].map((artist) => (
+            <div key={artist.rank} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/20 border border-border/50">
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                artist.rank === 1 ? 'bg-yellow-500 text-black' :
+                artist.rank === 2 ? 'bg-gray-400 text-white' :
+                artist.rank === 3 ? 'bg-amber-600 text-white' :
+                'bg-primary text-primary-foreground'
+              }`}>
+                #{artist.rank}
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">{artist.name}</div>
+                <div className="text-sm text-muted-foreground">
+                  {artist.streams} streams • {artist.engagement} engagement
+                </div>
+              </div>
+              <Badge variant="secondary" className="text-xs">
+                {artist.change}
+              </Badge>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       {/* Daily Tasks */}
       <Card>
         <CardHeader>

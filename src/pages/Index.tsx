@@ -7,6 +7,7 @@ import { ContentCalendar } from "@/components/ContentCalendar";
 import { RoyaltyDashboard } from "@/components/RoyaltyDashboard";
 import { Fans } from "@/components/Fans";
 import { Create } from "@/components/Create";
+import { Community } from "@/components/Community";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -23,6 +24,8 @@ const Index = () => {
         return <RoyaltyDashboard />;
       case "fans":
         return <Fans />;
+      case "community":
+        return <Community />;
       case "create":
         return <Create />;
       case "metadata":
