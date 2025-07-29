@@ -8,6 +8,7 @@ import { RoyaltyDashboard } from "@/components/RoyaltyDashboard";
 import { Fans } from "@/components/Fans";
 import { Create } from "@/components/Create";
 import { Community } from "@/components/Community";
+import { MetadataPrep } from "@/components/MetadataPrep";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -29,16 +30,7 @@ const Index = () => {
       case "create":
         return <Create />;
       case "metadata":
-        return (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-bold mb-4">Metadata Prep Tool</h2>
-            <p className="text-muted-foreground mb-6">Coming soon - Streamline your track metadata for all DSPs</p>
-            <div className="flex gap-4 justify-center">
-              <Button variant="default">Create My Label Copy</Button>
-              <Button variant="outline">Lyric Sheet</Button>
-            </div>
-          </div>
-        );
+        return <MetadataPrep />;
       case "pitch":
         return (
           <div className="text-center py-20">
