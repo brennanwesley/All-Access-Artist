@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, Plus, Clock, Music, CheckCircle, AlertCircle, ExternalLink, TrendingUp } from "lucide-react";
+import { Calendar, Plus, Clock, Music, CheckCircle, AlertCircle, ExternalLink, TrendingUp, Upload } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ReleaseDetail } from "./ReleaseDetail";
@@ -115,6 +115,20 @@ export const ReleaseCalendar = () => {
             onClick={() => setSelectedRelease(release.id)}
           >
             <CardHeader>
+              <div className="flex justify-between items-start mb-4">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open('https://distrokid.com', '_blank');
+                  }}
+                  className="mb-3"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload to Distributor
+                </Button>
+              </div>
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="flex items-center gap-3">
