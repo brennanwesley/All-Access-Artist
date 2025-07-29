@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Calendar, DollarSign, Eye, CheckCircle2, Circle, Target, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { MetadataPrep } from "./MetadataPrep";
 
 interface ReleaseDetailProps {
   releaseId: number;
@@ -10,6 +12,7 @@ interface ReleaseDetailProps {
 }
 
 export const ReleaseDetail = ({ releaseId, onBack }: ReleaseDetailProps) => {
+  const [showMetadata, setShowMetadata] = useState(false);
   // This would typically come from props or a data store
   const release = {
     id: 1,
@@ -69,6 +72,24 @@ export const ReleaseDetail = ({ releaseId, onBack }: ReleaseDetailProps) => {
       default: return "outline";
     }
   };
+
+  if (showMetadata) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => setShowMetadata(false)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Release Dashboard
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Metadata Management</h1>
+            <p className="text-muted-foreground">{release.title}</p>
+          </div>
+        </div>
+        <MetadataPrep />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -240,7 +261,11 @@ export const ReleaseDetail = ({ releaseId, onBack }: ReleaseDetailProps) => {
             <CardDescription>Manage track metadata and generate label copy</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button variant="outline" className="w-full">
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => setShowMetadata(true)}
+            >
               Edit Metadata
             </Button>
             <p className="text-sm text-muted-foreground text-center">
