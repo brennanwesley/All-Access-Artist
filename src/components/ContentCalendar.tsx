@@ -207,52 +207,28 @@ export const ContentCalendar = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
-            <div className="mx-auto w-80 h-64 relative">
-              {/* House Image */}
-              <div className="w-full h-48 bg-gradient-to-b from-background to-muted rounded-lg border border-border mb-4 relative overflow-hidden">
-                {/* Simple house structure */}
-                <div className="absolute top-12 left-1/2 transform -translate-x-1/2">
-                  {/* Roof */}
-                  <div className="w-0 h-0 border-l-[50px] border-r-[50px] border-b-[30px] border-l-transparent border-r-transparent border-b-primary"></div>
-                  {/* House body */}
-                  <div className="w-[100px] h-[60px] bg-secondary border border-border rounded-sm">
-                    {/* Door */}
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-3 h-6 bg-primary/80 rounded-t-sm"></div>
-                    {/* Windows */}
-                    <div className="absolute top-2 left-3 w-3 h-3 bg-primary/20 border border-primary/40 rounded-sm"></div>
-                    <div className="absolute top-2 right-3 w-3 h-3 bg-primary/20 border border-primary/40 rounded-sm"></div>
-                  </div>
-                </div>
-              </div>
+            <div className="mx-auto w-64 h-48 relative">
+              {/* House Roof */}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-32 border-r-32 border-b-16 border-l-transparent border-r-transparent border-b-primary"></div>
               
-              {/* Foundation with Bricks */}
-              <div className="absolute bottom-0 w-full h-16 bg-gradient-to-t from-amber-200 to-amber-100 dark:from-amber-800 dark:to-amber-700 rounded-lg border-2 border-amber-300 dark:border-amber-600">
-                <div className="grid grid-cols-4 h-full gap-1 p-2">
+              {/* House Foundation */}
+              <div className="absolute bottom-0 w-full h-32 bg-gradient-to-t from-secondary to-secondary/50 rounded-lg border-2 border-border">
+                
+                {/* Four Pillars */}
+                <div className="grid grid-cols-4 h-full">
                   {brandPillars.map((pillar, index) => {
                     const pillarCount = getPillarDistribution()[pillar] || 0;
+                    const pillarHeight = Math.min(100, (pillarCount / 5) * 100); // Scale to max 100%
                     
                     return (
-                      <div key={index} className="flex flex-col items-center justify-start space-y-1">
-                        <span className="text-xs font-medium text-amber-800 dark:text-amber-200 truncate w-full text-center">
+                      <div key={index} className="flex flex-col items-center justify-end p-1">
+                        <div 
+                          className={`w-6 bg-primary/80 rounded-sm transition-all duration-500 ${pillarHeight < 20 ? 'animate-pulse' : ''}`}
+                          style={{ height: `${Math.max(20, pillarHeight)}%` }}
+                        ></div>
+                        <span className="text-xs mt-1 text-center font-medium truncate w-full">
                           {pillar.split(' ')[0]}
                         </span>
-                        <div className="flex flex-wrap justify-center gap-0.5 w-full">
-                          {Array.from({ length: Math.min(pillarCount, 8) }, (_, brickIndex) => (
-                            <div
-                              key={brickIndex}
-                              className="w-2 h-1.5 bg-red-600 dark:bg-red-500 border border-red-700 dark:border-red-600 rounded-sm"
-                              style={{
-                                animationDelay: `${brickIndex * 100}ms`
-                              }}
-                            />
-                          ))}
-                          {pillarCount === 0 && (
-                            <div className="w-2 h-1.5 bg-gray-300 dark:bg-gray-600 border border-gray-400 dark:border-gray-500 rounded-sm opacity-50" />
-                          )}
-                        </div>
-                        {pillarCount > 8 && (
-                          <span className="text-xs text-amber-700 dark:text-amber-300">+{pillarCount - 8}</span>
-                        )}
                       </div>
                     );
                   })}
