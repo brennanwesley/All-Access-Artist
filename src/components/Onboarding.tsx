@@ -76,41 +76,6 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       category: "Distribution (Choose One)"
     },
     {
-      id: "tunecore",
-      name: "TuneCore",
-      description: "Connect your TuneCore distribution account",
-      color: "bg-blue-500",
-      category: "Distribution (Choose One)"
-    },
-    {
-      id: "cdbaby",
-      name: "CD Baby",
-      description: "Sync your CD Baby distribution and royalty data",
-      color: "bg-red-500",
-      category: "Distribution (Choose One)"
-    },
-    {
-      id: "symphonic",
-      name: "Symphonic",
-      description: "Connect your Symphonic distribution platform",
-      color: "bg-purple-600",
-      category: "Distribution (Choose One)"
-    },
-    {
-      id: "amuse",
-      name: "Amuse",
-      description: "Link your Amuse distribution account",
-      color: "bg-pink-500",
-      category: "Distribution (Choose One)"
-    },
-    {
-      id: "routenote",
-      name: "RouteNote",
-      description: "Connect your RouteNote distribution platform",
-      color: "bg-teal-600",
-      category: "Distribution (Choose One)"
-    },
-    {
       id: "linktree",
       name: "Linktree",
       description: "Import your link-in-bio setup and analytics",
