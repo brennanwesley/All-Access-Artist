@@ -55,13 +55,6 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       category: "Social Media"
     },
     {
-      id: "discord",
-      name: "Discord",
-      description: "Link your Discord server for community management",
-      color: "bg-indigo-600",
-      category: "Social Media"
-    },
-    {
       id: "feature-fm",
       name: "feature.fm",
       description: "Connect your smart links and fan engagement platform",
