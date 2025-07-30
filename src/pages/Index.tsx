@@ -8,6 +8,7 @@ import { RoyaltyDashboard } from "@/components/RoyaltyDashboard";
 import { Fans } from "@/components/Fans";
 import { Create } from "@/components/Create";
 import { Community } from "@/components/Community";
+import { Settings } from "@/components/Settings";
 import { MetadataPrep } from "@/components/MetadataPrep";
 import { Onboarding } from "@/components/Onboarding";
 
@@ -53,12 +54,7 @@ const Index = () => {
           </div>
         );
       case "settings":
-        return (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-bold mb-4">Settings</h2>
-            <p className="text-muted-foreground">Coming soon - Customize your All Access Artist experience</p>
-          </div>
-        );
+        return <Settings />;
       default:
         return <Dashboard />;
     }

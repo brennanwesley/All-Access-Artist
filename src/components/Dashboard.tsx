@@ -192,35 +192,6 @@ export const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>
-            Jump into your most used tools
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex-col gap-2">
-              <Clock className="h-6 w-6" />
-              <span className="text-xs">Schedule Post</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2">
-              <Music className="h-6 w-6" />
-              <span className="text-xs">Upload Track</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2">
-              <Target className="h-6 w-6" />
-              <span className="text-xs">Pitch to DSP</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2">
-              <TrendingUp className="h-6 w-6" />
-              <span className="text-xs">View Analytics</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
