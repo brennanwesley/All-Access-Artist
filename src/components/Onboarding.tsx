@@ -45,21 +45,70 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       name: "YouTube",
       description: "Link YouTube for video content management and analytics",
       color: "bg-red-600",
-      category: "Video Platform"
+      category: "Social Media"
+    },
+    {
+      id: "twitter",
+      name: "Twitter 'X'",
+      description: "Connect your X account for real-time updates and engagement",
+      color: "bg-black",
+      category: "Social Media"
+    },
+    {
+      id: "discord",
+      name: "Discord",
+      description: "Link your Discord server for community management",
+      color: "bg-indigo-600",
+      category: "Social Media"
     },
     {
       id: "feature-fm",
       name: "feature.fm",
       description: "Connect your smart links and fan engagement platform",
       color: "bg-green-600",
-      category: "Music Tools"
+      category: "Pre-Save Campaigns & Fan Data Collection"
     },
     {
       id: "distrokid",
       name: "DistroKid",
       description: "Sync your music distribution and release data",
       color: "bg-orange-500",
-      category: "Distribution"
+      category: "Distribution (Choose One)"
+    },
+    {
+      id: "tunecore",
+      name: "TuneCore",
+      description: "Connect your TuneCore distribution account",
+      color: "bg-blue-500",
+      category: "Distribution (Choose One)"
+    },
+    {
+      id: "cdbaby",
+      name: "CD Baby",
+      description: "Sync your CD Baby distribution and royalty data",
+      color: "bg-red-500",
+      category: "Distribution (Choose One)"
+    },
+    {
+      id: "symphonic",
+      name: "Symphonic",
+      description: "Connect your Symphonic distribution platform",
+      color: "bg-purple-600",
+      category: "Distribution (Choose One)"
+    },
+    {
+      id: "amuse",
+      name: "Amuse",
+      description: "Link your Amuse distribution account",
+      color: "bg-pink-500",
+      category: "Distribution (Choose One)"
+    },
+    {
+      id: "routenote",
+      name: "RouteNote",
+      description: "Connect your RouteNote distribution platform",
+      color: "bg-teal-600",
+      category: "Distribution (Choose One)"
     },
     {
       id: "linktree",
@@ -73,16 +122,24 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       name: "Spotify for Artists",
       description: "Access your Spotify streaming data and insights",
       color: "bg-green-500",
-      category: "Streaming Platform"
+      category: "Streaming Analytics Dashboards"
     },
     {
       id: "apple-music",
       name: "Apple Music for Artists",
       description: "Connect Apple Music analytics and artist tools",
       color: "bg-gray-800",
-      category: "Streaming Platform"
+      category: "Streaming Analytics Dashboards"
     }
   ];
+
+  const categoryDescriptions = {
+    "Social Media": "Connect your social platforms to centralize content management, track engagement metrics, and streamline your online presence across all major networks.",
+    "Pre-Save Campaigns & Fan Data Collection": "Integrate tools that help you collect fan data, run pre-save campaigns, and build deeper relationships with your audience through targeted engagement strategies.",
+    "Distribution (Choose One)": "Link your music distribution service to automatically sync release schedules, track performance across stores, and manage your catalog from one central dashboard.",
+    "Link Management": "Connect your link-in-bio tools to unify your online presence and track how fans discover and engage with your content across different touchpoints.",
+    "Streaming Analytics Dashboards": "Access comprehensive streaming data and artist insights to understand your audience demographics, track song performance, and make data-driven decisions about your music career."
+  };
 
   const toggleConnection = (platformId: string) => {
     setConnectedAccounts(prev => 
@@ -145,11 +202,16 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
         <div className="space-y-8">
           {Object.entries(groupedPlatforms).map(([category, categoryPlatforms]) => (
             <div key={category} className="space-y-4">
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-semibold">{category}</h2>
-                <Badge variant="secondary">
-                  {categoryPlatforms.filter(p => connectedAccounts.includes(p.id)).length}/{categoryPlatforms.length}
-                </Badge>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl font-semibold">{category}</h2>
+                  <Badge variant="secondary">
+                    {categoryPlatforms.filter(p => connectedAccounts.includes(p.id)).length}/{categoryPlatforms.length}
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground text-sm max-w-4xl">
+                  {categoryDescriptions[category as keyof typeof categoryDescriptions]}
+                </p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
