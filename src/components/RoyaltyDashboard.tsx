@@ -335,77 +335,59 @@ export const RoyaltyDashboard = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="relative">
-          <div className="relative w-full h-96">
-            <ComposableMap
-              projectionConfig={{
-                scale: 147,
-                center: [0, 20]
-              }}
-              className="w-full h-full"
-            >
-              <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@3/countries-50m.json">
-                {({ geographies }) =>
-                  geographies.map(geo => {
-                    const countryName = geo.properties.NAME;
-                    const hasData = countryData[countryName];
-                    
-                    return (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        fill={hasData ? "hsl(var(--primary))" : "hsl(var(--muted))"}
-                        stroke="hsl(var(--border))"
-                        strokeWidth={0.5}
-                        style={{
-                          default: { outline: "none" },
-                          hover: { 
-                            outline: "none", 
-                            fill: hasData ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))",
-                            cursor: hasData ? "pointer" : "default"
-                          },
-                          pressed: { outline: "none" }
-                        }}
-                        onMouseEnter={(e) => {
-                          if (hasData) {
-                            const data = countryData[countryName];
-                            setTooltipContent(`
-                              ${countryName}
-                              ${data.listeners.toLocaleString()} listeners
-                              ${data.streams.toLocaleString()} streams
-                              ${data.socialViews.toLocaleString()} social views
-                              $${data.earnings.toFixed(2)} earnings
-                            `);
-                            setTooltipPosition({ x: e.clientX, y: e.clientY });
-                            setShowTooltip(true);
-                          }
-                        }}
-                        onMouseLeave={() => {
-                          setShowTooltip(false);
-                        }}
-                        onMouseMove={(e) => {
-                          if (hasData) {
-                            setTooltipPosition({ x: e.clientX, y: e.clientY });
-                          }
-                        }}
-                      />
-                    );
-                  })
-                }
-              </Geographies>
+          <div className="relative w-full h-96 bg-secondary/20 rounded-lg border border-border/50 overflow-hidden">
+            {/* Simple SVG World Map */}
+            <svg viewBox="0 0 1000 500" className="w-full h-full">
+              {/* Simplified world map paths */}
+              <g fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth="0.5">
+                {/* North America */}
+                <path d="M150 150 L200 120 L280 130 L320 160 L300 200 L250 220 L180 200 Z" fill="hsl(var(--primary))" />
+                {/* South America */}
+                <path d="M220 280 L250 250 L280 270 L290 350 L270 400 L240 380 L210 350 Z" fill="hsl(var(--primary))" />
+                {/* Europe */}
+                <path d="M450 120 L480 110 L520 120 L540 140 L520 160 L480 150 L450 140 Z" fill="hsl(var(--primary))" />
+                {/* Africa */}
+                <path d="M460 200 L500 190 L530 220 L540 280 L520 350 L480 360 L450 340 L440 280 L450 220 Z" fill="hsl(var(--muted))" />
+                {/* Asia */}
+                <path d="M550 100 L650 90 L750 110 L780 140 L770 180 L720 200 L650 190 L580 170 L550 140 Z" fill="hsl(var(--primary))" />
+                {/* Australia */}
+                <path d="M720 320 L780 310 L800 340 L790 360 L750 370 L720 350 Z" fill="hsl(var(--primary))" />
+              </g>
               
-              {/* Markers for top countries */}
-              {topCountries.map(({ name, coordinates, listeners }) => (
-                <Marker key={name} coordinates={coordinates}>
-                  <circle 
-                    r={Math.sqrt(listeners / 1000)} 
-                    fill="hsl(var(--primary))" 
-                    fillOpacity={0.7}
+              {/* Data visualization circles for top countries */}
+              {topCountries.map(({ name, coordinates, listeners }, index) => {
+                const x = (coordinates[0] + 180) * (1000 / 360);
+                const y = (90 - coordinates[1]) * (500 / 180);
+                const radius = Math.max(3, Math.min(15, Math.sqrt(listeners / 1000)));
+                
+                return (
+                  <circle
+                    key={name}
+                    cx={x}
+                    cy={y}
+                    r={radius}
+                    fill="hsl(var(--primary))"
+                    fillOpacity={0.8}
                     stroke="hsl(var(--background))"
-                    strokeWidth={1}
+                    strokeWidth={2}
+                    className="cursor-pointer hover:fillOpacity-100 transition-opacity"
+                    onMouseEnter={(e) => {
+                      const data = countryData[name];
+                      if (data) {
+                        setTooltipContent(`${name}
+${data.listeners.toLocaleString()} listeners
+${data.streams.toLocaleString()} streams
+${data.socialViews.toLocaleString()} social views
+$${data.earnings.toFixed(2)} earnings`);
+                        setTooltipPosition({ x: e.clientX, y: e.clientY });
+                        setShowTooltip(true);
+                      }
+                    }}
+                    onMouseLeave={() => setShowTooltip(false)}
                   />
-                </Marker>
-              ))}
-            </ComposableMap>
+                );
+              })}
+            </svg>
             
             {/* Tooltip */}
             {showTooltip && (
@@ -422,6 +404,60 @@ export const RoyaltyDashboard = () => {
                 </div>
               </div>
             )}
+          </div>
+          
+          {/* Stats Grid */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-secondary/20 rounded-lg p-4 border border-border/50">
+              <h4 className="font-medium text-sm mb-2">Top Markets</h4>
+              <div className="space-y-2">
+                {topCountries.slice(0, 3).map((country, index) => (
+                  <div key={country.name} className="flex justify-between items-center text-sm">
+                    <span className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-primary"></div>
+                      {country.name}
+                    </span>
+                    <span className="text-muted-foreground">{country.listeners.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="bg-secondary/20 rounded-lg p-4 border border-border/50">
+              <h4 className="font-medium text-sm mb-2">Total Reach</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Active Countries</span>
+                  <span className="text-primary font-medium">47</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total Listeners</span>
+                  <span className="text-primary font-medium">284K</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Global Streams</span>
+                  <span className="text-primary font-medium">8.2M</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-secondary/20 rounded-lg p-4 border border-border/50">
+              <h4 className="font-medium text-sm mb-2">Growth Trends</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>New Markets</span>
+                  <span className="text-green-500 font-medium">+3 this month</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Fastest Growing</span>
+                  <span className="text-primary font-medium">Brazil</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Avg. Growth</span>
+                  <span className="text-green-500 font-medium">+18.5%</span>
+                </div>
+              </div>
+            </div>
           </div>
           
           {/* Legend */}
