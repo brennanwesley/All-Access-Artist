@@ -9,9 +9,11 @@ import { Fans } from "@/components/Fans";
 import { Create } from "@/components/Create";
 import { Community } from "@/components/Community";
 import { MetadataPrep } from "@/components/MetadataPrep";
+import { Onboarding } from "@/components/Onboarding";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const renderActiveSection = () => {
     switch (activeSection) {
@@ -62,6 +64,14 @@ const Index = () => {
     }
   };
 
+  // Onboarding view
+  if (showOnboarding) {
+    return <Onboarding onComplete={() => {
+      setShowOnboarding(false);
+      setActiveSection("dashboard");
+    }} />;
+  }
+
   // Landing page view
   if (!activeSection) {
     return (
@@ -81,7 +91,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 className="text-lg px-8 py-6 shadow-elegant hover:shadow-glow transition-all duration-300"
-                onClick={() => setActiveSection("dashboard")}
+                onClick={() => setShowOnboarding(true)}
               >
                 Let's Get Started
               </Button>
