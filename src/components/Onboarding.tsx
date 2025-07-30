@@ -130,6 +130,41 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       description: "Connect Apple Music analytics and artist tools",
       color: "bg-gray-800",
       category: "Streaming Analytics Dashboards"
+    },
+    {
+      id: "account",
+      name: "Account",
+      description: "Manage your profile, subscription, and personal information",
+      color: "bg-slate-600",
+      category: "Settings"
+    },
+    {
+      id: "notifications",
+      name: "Notifications",
+      description: "Configure email, push, and in-app notification preferences",
+      color: "bg-amber-600",
+      category: "Settings"
+    },
+    {
+      id: "privacy-security",
+      name: "Privacy & Security",
+      description: "Control data sharing, two-factor authentication, and privacy settings",
+      color: "bg-emerald-600",
+      category: "Settings"
+    },
+    {
+      id: "preferences",
+      name: "Preferences",
+      description: "Customize your dashboard layout, themes, and user experience",
+      color: "bg-violet-600",
+      category: "Settings"
+    },
+    {
+      id: "integrations",
+      name: "Integrations",
+      description: "Manage API connections and third-party app permissions",
+      color: "bg-cyan-600",
+      category: "Settings"
     }
   ];
 
@@ -138,7 +173,8 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
     "Pre-Save Campaigns & Fan Data Collection": "Integrate tools that help you collect fan data, run pre-save campaigns, and build deeper relationships with your audience through targeted engagement strategies.",
     "Distribution (Choose One)": "Link your music distribution service to automatically sync release schedules, track performance across stores, and manage your catalog from one central dashboard.",
     "Link Management": "Connect your link-in-bio tools to unify your online presence and track how fans discover and engage with your content across different touchpoints.",
-    "Streaming Analytics Dashboards": "Access comprehensive streaming data and artist insights to understand your audience demographics, track song performance, and make data-driven decisions about your music career."
+    "Streaming Analytics Dashboards": "Access comprehensive streaming data and artist insights to understand your audience demographics, track song performance, and make data-driven decisions about your music career.",
+    "Settings": "Configure your account preferences, notification settings, privacy controls, and customize your experience to match your workflow and security requirements."
   };
 
   const toggleConnection = (platformId: string) => {
