@@ -136,45 +136,6 @@ export const Settings = () => {
         })}
       </div>
 
-      {/* Quick Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Settings</CardTitle>
-          <CardDescription>
-            Frequently used settings for quick access
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Dark Mode</h4>
-              <p className="text-sm text-muted-foreground">Toggle between light and dark themes</p>
-            </div>
-            <Switch />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Email Notifications</h4>
-              <p className="text-sm text-muted-foreground">Receive updates via email</p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Auto-sync Data</h4>
-              <p className="text-sm text-muted-foreground">Automatically sync platform data</p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Show Dashboard Tips</h4>
-              <p className="text-sm text-muted-foreground">Display helpful tips and guidance</p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
