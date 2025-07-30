@@ -209,18 +209,18 @@ export const ContentCalendar = () => {
           <div className="text-center">
             <div className="mx-auto w-80 h-64 relative">
               {/* House Image */}
-              <div className="w-full h-48 bg-gradient-to-b from-sky-200 to-green-200 dark:from-sky-800 dark:to-green-800 rounded-lg border-2 border-blue-200 dark:border-blue-600 mb-4 relative overflow-hidden">
-                {/* House structure using CSS */}
-                <div className="absolute top-8 left-1/2 transform -translate-x-1/2">
+              <div className="w-full h-48 bg-gradient-to-b from-background to-muted rounded-lg border border-border mb-4 relative overflow-hidden">
+                {/* Simple house structure */}
+                <div className="absolute top-12 left-1/2 transform -translate-x-1/2">
                   {/* Roof */}
-                  <div className="w-0 h-0 border-l-[60px] border-r-[60px] border-b-[40px] border-l-transparent border-r-transparent border-b-red-600 dark:border-b-red-500"></div>
+                  <div className="w-0 h-0 border-l-[50px] border-r-[50px] border-b-[30px] border-l-transparent border-r-transparent border-b-primary"></div>
                   {/* House body */}
-                  <div className="w-[120px] h-[80px] bg-yellow-200 dark:bg-yellow-600 border-2 border-yellow-400 dark:border-yellow-500 rounded-b-lg">
+                  <div className="w-[100px] h-[60px] bg-secondary border border-border rounded-sm">
                     {/* Door */}
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4 h-8 bg-brown-600 dark:bg-brown-400 rounded-t-lg"></div>
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-3 h-6 bg-primary/80 rounded-t-sm"></div>
                     {/* Windows */}
-                    <div className="absolute top-2 left-2 w-4 h-4 bg-blue-400 dark:bg-blue-300 border border-blue-600 dark:border-blue-500 rounded"></div>
-                    <div className="absolute top-2 right-2 w-4 h-4 bg-blue-400 dark:bg-blue-300 border border-blue-600 dark:border-blue-500 rounded"></div>
+                    <div className="absolute top-2 left-3 w-3 h-3 bg-primary/20 border border-primary/40 rounded-sm"></div>
+                    <div className="absolute top-2 right-3 w-3 h-3 bg-primary/20 border border-primary/40 rounded-sm"></div>
                   </div>
                 </div>
               </div>
