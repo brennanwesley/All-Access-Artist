@@ -207,28 +207,52 @@ export const ContentCalendar = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
-            <div className="mx-auto w-64 h-48 relative">
-              {/* House Roof */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-32 border-r-32 border-b-16 border-l-transparent border-r-transparent border-b-primary"></div>
+            <div className="mx-auto w-80 h-64 relative">
+              {/* House Image */}
+              <div className="w-full h-48 bg-gradient-to-b from-sky-200 to-green-200 dark:from-sky-800 dark:to-green-800 rounded-lg border-2 border-blue-200 dark:border-blue-600 mb-4 relative overflow-hidden">
+                {/* House structure using CSS */}
+                <div className="absolute top-8 left-1/2 transform -translate-x-1/2">
+                  {/* Roof */}
+                  <div className="w-0 h-0 border-l-[60px] border-r-[60px] border-b-[40px] border-l-transparent border-r-transparent border-b-red-600 dark:border-b-red-500"></div>
+                  {/* House body */}
+                  <div className="w-[120px] h-[80px] bg-yellow-200 dark:bg-yellow-600 border-2 border-yellow-400 dark:border-yellow-500 rounded-b-lg">
+                    {/* Door */}
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4 h-8 bg-brown-600 dark:bg-brown-400 rounded-t-lg"></div>
+                    {/* Windows */}
+                    <div className="absolute top-2 left-2 w-4 h-4 bg-blue-400 dark:bg-blue-300 border border-blue-600 dark:border-blue-500 rounded"></div>
+                    <div className="absolute top-2 right-2 w-4 h-4 bg-blue-400 dark:bg-blue-300 border border-blue-600 dark:border-blue-500 rounded"></div>
+                  </div>
+                </div>
+              </div>
               
-              {/* House Foundation */}
-              <div className="absolute bottom-0 w-full h-32 bg-gradient-to-t from-secondary to-secondary/50 rounded-lg border-2 border-border">
-                
-                {/* Four Pillars */}
-                <div className="grid grid-cols-4 h-full">
+              {/* Foundation with Bricks */}
+              <div className="absolute bottom-0 w-full h-16 bg-gradient-to-t from-amber-200 to-amber-100 dark:from-amber-800 dark:to-amber-700 rounded-lg border-2 border-amber-300 dark:border-amber-600">
+                <div className="grid grid-cols-4 h-full gap-1 p-2">
                   {brandPillars.map((pillar, index) => {
                     const pillarCount = getPillarDistribution()[pillar] || 0;
-                    const pillarHeight = Math.min(100, (pillarCount / 5) * 100); // Scale to max 100%
                     
                     return (
-                      <div key={index} className="flex flex-col items-center justify-end p-1">
-                        <div 
-                          className={`w-6 bg-primary/80 rounded-sm transition-all duration-500 ${pillarHeight < 20 ? 'animate-pulse' : ''}`}
-                          style={{ height: `${Math.max(20, pillarHeight)}%` }}
-                        ></div>
-                        <span className="text-xs mt-1 text-center font-medium truncate w-full">
+                      <div key={index} className="flex flex-col items-center justify-start space-y-1">
+                        <span className="text-xs font-medium text-amber-800 dark:text-amber-200 truncate w-full text-center">
                           {pillar.split(' ')[0]}
                         </span>
+                        <div className="flex flex-wrap justify-center gap-0.5 w-full">
+                          {Array.from({ length: Math.min(pillarCount, 8) }, (_, brickIndex) => (
+                            <div
+                              key={brickIndex}
+                              className="w-2 h-1.5 bg-red-600 dark:bg-red-500 border border-red-700 dark:border-red-600 rounded-sm"
+                              style={{
+                                animationDelay: `${brickIndex * 100}ms`
+                              }}
+                            />
+                          ))}
+                          {pillarCount === 0 && (
+                            <div className="w-2 h-1.5 bg-gray-300 dark:bg-gray-600 border border-gray-400 dark:border-gray-500 rounded-sm opacity-50" />
+                          )}
+                        </div>
+                        {pillarCount > 8 && (
+                          <span className="text-xs text-amber-700 dark:text-amber-300">+{pillarCount - 8}</span>
+                        )}
                       </div>
                     );
                   })}
