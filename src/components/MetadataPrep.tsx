@@ -331,6 +331,26 @@ export const MetadataPrep = () => {
             </Button>
           </CardContent>
         </Card>
+
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-elegant transition-all duration-300 cursor-pointer">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Split Sheet
+            </CardTitle>
+            <CardDescription>
+              Manage songwriter credits and publishing splits
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline" 
+              className="w-full"
+            >
+              Create Split Sheet
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

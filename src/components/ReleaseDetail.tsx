@@ -268,12 +268,6 @@ export const ReleaseDetail = ({ releaseId, onBack }: ReleaseDetailProps) => {
             >
               Edit Metadata
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full"
-            >
-              Split Sheet
-            </Button>
             <p className="text-sm text-muted-foreground text-center">
               Update track information, lyrics, and manage writer splits
             </p>
