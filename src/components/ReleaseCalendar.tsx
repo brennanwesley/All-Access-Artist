@@ -89,12 +89,16 @@ export const ReleaseCalendar = () => {
     });
   };
 
+  const handleCreateRelease = (newRelease: any) => {
+    setReleases(prev => [newRelease, ...prev]);
+  };
+
   if (selectedRelease) {
     return <ReleaseDetail releaseId={selectedRelease} onBack={() => setSelectedRelease(null)} />;
   }
 
   if (showNewReleaseForm) {
-    return <NewReleaseForm onBack={() => setShowNewReleaseForm(false)} />;
+    return <NewReleaseForm onBack={() => setShowNewReleaseForm(false)} onCreateRelease={handleCreateRelease} />;
   }
 
   return (

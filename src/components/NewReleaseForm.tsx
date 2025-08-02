@@ -9,9 +9,10 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface NewReleaseFormProps {
   onBack: () => void;
+  onCreateRelease: (releaseData: any) => void;
 }
 
-export const NewReleaseForm = ({ onBack }: NewReleaseFormProps) => {
+export const NewReleaseForm = ({ onBack, onCreateRelease }: NewReleaseFormProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     title: "",
@@ -30,6 +31,30 @@ export const NewReleaseForm = ({ onBack }: NewReleaseFormProps) => {
       return;
     }
 
+    // Create new release with standard structure
+    const newRelease = {
+      id: Date.now(),
+      title: formData.title,
+      releaseDate: formData.releaseDate,
+      status: "Planning",
+      progress: 15,
+      tracks: formData.productType === "single" ? 1 : formData.productType === "ep" ? 4 : 10,
+      distributors: ["TBD"],
+      presaves: 0,
+      presaveGoal: formData.productType === "single" ? 300 : formData.productType === "ep" ? 500 : 1000,
+      featureFmLink: "",
+      tasks: [
+        { task: "Recording", completed: false },
+        { task: "Mixing", completed: false },
+        { task: "Mastering", completed: false },
+        { task: "Album Artwork", completed: false },
+        { task: "Metadata Entry", completed: false },
+        { task: "Submit to DSPs", completed: false }
+      ]
+    };
+
+    onCreateRelease(newRelease);
+    
     toast({
       title: "Success",
       description: "New release created successfully!",
