@@ -354,10 +354,8 @@ export const MetadataPrep = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="songwriter">Songwriter</SelectItem>
-                        <SelectItem value="composer">Composer</SelectItem>
-                        <SelectItem value="lyricist">Lyricist</SelectItem>
-                        <SelectItem value="producer">Producer</SelectItem>
                         <SelectItem value="co-writer">Co-Writer</SelectItem>
+                        <SelectItem value="producer">Producer</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -381,10 +379,8 @@ export const MetadataPrep = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="songwriter">Songwriter</SelectItem>
-                        <SelectItem value="composer">Composer</SelectItem>
-                        <SelectItem value="lyricist">Lyricist</SelectItem>
-                        <SelectItem value="producer">Producer</SelectItem>
                         <SelectItem value="co-writer">Co-Writer</SelectItem>
+                        <SelectItem value="producer">Producer</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -408,10 +404,8 @@ export const MetadataPrep = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="songwriter">Songwriter</SelectItem>
-                        <SelectItem value="composer">Composer</SelectItem>
-                        <SelectItem value="lyricist">Lyricist</SelectItem>
-                        <SelectItem value="producer">Producer</SelectItem>
                         <SelectItem value="co-writer">Co-Writer</SelectItem>
+                        <SelectItem value="producer">Producer</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -463,7 +457,7 @@ export const MetadataPrep = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold">Metadata Prep Tool</h2>
+        <h2 className="text-3xl font-bold">Metadata Management</h2>
         <p className="text-muted-foreground mt-2">
           Streamline your track metadata for all DSPs
         </p>
@@ -474,7 +468,7 @@ export const MetadataPrep = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Label Copy Template
+              Label Copy
             </CardTitle>
             <CardDescription>
               Generate comprehensive label copy with all required metadata fields
@@ -495,7 +489,7 @@ export const MetadataPrep = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Music className="h-5 w-5" />
-              Lyric Sheet Template
+              Create Lyric Sheet
             </CardTitle>
             <CardDescription>
               Create structured lyric sheets with proper song sections
