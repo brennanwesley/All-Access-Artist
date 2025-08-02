@@ -8,10 +8,12 @@ import { Calendar, Plus, Clock, Music, CheckCircle, AlertCircle, ExternalLink, T
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ReleaseDetail } from "./ReleaseDetail";
+import { NewReleaseForm } from "./NewReleaseForm";
 
 export const ReleaseCalendar = () => {
   const { toast } = useToast();
   const [selectedRelease, setSelectedRelease] = useState<number | null>(null);
+  const [showNewReleaseForm, setShowNewReleaseForm] = useState(false);
   const [releases, setReleases] = useState([
     {
       id: 1,
@@ -87,20 +89,28 @@ export const ReleaseCalendar = () => {
     });
   };
 
+  const handleCreateRelease = (newRelease: any) => {
+    setReleases(prev => [newRelease, ...prev]);
+  };
+
   if (selectedRelease) {
     return <ReleaseDetail releaseId={selectedRelease} onBack={() => setSelectedRelease(null)} />;
+  }
+
+  if (showNewReleaseForm) {
+    return <NewReleaseForm onBack={() => setShowNewReleaseForm(false)} onCreateRelease={handleCreateRelease} />;
   }
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold">Release Calendar</h2>
+          <h2 className="text-3xl font-bold">Release Manager</h2>
           <p className="text-muted-foreground mt-2">
             Plan, track, and manage your music releases
           </p>
         </div>
-        <Button variant="hero" size="lg">
+        <Button variant="hero" size="lg" onClick={() => setShowNewReleaseForm(true)}>
           <Plus className="mr-2 h-5 w-5" />
           New Release
         </Button>

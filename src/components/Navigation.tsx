@@ -21,7 +21,7 @@ interface NavigationProps {
 export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) => {
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "releases", label: "Release Calendar", icon: Calendar },
+    { id: "releases", label: "Release Manager", icon: Calendar },
     { id: "content", label: "Content Planner", icon: Video },
     { id: "fans", label: "Fans", icon: Users },
     { id: "community", label: "Community", icon: Users },
