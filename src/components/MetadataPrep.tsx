@@ -353,7 +353,7 @@ export const MetadataPrep = () => {
                         <SelectValue placeholder="Role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="songwriter">Songwriter</SelectItem>
+                        <SelectItem value="writer">Writer</SelectItem>
                         <SelectItem value="co-writer">Co-Writer</SelectItem>
                         <SelectItem value="producer">Producer</SelectItem>
                       </SelectContent>
@@ -378,7 +378,7 @@ export const MetadataPrep = () => {
                         <SelectValue placeholder="Role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="songwriter">Songwriter</SelectItem>
+                        <SelectItem value="writer">Writer</SelectItem>
                         <SelectItem value="co-writer">Co-Writer</SelectItem>
                         <SelectItem value="producer">Producer</SelectItem>
                       </SelectContent>
@@ -403,7 +403,7 @@ export const MetadataPrep = () => {
                         <SelectValue placeholder="Role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="songwriter">Songwriter</SelectItem>
+                        <SelectItem value="writer">Writer</SelectItem>
                         <SelectItem value="co-writer">Co-Writer</SelectItem>
                         <SelectItem value="producer">Producer</SelectItem>
                       </SelectContent>
@@ -489,7 +489,7 @@ export const MetadataPrep = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Music className="h-5 w-5" />
-              Create Lyric Sheet
+              Lyric Sheet
             </CardTitle>
             <CardDescription>
               Create structured lyric sheets with proper song sections
@@ -501,7 +501,7 @@ export const MetadataPrep = () => {
               className="w-full"
               onClick={() => setActiveTemplate("lyricSheet")}
             >
-              Lyric Sheet
+               Create Lyric Sheet
             </Button>
           </CardContent>
         </Card>

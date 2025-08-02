@@ -17,7 +17,8 @@ export const NewReleaseForm = ({ onBack, onCreateRelease }: NewReleaseFormProps)
   const [formData, setFormData] = useState({
     title: "",
     releaseDate: "",
-    productType: ""
+    productType: "",
+    budget: ""
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -61,7 +62,7 @@ export const NewReleaseForm = ({ onBack, onCreateRelease }: NewReleaseFormProps)
     });
     
     // Reset form and go back
-    setFormData({ title: "", releaseDate: "", productType: "" });
+    setFormData({ title: "", releaseDate: "", productType: "", budget: "" });
     onBack();
   };
 
@@ -130,6 +131,17 @@ export const NewReleaseForm = ({ onBack, onCreateRelease }: NewReleaseFormProps)
                   <SelectItem value="album">Album</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="budget">Project Budget</Label>
+              <Input
+                id="budget"
+                type="text"
+                placeholder="Enter project budget (e.g., $5,000)"
+                value={formData.budget}
+                onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+              />
             </div>
 
             <div className="flex gap-4 pt-4">
