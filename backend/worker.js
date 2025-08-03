@@ -36,7 +36,8 @@ export default {
           version: '2.0.0',
           timestamp: new Date().toISOString(),
           worker: env.WORKER_NAME || 'allaccessartist',
-          deployed: new Date().toISOString()
+          deployed: new Date().toISOString(),
+          build_fixed: true
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
