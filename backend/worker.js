@@ -35,7 +35,8 @@ export default {
           service: 'All Access Artist API',
           version: '2.0.0',
           timestamp: new Date().toISOString(),
-          worker: env.WORKER_NAME || 'allaccessartist'
+          worker: env.WORKER_NAME || 'allaccessartist',
+          deployed: new Date().toISOString()
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
@@ -173,11 +174,11 @@ async function handleReleases(request, env, method, id) {
 
     case 'POST':
       const releaseData = await request.json();
-      const data = await supabaseRequest(env, 'music_releases', {
+      const releaseResult = await supabaseRequest(env, 'music_releases', {
         method: 'POST',
         body: JSON.stringify(releaseData)
       });
-      return jsonResponse(data[0], 201);
+      return jsonResponse(releaseResult[0], 201);
 
     default:
       return methodNotAllowed();
@@ -232,11 +233,11 @@ async function handleCalendar(request, env, method, id) {
 
     case 'POST':
       const calendarData = await request.json();
-      const data = await supabaseRequest(env, 'content_calendar', {
+      const calendarResult = await supabaseRequest(env, 'content_calendar', {
         method: 'POST',
         body: JSON.stringify(calendarData)
       });
-      return jsonResponse(data[0], 201);
+      return jsonResponse(calendarResult[0], 201);
 
     default:
       return methodNotAllowed();
