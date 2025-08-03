@@ -38,7 +38,7 @@ export default {
           worker: env.WORKER_NAME || 'allaccessartist',
           deployed: 'github_auto_deployment',
           build_fixed: true,
-          attempt: 2
+          attempt: 3
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });

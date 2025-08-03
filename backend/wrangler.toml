@@ -1,33 +1,23 @@
+# All Access Artist - Cloudflare Worker Configuration
+# Version 2.0.0 - Proprietary
+
 name = "allaccessartist"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
+# Environment variables (will be set in Cloudflare dashboard)
+[vars]
+# SUPABASE_URL will be set in dashboard
+# SUPABASE_SERVICE_KEY will be set in dashboard
+
+# Production environment
+[env.production]
+name = "allaccessartist"
+
+# Staging environment
 [env.staging]
 name = "allaccessartist-staging"
-vars = { ENVIRONMENT = "staging" }
 
-[env.production]
-name = "allaccessartist-production"
-vars = { ENVIRONMENT = "production" }
-
-# KV Namespaces for caching
-[[env.production.kv_namespaces]]
-binding = "CACHE"
-id = "your-production-kv-namespace-id"
-
-[[env.staging.kv_namespaces]]
-binding = "CACHE"
-id = "your-staging-kv-namespace-id"
-
-# Scheduled triggers for background jobs
-[triggers]
-crons = [
-  "0 0 * * *",    # Daily royalty calculations at midnight
-  "0 */6 * * *"   # Analytics processing every 6 hours
-]
-
-# Environment variables (set via wrangler secret)
-# SUPABASE_URL
-# SUPABASE_SERVICE_KEY
-# SPOTIFY_CLIENT_ID
-# SPOTIFY_CLIENT_SECRET
+# Development environment  
+[env.development]
+name = "allaccessartist"
