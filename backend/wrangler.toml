@@ -1,13 +1,13 @@
-name = "all-access-artist-api"
-main = "src/index.ts"
+name = "allaccessartist"
+main = "worker.js"
 compatibility_date = "2024-01-01"
 
 [env.staging]
-name = "all-access-artist-api-staging"
+name = "allaccessartist-staging"
 vars = { ENVIRONMENT = "staging" }
 
 [env.production]
-name = "all-access-artist-api-production"
+name = "allaccessartist-production"
 vars = { ENVIRONMENT = "production" }
 
 # KV Namespaces for caching
