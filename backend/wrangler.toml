@@ -1,0 +1,33 @@
+name = "all-access-artist-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[env.staging]
+name = "all-access-artist-api-staging"
+vars = { ENVIRONMENT = "staging" }
+
+[env.production]
+name = "all-access-artist-api-production"
+vars = { ENVIRONMENT = "production" }
+
+# KV Namespaces for caching
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+id = "your-production-kv-namespace-id"
+
+[[env.staging.kv_namespaces]]
+binding = "CACHE"
+id = "your-staging-kv-namespace-id"
+
+# Scheduled triggers for background jobs
+[triggers]
+crons = [
+  "0 0 * * *",    # Daily royalty calculations at midnight
+  "0 */6 * * *"   # Analytics processing every 6 hours
+]
+
+# Environment variables (set via wrangler secret)
+# SUPABASE_URL
+# SUPABASE_SERVICE_KEY
+# SPOTIFY_CLIENT_ID
+# SPOTIFY_CLIENT_SECRET
