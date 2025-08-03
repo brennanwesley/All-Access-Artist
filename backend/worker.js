@@ -36,7 +36,7 @@ export default {
           version: '2.0.0',
           timestamp: new Date().toISOString(),
           worker: env.WORKER_NAME || 'allaccessartist',
-          deployed: new Date().toISOString(),
+          deployed: 'github_auto_deployment',
           build_fixed: true,
           attempt: 2
         }), {
