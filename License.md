@@ -1,6 +1,6 @@
 PROPRIETARY SOFTWARE LICENSE
 
-Copyright (c) 2025 Brennan Wesley Tharaldson, whose address is 6605 Commonwealth Rd, Midland Texas 79706. All Rights Reserved.
+Copyright (c) 2025 Brennan Wesley Tharaldson, whose address is 6605 Commonwealth Rd Midland, Texas 79706. All Rights Reserved.
 
 This software and associated documentation files (the "Software") are proprietary 
 and confidential to Brennan Wesley Tharaldson. 
