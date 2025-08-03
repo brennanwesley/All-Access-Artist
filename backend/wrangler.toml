@@ -20,4 +20,4 @@ name = "allaccessartist-staging"
 
 # Development environment  
 [env.development]
-name = "allaccessartist"
+name = "allaccessartist-dev"
