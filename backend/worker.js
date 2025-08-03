@@ -37,7 +37,8 @@ export default {
           timestamp: new Date().toISOString(),
           worker: env.WORKER_NAME || 'allaccessartist',
           deployed: new Date().toISOString(),
-          build_fixed: true
+          build_fixed: true,
+          attempt: 2
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
