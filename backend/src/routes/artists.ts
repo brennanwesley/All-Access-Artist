@@ -1,0 +1,117 @@
+/**
+ * Artists Routes - HTTP handlers for artist management
+ * All Access Artist - Backend API v2.0.0
+ */
+import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
+import { ZodError } from 'zod'
+import { ArtistsService } from '../services/artistsService'
+import { CreateArtistSchema } from '../types/schemas'
+import type { Bindings, Variables } from '../types/bindings'
+import { handleValidationError, handleServiceError, handleNotFoundError, handleDatabaseError } from '../utils/errorHandler'
+
+const artists = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+// GET /api/artists - Get all artists
+artists.get('/', async (c) => {
+  try {
+    const supabase = c.get('supabase')
+    const artistsService = new ArtistsService(supabase)
+    
+    const data = await artistsService.getAllArtists()
+    return c.json({ 
+      success: true, 
+      data,
+      meta: {
+        timestamp: new Date().toISOString(),
+        version: '2.0.0'
+      }
+    })
+  } catch (error) {
+    return handleServiceError(error as Error, c, 'fetch artists')
+  }
+})
+
+// GET /api/artists/:id - Get artist by ID
+artists.get('/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const supabase = c.get('supabase')
+    const artistsService = new ArtistsService(supabase)
+    
+    const data = await artistsService.getArtistById(id)
+    return c.json({ success: true, data })
+  } catch (error) {
+    console.error('Error fetching artist:', error)
+    return c.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to fetch artist' 
+    }, 500)
+  }
+})
+
+// POST /api/artists - Create new artist
+artists.post('/', async (c) => {
+  try {
+    // Manual validation with standardized error handling
+    const body = await c.req.json()
+    const validatedData = CreateArtistSchema.parse(body)
+    
+    const supabase = c.get('supabase')
+    const artistsService = new ArtistsService(supabase)
+    
+    const data = await artistsService.createArtist(validatedData)
+    return c.json({ 
+      success: true, 
+      data,
+      meta: {
+        timestamp: new Date().toISOString(),
+        version: '2.0.0'
+      }
+    }, 201)
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return handleValidationError(error, c)
+    }
+    return handleServiceError(error as Error, c, 'create artist')
+  }
+})
+
+// PUT /api/artists/:id - Update artist
+artists.put('/:id', zValidator('json', CreateArtistSchema.partial()), async (c) => {
+  try {
+    const id = c.req.param('id')
+    const artistData = c.req.valid('json')
+    const supabase = c.get('supabase')
+    const artistsService = new ArtistsService(supabase)
+    
+    const data = await artistsService.updateArtist(id, artistData)
+    return c.json({ success: true, data })
+  } catch (error) {
+    console.error('Error updating artist:', error)
+    return c.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to update artist' 
+    }, 500)
+  }
+})
+
+// DELETE /api/artists/:id - Delete artist
+artists.delete('/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const supabase = c.get('supabase')
+    const artistsService = new ArtistsService(supabase)
+    
+    const data = await artistsService.deleteArtist(id)
+    return c.json({ success: true, data })
+  } catch (error) {
+    console.error('Error deleting artist:', error)
+    return c.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to delete artist' 
+    }, 500)
+  }
+})
+
+export { artists }

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { UserProfile } from "@/components/auth/UserProfile";
 import { 
   Calendar, 
   Music, 
@@ -31,7 +32,7 @@ export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) 
   ];
 
   return (
-    <nav className="bg-card/50 backdrop-blur-sm border-r border-border h-screen w-64 p-6 fixed left-0 top-0 z-40">
+    <nav className="bg-card/50 backdrop-blur-sm border-r border-border h-screen w-64 p-6 fixed left-0 top-0 z-40 flex flex-col">
       <div className="mb-8">
         <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
           All Access Artist
@@ -39,7 +40,7 @@ export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) 
         <p className="text-sm text-muted-foreground mt-1">giving you all access to build a career you're proud of</p>
       </div>
       
-      <div className="space-y-2">
+      <div className="space-y-2 flex-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeSection === item.id;
@@ -63,6 +64,11 @@ export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) 
             </Button>
           );
         })}
+      </div>
+      
+      {/* User Profile at bottom */}
+      <div className="mt-auto pt-4">
+        <UserProfile />
       </div>
     </nav>
   );

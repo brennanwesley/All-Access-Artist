@@ -11,6 +11,8 @@ import { Community } from "@/components/Community";
 import { Settings } from "@/components/Settings";
 import { MetadataPrep } from "@/components/MetadataPrep";
 import { Onboarding } from "@/components/Onboarding";
+import { UserProfile } from "@/components/auth/UserProfile";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
