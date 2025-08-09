@@ -4,9 +4,9 @@
  */
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
-import { CalendarService } from '../services/calendarService'
-import { CreateCalendarSchema } from '../types/schemas'
-import type { Bindings, Variables } from '../types/bindings'
+import { CalendarService } from '../services/calendarService.js'
+import { CreateCalendarSchema } from '../types/schemas.js'
+import type { Bindings, Variables } from '../types/bindings.js'
 
 const calendar = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -101,4 +101,4 @@ calendar.delete('/:id', async (c) => {
   }
 })
 
-export { calendar }
+export default calendar

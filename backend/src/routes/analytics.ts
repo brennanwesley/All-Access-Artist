@@ -4,9 +4,9 @@
  */
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
-import { AnalyticsService } from '../services/analyticsService'
-import { CreateAnalyticsSchema } from '../types/schemas'
-import type { Bindings, Variables } from '../types/bindings'
+import { AnalyticsService } from '../services/analyticsService.js'
+import { CreateAnalyticsSchema } from '../types/schemas.js'
+import type { Bindings, Variables } from '../types/bindings.js'
 
 const analytics = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -101,4 +101,4 @@ analytics.delete('/:id', async (c) => {
   }
 })
 
-export { analytics }
+export default analytics

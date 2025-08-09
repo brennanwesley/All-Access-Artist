@@ -5,7 +5,7 @@
 import { createMiddleware } from 'hono/factory'
 import { jwt } from 'hono/jwt'
 import { createClient } from '@supabase/supabase-js'
-import type { Bindings, Variables } from '../types/bindings'
+import type { Bindings, Variables } from '../types/bindings.js'
 
 // JWT authentication middleware factory
 export const createJwtAuth = (getSecret: (c: any) => string) => {
@@ -25,8 +25,8 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
     }
 
     const token = authHeader.substring(7)
-    const supabaseUrl = c.env.SUPABASE_URL
-    const supabaseAnonKey = c.env.SUPABASE_ANON_KEY
+    const supabaseUrl = process.env.SUPABASE_URL!
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
 
     // Create user-scoped Supabase client with the JWT token
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {

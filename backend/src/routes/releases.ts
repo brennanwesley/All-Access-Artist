@@ -4,9 +4,9 @@
  */
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
-import { ReleasesService } from '../services/releasesService'
-import { CreateReleaseSchema } from '../types/schemas'
-import type { Bindings, Variables } from '../types/bindings'
+import { ReleasesService } from '../services/releasesService.js'
+import { CreateReleaseSchema } from '../types/schemas.js'
+import type { Bindings, Variables } from '../types/bindings.js'
 
 const releases = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -100,4 +100,4 @@ releases.delete('/:id', async (c) => {
   }
 })
 
-export { releases }
+export default releases

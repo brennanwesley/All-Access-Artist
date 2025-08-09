@@ -4,8 +4,8 @@
  */
 import type { Context } from 'hono'
 import { ZodError } from 'zod'
-import { APIError, CommonErrors, ErrorCategory, ErrorSeverity, type ErrorResponse } from '../types/errors'
-import type { Bindings, Variables } from '../types/bindings'
+import { APIError, CommonErrors, ErrorCategory, ErrorSeverity, type ErrorResponse } from '../types/errors.js'
+import type { Bindings, Variables } from '../types/bindings.js'
 
 type HonoContext = Context<{ Bindings: Bindings; Variables: Variables }>
 

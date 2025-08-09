@@ -1,19 +1,19 @@
 /**
- * All Access Artist - Backend API v2.0.0 (Restructured)
- * Cloudflare Worker with Hono, JWT Authentication, and Service Layer Architecture
+ * All Access Artist - Backend API v2.0.0 (Node.js)
+ * Hono Framework with JWT Authentication, Service Layer Architecture
  * Proprietary - Music Industry Management Platform
  */
 
 import { Hono } from 'hono'
-import { corsMiddleware } from './middleware/cors'
-import { createJwtAuth, supabaseAuth } from './middleware/auth'
-import { artists } from './routes/artists'
-import { releases } from './routes/releases'
-import { calendar } from './routes/calendar'
-import { analytics } from './routes/analytics'
-import type { Bindings, Variables } from './types/bindings'
-import { APIError, CommonErrors } from './types/errors'
-import { createErrorResponse, logError, generateRequestId } from './utils/errorHandler'
+import { corsMiddleware } from './middleware/cors.js'
+import { createJwtAuth, supabaseAuth } from './middleware/auth.js'
+import artists from './routes/artists.js'
+import releases from './routes/releases.js'
+import calendar from './routes/calendar.js'
+import analytics from './routes/analytics.js'
+import type { Bindings, Variables } from './types/bindings.js'
+import { APIError, CommonErrors } from './types/errors.js'
+import { createErrorResponse, logError, generateRequestId } from './utils/errorHandler.js'
 
 // Initialize Hono app with proper typing
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -27,12 +27,13 @@ app.get('/health', (c) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     version: '2.0.0',
-    service: 'All Access Artist Backend API'
+    service: 'All Access Artist Backend API',
+    environment: process.env.NODE_ENV || 'development'
   })
 })
 
 // JWT authentication middleware for all API routes
-app.use('/api/*', createJwtAuth((c) => c.env.SUPABASE_JWT_SECRET))
+app.use('/api/*', createJwtAuth(() => process.env.SUPABASE_JWT_SECRET!))
 
 // Supabase user-scoped client middleware for all API routes
 app.use('/api/*', supabaseAuth)
@@ -61,20 +62,13 @@ app.notFound((c) => {
 // Global error handler with standardized responses
 app.onError((err, c) => {
   const requestId = generateRequestId()
+  console.error('Global error:', err)
   
-  // Log error securely (no sensitive data)
-  logError(err, c, { requestId })
-  
-  // Handle different error types
-  if (err instanceof APIError) {
-    const response = createErrorResponse(err, c, requestId)
-    return c.json(response, err.statusCode)
-  }
-  
-  // Handle unknown errors with generic internal error
-  const internalError = CommonErrors.INTERNAL_SERVER_ERROR
-  const response = createErrorResponse(internalError, c, requestId)
-  return c.json(response, internalError.statusCode)
+  return c.json({
+    success: false,
+    error: 'Internal server error',
+    requestId
+  }, 500)
 })
 
 export default app

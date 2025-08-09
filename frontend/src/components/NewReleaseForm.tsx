@@ -1,69 +1,52 @@
-import { useState } from "react";
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Calendar, Music } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { ArrowLeft, Calendar, Music, Loader2 } from "lucide-react";
+import { useCreateRelease, createReleaseSchema, type CreateReleaseFormData } from '@/hooks/useCreateRelease';
 
 interface NewReleaseFormProps {
   onBack: () => void;
-  onCreateRelease: (releaseData: any) => void;
+  onCreateRelease?: (releaseData: any) => void; // Optional for backward compatibility
 }
 
 export const NewReleaseForm = ({ onBack, onCreateRelease }: NewReleaseFormProps) => {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    title: "",
-    releaseDate: "",
-    productType: "",
-    budget: ""
+  const createReleaseMutation = useCreateRelease();
+  
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<CreateReleaseFormData>({
+    resolver: zodResolver(createReleaseSchema),
+    defaultValues: {
+      title: '',
+      releaseDate: '',
+      budget: '',
+    },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.title || !formData.releaseDate || !formData.productType) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
+  const onSubmit = async (data: CreateReleaseFormData) => {
+    try {
+      const result = await createReleaseMutation.mutateAsync(data);
+      
+      // Call the optional callback for backward compatibility
+      if (onCreateRelease) {
+        onCreateRelease(result);
+      }
+      
+      // Reset form and go back on success
+      reset();
+      onBack();
+    } catch (error) {
+      // Error handling is done in the mutation hook
+      console.error('Form submission error:', error);
     }
-
-    // Create new release with standard structure
-    const newRelease = {
-      id: Date.now(),
-      title: formData.title,
-      releaseDate: formData.releaseDate,
-      status: "Planning",
-      progress: 15,
-      tracks: formData.productType === "single" ? 1 : formData.productType === "ep" ? 4 : 10,
-      distributors: ["TBD"],
-      presaves: 0,
-      presaveGoal: formData.productType === "single" ? 300 : formData.productType === "ep" ? 500 : 1000,
-      featureFmLink: "",
-      tasks: [
-        { task: "Recording", completed: false },
-        { task: "Mixing", completed: false },
-        { task: "Mastering", completed: false },
-        { task: "Album Artwork", completed: false },
-        { task: "Metadata Entry", completed: false },
-        { task: "Submit to DSPs", completed: false }
-      ]
-    };
-
-    onCreateRelease(newRelease);
-    
-    toast({
-      title: "Success",
-      description: "New release created successfully!",
-    });
-    
-    // Reset form and go back
-    setFormData({ title: "", releaseDate: "", productType: "", budget: "" });
-    onBack();
   };
 
   return (
@@ -89,17 +72,18 @@ export const NewReleaseForm = ({ onBack, onCreateRelease }: NewReleaseFormProps)
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="title">Track or Project Title *</Label>
               <Input
                 id="title"
                 type="text"
                 placeholder="Enter your track or project title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
+                {...register('title')}
               />
+              {errors.title && (
+                <p className="text-sm text-destructive">{errors.title.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -108,29 +92,36 @@ export const NewReleaseForm = ({ onBack, onCreateRelease }: NewReleaseFormProps)
                 <Input
                   id="releaseDate"
                   type="date"
-                  value={formData.releaseDate}
-                  onChange={(e) => setFormData({ ...formData, releaseDate: e.target.value })}
-                  required
+                  {...register('releaseDate')}
                 />
                 <Calendar className="absolute right-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
               </div>
+              {errors.releaseDate && (
+                <p className="text-sm text-destructive">{errors.releaseDate.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="productType">Type of Product *</Label>
-              <Select
-                value={formData.productType}
-                onValueChange={(value) => setFormData({ ...formData, productType: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select product type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="ep">EP</SelectItem>
-                  <SelectItem value="album">Album</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                name="productType"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Single</SelectItem>
+                      <SelectItem value="ep">EP</SelectItem>
+                      <SelectItem value="album">Album</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.productType && (
+                <p className="text-sm text-destructive">{errors.productType.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -139,17 +130,37 @@ export const NewReleaseForm = ({ onBack, onCreateRelease }: NewReleaseFormProps)
                 id="budget"
                 type="text"
                 placeholder="Enter project budget (e.g., $5,000)"
-                value={formData.budget}
-                onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                {...register('budget')}
               />
+              {errors.budget && (
+                <p className="text-sm text-destructive">{errors.budget.message}</p>
+              )}
             </div>
 
             <div className="flex gap-4 pt-4">
-              <Button type="button" variant="outline" onClick={onBack} className="flex-1">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onBack} 
+                className="flex-1"
+                disabled={isSubmitting || createReleaseMutation.isPending}
+              >
                 Cancel
               </Button>
-              <Button type="submit" variant="hero" className="flex-1">
-                Create Release
+              <Button 
+                type="submit" 
+                variant="hero" 
+                className="flex-1"
+                disabled={isSubmitting || createReleaseMutation.isPending}
+              >
+                {(isSubmitting || createReleaseMutation.isPending) ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Release'
+                )}
               </Button>
             </div>
           </form>

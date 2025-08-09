@@ -5,10 +5,10 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { ZodError } from 'zod'
-import { ArtistsService } from '../services/artistsService'
-import { CreateArtistSchema } from '../types/schemas'
-import type { Bindings, Variables } from '../types/bindings'
-import { handleValidationError, handleServiceError, handleNotFoundError, handleDatabaseError } from '../utils/errorHandler'
+import { ArtistsService } from '../services/artistsService.js'
+import { CreateArtistSchema } from '../types/schemas.js'
+import type { Bindings, Variables } from '../types/bindings.js'
+import { handleValidationError, handleServiceError, handleNotFoundError, handleDatabaseError } from '../utils/errorHandler.js'
 
 const artists = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -114,4 +114,4 @@ artists.delete('/:id', async (c) => {
   }
 })
 
-export { artists }
+export default artists

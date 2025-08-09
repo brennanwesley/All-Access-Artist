@@ -1,5 +1,5 @@
 /**
- * Environment variable types for Cloudflare Workers
+ * Environment variable types for Node.js
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -8,6 +8,9 @@ export type Bindings = {
   SUPABASE_SERVICE_KEY: string
   SUPABASE_ANON_KEY: string
   SUPABASE_JWT_SECRET: string
+  NODE_ENV: string
+  PORT: string
+  ENVIRONMENT: string
 }
 
 /**

@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CalendarSkeleton } from "@/components/skeletons";
 import { 
   Video, 
   Plus, 
@@ -17,13 +19,13 @@ import {
   Share,
   BarChart3,
   Home,
-  TrendingUp,
-  Heart,
-  Users,
+  AlertTriangle,
+  RefreshCw,
   Zap
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 export const ContentCalendar = () => {
   const { toast } = useToast();
@@ -33,6 +35,77 @@ export const ContentCalendar = () => {
     "Covers of Songs I Love",
     "Personality/Lifestyle"
   ]);
+
+  // Mock calendar data query to demonstrate loading and error states
+  const mockCalendarData = async () => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Simulate random error for demonstration (15% chance)
+    if (Math.random() < 0.15) {
+      throw new Error('Failed to load calendar data')
+    }
+    
+    return {
+      platforms: [
+        { name: "TikTok", icon: Video, color: "bg-pink-500", connected: true },
+        { name: "Instagram", icon: Instagram, color: "bg-gradient-to-r from-purple-500 to-pink-500", connected: true },
+        { name: "YouTube Shorts", icon: Play, color: "bg-red-500", connected: false },
+        { name: "Twitter", icon: Share, color: "bg-blue-500", connected: false }
+      ],
+      contentStats: {
+        totalPosts: 24,
+        scheduledPosts: 8,
+        draftPosts: 3
+      }
+    }
+  }
+
+  // Calendar data query with loading and error states
+  const {
+    data: calendarData,
+    isLoading,
+    isError,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['calendar-data'],
+    queryFn: mockCalendarData,
+    retry: 2,
+    staleTime: 3 * 60 * 1000, // 3 minutes
+  })
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return <CalendarSkeleton />
+  }
+
+  // Show error state with retry option
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>
+                Failed to load calendar data: {error?.message || 'Unknown error'}
+              </span>
+              <Button
+                onClick={() => refetch()}
+                variant="outline"
+                size="sm"
+                className="ml-4"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
 
   const [releases] = useState([
     {

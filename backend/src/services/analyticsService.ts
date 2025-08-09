@@ -3,7 +3,7 @@
  * All Access Artist - Backend API v2.0.0
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { CreateAnalyticsData } from '../types/schemas'
+import type { CreateAnalyticsData } from '../types/schemas.js'
 
 export class AnalyticsService {
   constructor(private supabase: SupabaseClient) {}

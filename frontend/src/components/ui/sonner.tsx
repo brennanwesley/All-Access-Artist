@@ -1,27 +1,74 @@
-import { useTheme } from "next-themes"
-import { Toaster as Sonner, toast } from "sonner"
+/**
+ * Toast Notification System
+ * All Access Artist - Frontend v2.0.0
+ * 
+ * Global toast notification component using react-hot-toast
+ * Configured to match application theme and shadcn/ui styling
+ */
+import { Toaster as HotToaster, toast } from 'react-hot-toast'
+import { cn } from '@/lib/utils'
 
-type ToasterProps = React.ComponentProps<typeof Sonner>
+interface ToasterProps {
+  className?: string
+}
 
-const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
-
+const Toaster = ({ className }: ToasterProps) => {
   return (
-    <Sonner
-      theme={theme as ToasterProps["theme"]}
-      className="toaster group"
+    <HotToaster
+      position="top-right"
+      reverseOrder={false}
+      gutter={8}
+      containerClassName={cn('', className)}
+      containerStyle={{}}
       toastOptions={{
-        classNames: {
-          toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
-          actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-          cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+        // Default options for all toasts
+        duration: 4000,
+        style: {
+          background: 'hsl(var(--background))',
+          color: 'hsl(var(--foreground))',
+          border: '1px solid hsl(var(--border))',
+          borderRadius: 'calc(var(--radius) - 2px)',
+          fontSize: '14px',
+          padding: '12px 16px',
+          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+        },
+        // Success toast styling
+        success: {
+          style: {
+            background: 'hsl(var(--background))',
+            color: 'hsl(var(--foreground))',
+            border: '1px solid hsl(var(--border))',
+          },
+          iconTheme: {
+            primary: 'hsl(var(--primary))',
+            secondary: 'hsl(var(--primary-foreground))',
+          },
+        },
+        // Error toast styling
+        error: {
+          style: {
+            background: 'hsl(var(--background))',
+            color: 'hsl(var(--foreground))',
+            border: '1px solid hsl(var(--destructive))',
+          },
+          iconTheme: {
+            primary: 'hsl(var(--destructive))',
+            secondary: 'hsl(var(--destructive-foreground))',
+          },
+        },
+        // Loading toast styling
+        loading: {
+          style: {
+            background: 'hsl(var(--background))',
+            color: 'hsl(var(--foreground))',
+            border: '1px solid hsl(var(--border))',
+          },
+          iconTheme: {
+            primary: 'hsl(var(--muted-foreground))',
+            secondary: 'hsl(var(--muted))',
+          },
         },
       }}
-      {...props}
     />
   )
 }
