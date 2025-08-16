@@ -8,7 +8,7 @@ export default function ReleaseDetailPage() {
   const [activeSection, setActiveSection] = useState<string>('releases')
 
   const handleBackToCalendar = () => {
-    navigate('/')
+    navigate('/releases')
   }
 
   return (
