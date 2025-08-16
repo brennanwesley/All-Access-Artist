@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Dashboard } from "@/components/Dashboard";
@@ -15,8 +16,16 @@ import { UserProfile } from "@/components/auth/UserProfile";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const location = useLocation();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Handle navigation state to set active section
+  useEffect(() => {
+    if (location.state?.activeSection) {
+      setActiveSection(location.state.activeSection);
+    }
+  }, [location.state]);
 
   const renderActiveSection = () => {
     switch (activeSection) {
