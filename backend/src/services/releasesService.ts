@@ -50,7 +50,11 @@ export class ReleasesService {
   }
 
   async createRelease(releaseData: CreateReleaseData) {
+    console.log('=== RELEASES SERVICE DEBUG ===')
+    console.log('5. Service Input Data:', JSON.stringify(releaseData, null, 2))
+    
     // Start by creating the release record
+    console.log('6. Attempting database insert...')
     const { data: newRelease, error: releaseError } = await this.supabase
       .from('music_releases')
       .insert([releaseData])
@@ -58,18 +62,29 @@ export class ReleasesService {
       .single()
 
     if (releaseError) {
+      console.error('7. Database Insert Error:', {
+        message: releaseError.message,
+        details: releaseError.details,
+        hint: releaseError.hint,
+        code: releaseError.code
+      })
       throw new Error(`Failed to create release: ${releaseError.message}`)
     }
 
+    console.log('8. Database Insert Success:', { id: newRelease.id, title: newRelease.title })
+
     try {
+      console.log('9. Starting task generation...')
       // Try to generate to-do list tasks for the new release
       await this.generateReleaseTasks(newRelease.id, newRelease.artist_id, releaseData.release_type)
+      console.log('10. Task generation completed successfully')
     } catch (taskError) {
       // Log the error but don't fail the release creation
-      console.warn(`Task generation failed for release ${newRelease.id}:`, taskError)
+      console.warn('11. Task generation failed (non-critical):', taskError)
       // Continue without tasks - the release is still created successfully
     }
     
+    console.log('=== RELEASES SERVICE COMPLETE ===')
     return newRelease
   }
 

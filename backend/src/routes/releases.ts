@@ -123,12 +123,28 @@ releases.post('/', zValidator('json', CreateReleaseSchema), async (c) => {
   try {
     const releaseData = c.req.valid('json')
     const supabase = c.get('supabase')
+    const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
+    // Phase 1 Diagnostic Logging
+    console.log('=== RELEASE CREATION DEBUG START ===')
+    console.log('1. Request Data:', JSON.stringify(releaseData, null, 2))
+    console.log('2. User Context:', user ? { id: user.id, email: user.email } : 'NO USER CONTEXT')
+    console.log('3. Supabase Client Type:', supabase ? 'AVAILABLE' : 'MISSING')
+    
     const data = await releasesService.createRelease(releaseData)
+    
+    console.log('4. Release Created Successfully:', { id: data.id, title: data.title })
+    console.log('=== RELEASE CREATION DEBUG END ===')
+    
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    console.error('Error creating release:', error)
+    console.error('=== RELEASE CREATION ERROR ===')
+    console.error('Error Type:', error?.constructor?.name)
+    console.error('Error Message:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('Error Stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('=== END ERROR LOG ===')
+    
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to create release' 

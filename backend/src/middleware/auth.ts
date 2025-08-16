@@ -59,6 +59,7 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
 
     // Attach user-scoped client and user to context
     c.set('supabase', supabase)
+    c.set('user', user)
     c.set('jwtPayload', user)
     
     await next()
