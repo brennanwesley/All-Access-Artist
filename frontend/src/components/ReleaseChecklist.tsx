@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle2, Circle, Loader2 } from "lucide-react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { CheckCircle2, Circle, Loader2, RotateCcw } from "lucide-react"
 import { useUpdateTask, ReleaseTask } from "@/hooks/api/useReleaseDetail"
 
 interface ReleaseChecklistProps {
@@ -14,6 +15,13 @@ export const ReleaseChecklist = ({ tasks }: ReleaseChecklistProps) => {
     updateTaskMutation.mutate({
       taskId,
       completed: !currentStatus
+    })
+  }
+
+  const handleUncheckTask = (taskId: string) => {
+    updateTaskMutation.mutate({
+      taskId,
+      completed: false
     })
   }
 
@@ -79,11 +87,39 @@ export const ReleaseChecklist = ({ tasks }: ReleaseChecklistProps) => {
 
                 <div className="flex-shrink-0">
                   {isCompleted ? (
-                    <div className="flex items-center gap-2 text-sm text-green-600">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>
-                        Completed on {task.completed_at ? formatCompletedDate(task.completed_at) : 'Unknown'}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>
+                          Completed {task.completed_at ? formatCompletedDate(task.completed_at) : 'Unknown'}
+                        </span>
+                      </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                            disabled={updateTaskMutation.isPending}
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Mark task as incomplete?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will remove the completion date and move this task back to your active tasks list.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleUncheckTask(task.id)}>
+                              Mark Incomplete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   ) : (
                     <Button
