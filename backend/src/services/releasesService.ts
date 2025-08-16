@@ -62,20 +62,15 @@ export class ReleasesService {
     }
 
     try {
-      // Generate to-do list tasks for the new release
+      // Try to generate to-do list tasks for the new release
       await this.generateReleaseTasks(newRelease.id, newRelease.artist_id, releaseData.type)
-      
-      return newRelease
     } catch (taskError) {
-      // If task generation fails, rollback the release creation
-      await this.supabase
-        .from('music_releases')
-        .delete()
-        .eq('id', newRelease.id)
-      
-      const errorMessage = taskError instanceof Error ? taskError.message : 'Unknown error occurred'
-      throw new Error(`Failed to generate release tasks: ${errorMessage}. Release creation rolled back.`)
+      // Log the error but don't fail the release creation
+      console.warn(`Task generation failed for release ${newRelease.id}:`, taskError)
+      // Continue without tasks - the release is still created successfully
     }
+    
+    return newRelease
   }
 
   /**
