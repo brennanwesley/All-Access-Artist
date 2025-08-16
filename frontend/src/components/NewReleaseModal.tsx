@@ -17,7 +17,7 @@ const createReleaseSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   artist_id: z.string().min(1, 'Artist ID is required'),
   release_date: z.string().min(1, 'Release date is required'),
-  release_type: z.enum(['single', 'ep', 'album']),
+  release_type: z.enum(['single', 'ep', 'album', 'mixtape']),
   status: z.enum(['draft', 'scheduled', 'released']).default('draft'),
   description: z.string().optional(),
   genre: z.string().optional(),
@@ -181,6 +181,7 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
                       <SelectItem value="single">Single</SelectItem>
                       <SelectItem value="ep">EP</SelectItem>
                       <SelectItem value="album">Album</SelectItem>
+                      <SelectItem value="mixtape">Mixtape</SelectItem>
                     </SelectContent>
                   </Select>
                 )}

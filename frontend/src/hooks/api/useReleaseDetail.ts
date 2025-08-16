@@ -6,7 +6,6 @@ import { toast } from 'sonner'
 export interface ReleaseTask {
   id: string
   release_id: string
-  task_title: string
   task_description: string
   task_order: number
   completed_at: string | null

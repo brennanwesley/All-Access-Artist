@@ -73,15 +73,8 @@ export const ReleaseChecklist = ({ tasks }: ReleaseChecklistProps) => {
                   <h4 className={`font-medium ${
                     isCompleted ? 'text-muted-foreground line-through' : ''
                   }`}>
-                    {task.task_title}
+                    {task.task_description}
                   </h4>
-                  {task.task_description && (
-                    <p className={`text-sm mt-1 ${
-                      isCompleted ? 'text-muted-foreground line-through' : 'text-muted-foreground'
-                    }`}>
-                      {task.task_description}
-                    </p>
-                  )}
                 </div>
 
                 <div className="flex-shrink-0">

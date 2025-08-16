@@ -86,6 +86,9 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
     )
   }
 
+  // Debug: Log the release data to understand its structure
+  console.log('Release data received:', release)
+
   // No data state
   if (!release) {
     return (

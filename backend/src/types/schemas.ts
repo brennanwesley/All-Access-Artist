@@ -9,8 +9,8 @@ export const CreateReleaseSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
   artist_id: z.string().uuid('Invalid artist ID'),
   release_date: z.string().datetime('Invalid release date'),
-  release_type: z.enum(['single', 'album', 'ep'], {
-    errorMap: () => ({ message: 'Release type must be single, album, or ep' })
+  release_type: z.enum(['single', 'album', 'ep', 'mixtape'], {
+    errorMap: () => ({ message: 'Release type must be single, album, ep, or mixtape' })
   }),
   status: z.enum(['draft', 'scheduled', 'released']).default('draft'),
   description: z.string().max(1000, 'Description too long').optional(),

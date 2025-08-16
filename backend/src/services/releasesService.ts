@@ -188,6 +188,24 @@ export class ReleasesService {
           "Create merchandise strategy",
           "Develop sync licensing opportunities"
         ]
+      },
+      {
+        release_type: 'mixtape',
+        template_name: 'Standard Mixtape Release Checklist',
+        tasks: [
+          "Complete all track recordings",
+          "Finalize mixing for all tracks",
+          "Create mixtape artwork and cover",
+          "Clear any samples or interpolations",
+          "Create track listing and credits",
+          "Submit to digital distributors",
+          "Set up streaming platform uploads",
+          "Plan social media promotion",
+          "Create promotional content and visuals",
+          "Schedule release date",
+          "Prepare artist bio and press materials",
+          "Plan mixtape release party or event"
+        ]
       }
     ]
 

@@ -6,13 +6,9 @@ interface ReleaseTask {
   id: string
   release_id: string
   artist_id: string
-  task_name: string
   task_description: string
-  is_completed: boolean
-  completed_at: string | null
-  due_date: string | null
   task_order: number
-  is_required: boolean
+  completed_at: string | null
   created_at: string
   updated_at: string
 }
