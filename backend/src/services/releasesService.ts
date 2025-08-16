@@ -63,7 +63,7 @@ export class ReleasesService {
 
     try {
       // Try to generate to-do list tasks for the new release
-      await this.generateReleaseTasks(newRelease.id, newRelease.artist_id, releaseData.type)
+      await this.generateReleaseTasks(newRelease.id, newRelease.artist_id, releaseData.release_type)
     } catch (taskError) {
       // Log the error but don't fail the release creation
       console.warn(`Task generation failed for release ${newRelease.id}:`, taskError)
