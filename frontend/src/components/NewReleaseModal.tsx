@@ -66,7 +66,7 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
         title: data.title,
         artist_id: user.id, // Use authenticated user's ID
         release_date: new Date(data.release_date).toISOString(), // Convert to ISO datetime string
-        type: data.release_type, // Backend expects 'type' not 'release_type'
+        release_type: data.release_type, // Backend expects 'release_type' to match database schema
         status: data.status,
         ...(data.description && { description: data.description }),
         ...(data.genre && { genre: data.genre }),

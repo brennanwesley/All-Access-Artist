@@ -21,7 +21,7 @@ interface CreateReleaseData {
   title: string
   artist_id: string
   release_date: string
-  type: 'single' | 'ep' | 'album'
+  release_type: 'single' | 'ep' | 'album'
   status?: 'draft' | 'scheduled' | 'released'
   description?: string
   genre?: string
