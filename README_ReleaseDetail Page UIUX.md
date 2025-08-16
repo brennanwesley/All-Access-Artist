@@ -36,8 +36,9 @@ ReleaseDetail Component
 
 ### **Tab Content**:
 1. **Checklist Tab**: ✅ **Fully Functional**
-   - Uses `ReleaseChecklist` component
-   - Displays `release.release_tasks` array
+   - Uses `ReleaseChecklist` component with integrated `ProjectTimeline` component
+   - 40/60 split layout (Timeline/Checklist) with responsive mobile stacking
+   - Displays `release.release_tasks` array with full functionality
    
 2. **Songs Tab**: ❌ **Placeholder**
    - Shows "will be implemented in next phase" message
@@ -45,9 +46,23 @@ ReleaseDetail Component
 3. **Lyrics Tab**: ❌ **Placeholder**
    - Shows "will be implemented in next phase" message
 
-## **Project Checklist Functionality**
+## **Checklist Tab Components**
+
+### **ProjectTimeline Component** (New - August 2025)
+- **Layout**: 40% of split layout (2/5 grid columns)
+- **Component File**: `ProjectTimeline.tsx` (separate component for maintainability)
+- **Milestone Rows**: 6 core milestones with consistent styling
+  - Recording Complete
+  - Mixing & Mastering
+  - Artwork & Design
+  - Metadata Submission
+  - DSP Distribution
+  - Marketing Campaign Launch
+- **Row Structure**: Milestone name, space for date calculations, "In Progress" status indicator
+- **Styling**: Matches existing checklist formatting with glass morphism design
 
 ### **ReleaseChecklist Component** (Fully Integrated)
+- **Layout**: 60% of split layout (3/5 grid columns)
 - **Data Source**: `release.release_tasks` array from API
 - **Task Structure**: 
   - `task_description`, `task_order`, `completed_at`
@@ -111,5 +126,12 @@ ReleaseDetail Component
 - **Clean UX**: Ghost button styling with clear user intent
 - **API Integration**: Uses existing `useUpdateTask()` hook
 - **No Backend Changes**: Leverages current infrastructure
+
+### **Project Timeline Integration** (August 2025)
+- **Split Layout**: 40/60 responsive grid with Timeline and Checklist sections
+- **Separate Component**: `ProjectTimeline.tsx` for clean architecture
+- **Six Milestones**: Core release preparation steps with consistent styling
+- **Mobile Responsive**: Vertical stacking on smaller screens
+- **Future Ready**: Structure prepared for release date calculations
 
 The current UI provides an excellent foundation for modifications with a clean, modular structure that can easily accommodate new sections and functionality.

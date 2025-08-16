@@ -203,7 +203,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
         </TabsList>
         
         <TabsContent value="checklist" className="space-y-6">
-          <ReleaseChecklist tasks={release.release_tasks || []} />
+          <ReleaseChecklist tasks={release.release_tasks || []} releaseDate={release.release_date} />
         </TabsContent>
         
         <TabsContent value="songs" className="space-y-6">

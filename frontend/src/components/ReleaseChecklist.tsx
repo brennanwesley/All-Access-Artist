@@ -7,9 +7,10 @@ import { ProjectTimeline } from "./ProjectTimeline"
 
 interface ReleaseChecklistProps {
   tasks: ReleaseTask[]
+  releaseDate?: string
 }
 
-export const ReleaseChecklist = ({ tasks }: ReleaseChecklistProps) => {
+export const ReleaseChecklist = ({ tasks, releaseDate }: ReleaseChecklistProps) => {
   const updateTaskMutation = useUpdateTask()
 
   const handleMarkComplete = async (taskId: string, currentStatus: boolean) => {
@@ -53,7 +54,7 @@ export const ReleaseChecklist = ({ tasks }: ReleaseChecklistProps) => {
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Project Timeline - 40% (2/5 columns) */}
       <div className="lg:col-span-2">
-        <ProjectTimeline />
+        <ProjectTimeline releaseDate={releaseDate} />
       </div>
 
       {/* Project Checklist - 60% (3/5 columns) */}
