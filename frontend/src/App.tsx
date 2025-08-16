@@ -1,4 +1,5 @@
 // All Access Artist v2.0.0 - Frontend with Authentication Integration
+// Trigger deployment
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
