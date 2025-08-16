@@ -33,6 +33,7 @@ releases.get('/:id', async (c) => {
   try {
     const id = c.req.param('id')
     const supabase = c.get('supabase')
+    const releasesService = new ReleasesService(supabase)
     
     console.log('Releases: Fetching release details for ID:', id)
     
@@ -58,6 +59,34 @@ releases.get('/:id', async (c) => {
     if (tasksError) {
       console.error('Releases: Database error fetching tasks:', tasksError)
       // Don't fail the request if tasks can't be fetched
+    }
+    
+    // If no tasks exist, try to generate them automatically
+    if (!tasks || tasks.length === 0) {
+      try {
+        console.log('Releases: No tasks found, generating tasks for release:', id)
+        await releasesService.generateTasksForExistingRelease(id)
+        
+        // Refetch tasks after generation
+        const { data: newTasks } = await supabase
+          .from('release_tasks')
+          .select('*')
+          .eq('release_id', id)
+          .order('task_order', { ascending: true })
+        
+        console.log('Releases: Tasks generated successfully, count:', newTasks?.length || 0)
+        
+        const releaseWithDetails = {
+          ...release,
+          release_tasks: newTasks || [],
+          songs: []
+        }
+        
+        return c.json({ success: true, data: releaseWithDetails })
+      } catch (taskError) {
+        console.warn('Releases: Failed to generate tasks:', taskError)
+        // Continue with empty tasks if generation fails
+      }
     }
     
     // Get songs
