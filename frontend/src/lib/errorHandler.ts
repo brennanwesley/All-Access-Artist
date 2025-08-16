@@ -79,11 +79,32 @@ export const handleApiError = async (error: unknown): Promise<void> => {
     }
     
     default: {
-      // All other errors - Show user-friendly toast
+      // All other errors - Show user-friendly toast with better error message
       console.log(`API Error ${statusCode || 'Unknown'} - Showing error toast`)
       
+      // Extract meaningful error message
+      let errorMessage = 'An unexpected error occurred. Please try again.'
+      
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      } else if (error && typeof error === 'object') {
+        const errorObj = error as any
+        if (errorObj.message) {
+          errorMessage = errorObj.message
+        } else if (errorObj.error) {
+          errorMessage = errorObj.error
+        }
+      }
+      
+      // Don't show [object Object] to users
+      if (errorMessage === '[object Object]' || errorMessage.includes('[object Object]')) {
+        errorMessage = 'An unexpected error occurred. Please try again.'
+      }
+      
       // TODO: Add Sentry/LogRocket error reporting here
-      toast.error('An unexpected error occurred. Please try again.', {
+      toast.error(errorMessage, {
         duration: 4000,
         position: 'top-right',
       })

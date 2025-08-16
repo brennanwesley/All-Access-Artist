@@ -102,33 +102,30 @@ export const Dashboard = () => {
   // Show error state with retry option
   if (isError) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <Alert variant="destructive" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
-              <span>
-                Failed to load dashboard data: {error?.message || 'Unknown error'}
-              </span>
-              <Button
-                onClick={() => refetch()}
-                variant="outline"
-                size="sm"
-                className="ml-4"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Try Again
-              </Button>
-            </AlertDescription>
-          </Alert>
-        </div>
+      <div className="space-y-8">
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              Failed to load dashboard data: {error?.message || 'Unknown error'}
+            </span>
+            <Button
+              onClick={() => refetch()}
+              variant="outline"
+              size="sm"
+              className="ml-4"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="space-y-8">
         {/* Header Section - Delegated to presentational component */}
         <DashboardHeader 
           dateTime={dateTime}
@@ -278,7 +275,6 @@ export const Dashboard = () => {
             </Card>
           </div>
         </div>
-      </div>
     </div>
   )
 }

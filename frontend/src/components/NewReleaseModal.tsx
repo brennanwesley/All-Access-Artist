@@ -81,9 +81,25 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
       reset();
       onOpenChange(false);
     } catch (error) {
-      // Error handling is done in the mutation hook (toast notifications)
+      // Enhanced error handling with proper message extraction
       console.error('Form submission error:', error);
-      toast.error('Failed to create release. Please try again.');
+      
+      let errorMessage = 'Failed to create release. Please try again.';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object') {
+        const errorObj = error as any;
+        if (errorObj.message) {
+          errorMessage = errorObj.message;
+        } else if (errorObj.error) {
+          errorMessage = errorObj.error;
+        }
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
