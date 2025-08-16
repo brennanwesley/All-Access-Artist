@@ -255,6 +255,12 @@ frontend/src/
    - Database shows 6+ releases created with proper artist linking
    - RLS enforcement working correctly with user-scoped client
 
+7. **Task Uncheck Functionality**
+   - Added confirmation dialog for unchecking completed tasks
+   - Implemented undo button with RotateCcw icon for completed tasks
+   - Clean UX prevents accidental task status changes
+   - No backend changes required - leverages existing API
+
 ### 📊 Current System Status
 
 - **Release Creation:** ✅ Fully functional
