@@ -57,7 +57,9 @@ export const useGetReleaseDetails = (releaseId: string) => {
       }
       
       // Backend now handles task generation automatically
-      return response.data as ReleaseDetails
+      // Extract the actual release data from the success wrapper
+      const backendResponse = response.data as any
+      return backendResponse?.data || backendResponse
     },
     enabled: !!releaseId,
     staleTime: 5 * 60 * 1000, // 5 minutes
