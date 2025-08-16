@@ -27,6 +27,11 @@ export const ReleaseChecklist = ({ tasks, releaseDate }: ReleaseChecklistProps) 
     })
   }
 
+  // Check if this specific task is being updated
+  const isTaskUpdating = (taskId: string) => {
+    return updateTaskMutation.isPending && updateTaskMutation.variables?.taskId === taskId
+  }
+
   const formatCompletedDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { 
@@ -110,7 +115,7 @@ export const ReleaseChecklist = ({ tasks, releaseDate }: ReleaseChecklistProps) 
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                                disabled={updateTaskMutation.isPending}
+                                disabled={isTaskUpdating(task.id)}
                               >
                                 <RotateCcw className="h-4 w-4" />
                               </Button>
@@ -135,10 +140,10 @@ export const ReleaseChecklist = ({ tasks, releaseDate }: ReleaseChecklistProps) 
                         <Button
                           size="sm"
                           onClick={() => handleMarkComplete(task.id, isCompleted)}
-                          disabled={updateTaskMutation.isPending}
+                          disabled={isTaskUpdating(task.id)}
                           className="min-w-[120px]"
                         >
-                          {updateTaskMutation.isPending ? (
+                          {isTaskUpdating(task.id) ? (
                             <>
                               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                               Updating...
