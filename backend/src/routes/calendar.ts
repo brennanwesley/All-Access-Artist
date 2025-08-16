@@ -13,11 +13,11 @@ const calendar = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 // GET /api/calendar - Get all calendar events
 calendar.get('/', async (c) => {
   try {
-    const artistId = c.req.query('artist_id')
-    const supabase = c.get('supabase')
-    const calendarService = new CalendarService(supabase)
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const calendarService = new CalendarService(bindings)
     
-    const data = await calendarService.getAllEvents(artistId)
+    const data = await calendarService.getAllCalendarEvents(userId)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error fetching calendar events:', error)
@@ -32,10 +32,11 @@ calendar.get('/', async (c) => {
 calendar.get('/:id', async (c) => {
   try {
     const id = c.req.param('id')
-    const supabase = c.get('supabase')
-    const calendarService = new CalendarService(supabase)
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const calendarService = new CalendarService(bindings)
     
-    const data = await calendarService.getEventById(id)
+    const data = await calendarService.getCalendarEventById(userId, id)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error fetching calendar event:', error)
@@ -50,10 +51,11 @@ calendar.get('/:id', async (c) => {
 calendar.post('/', zValidator('json', CreateCalendarSchema), async (c) => {
   try {
     const eventData = c.req.valid('json')
-    const supabase = c.get('supabase')
-    const calendarService = new CalendarService(supabase)
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const calendarService = new CalendarService(bindings)
     
-    const data = await calendarService.createEvent(eventData)
+    const data = await calendarService.createCalendarEvent(userId, eventData)
     return c.json({ success: true, data }, 201)
   } catch (error) {
     console.error('Error creating calendar event:', error)
@@ -69,10 +71,11 @@ calendar.put('/:id', zValidator('json', CreateCalendarSchema.partial()), async (
   try {
     const id = c.req.param('id')
     const eventData = c.req.valid('json')
-    const supabase = c.get('supabase')
-    const calendarService = new CalendarService(supabase)
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const calendarService = new CalendarService(bindings)
     
-    const data = await calendarService.updateEvent(id, eventData)
+    const data = await calendarService.updateCalendarEvent(userId, id, eventData)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error updating calendar event:', error)
@@ -87,10 +90,11 @@ calendar.put('/:id', zValidator('json', CreateCalendarSchema.partial()), async (
 calendar.delete('/:id', async (c) => {
   try {
     const id = c.req.param('id')
-    const supabase = c.get('supabase')
-    const calendarService = new CalendarService(supabase)
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const calendarService = new CalendarService(bindings)
     
-    const data = await calendarService.deleteEvent(id)
+    const data = await calendarService.deleteCalendarEvent(userId, id)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error deleting calendar event:', error)

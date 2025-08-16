@@ -13,11 +13,11 @@ const analytics = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 // GET /api/analytics - Get all analytics
 analytics.get('/', async (c) => {
   try {
-    const artistId = c.req.query('artist_id')
-    const supabase = c.get('supabase')
-    const analyticsService = new AnalyticsService(supabase)
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const analyticsService = new AnalyticsService(bindings)
     
-    const data = await analyticsService.getAllAnalytics(artistId)
+    const data = await analyticsService.getAllAnalytics(userId)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error fetching analytics:', error)
@@ -32,10 +32,11 @@ analytics.get('/', async (c) => {
 analytics.get('/:id', async (c) => {
   try {
     const id = c.req.param('id')
-    const supabase = c.get('supabase')
-    const analyticsService = new AnalyticsService(supabase)
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const analyticsService = new AnalyticsService(bindings)
     
-    const data = await analyticsService.getAnalyticsById(id)
+    const data = await analyticsService.getAnalyticsById(userId, id)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error fetching analytics:', error)
@@ -50,10 +51,11 @@ analytics.get('/:id', async (c) => {
 analytics.post('/', zValidator('json', CreateAnalyticsSchema), async (c) => {
   try {
     const analyticsData = c.req.valid('json')
-    const supabase = c.get('supabase')
-    const analyticsService = new AnalyticsService(supabase)
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const analyticsService = new AnalyticsService(bindings)
     
-    const data = await analyticsService.createAnalytics(analyticsData)
+    const data = await analyticsService.createAnalytics(userId, analyticsData)
     return c.json({ success: true, data }, 201)
   } catch (error) {
     console.error('Error creating analytics:', error)
@@ -69,10 +71,11 @@ analytics.put('/:id', zValidator('json', CreateAnalyticsSchema.partial()), async
   try {
     const id = c.req.param('id')
     const analyticsData = c.req.valid('json')
-    const supabase = c.get('supabase')
-    const analyticsService = new AnalyticsService(supabase)
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const analyticsService = new AnalyticsService(bindings)
     
-    const data = await analyticsService.updateAnalytics(id, analyticsData)
+    const data = await analyticsService.updateAnalytics(userId, id, analyticsData)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error updating analytics:', error)
@@ -87,10 +90,11 @@ analytics.put('/:id', zValidator('json', CreateAnalyticsSchema.partial()), async
 analytics.delete('/:id', async (c) => {
   try {
     const id = c.req.param('id')
-    const supabase = c.get('supabase')
-    const analyticsService = new AnalyticsService(supabase)
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const analyticsService = new AnalyticsService(bindings)
     
-    const data = await analyticsService.deleteAnalytics(id)
+    const data = await analyticsService.deleteAnalytics(userId, id)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error deleting analytics:', error)
