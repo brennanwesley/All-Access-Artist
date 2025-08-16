@@ -17,7 +17,7 @@ const createReleaseSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   artist_id: z.string().min(1, 'Artist ID is required'),
   release_date: z.string().min(1, 'Release date is required'),
-  release_type: z.enum(['single', 'ep', 'album', 'mixtape']),
+  release_type: z.enum(['single', 'ep', 'album']),
   status: z.enum(['draft', 'scheduled', 'released']).default('draft'),
   description: z.string().optional(),
   genre: z.string().optional(),
@@ -61,12 +61,12 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
     }
 
     try {
-      // Transform form data to match backend API
+      // Transform form data to match backend API schema
       const releaseData = {
         title: data.title,
         artist_id: user.id, // Use authenticated user's ID
-        release_date: data.release_date,
-        release_type: data.release_type,
+        release_date: new Date(data.release_date).toISOString(), // Convert to ISO datetime string
+        type: data.release_type, // Backend expects 'type' not 'release_type'
         status: data.status,
         ...(data.description && { description: data.description }),
         ...(data.genre && { genre: data.genre }),
@@ -181,7 +181,6 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
                       <SelectItem value="single">Single</SelectItem>
                       <SelectItem value="ep">EP</SelectItem>
                       <SelectItem value="album">Album</SelectItem>
-                      <SelectItem value="mixtape">Mixtape</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
