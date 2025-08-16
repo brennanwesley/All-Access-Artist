@@ -112,6 +112,12 @@ class ApiClient {
     return this.makeRequest(`/api/releases/${id}`)
   }
 
+  async generateTasksForRelease(releaseId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/releases/${releaseId}/generate-tasks`, {
+      method: 'POST',
+    })
+  }
+
   // Tasks API
   async updateTask(taskId: string, taskData: any): Promise<ApiResponse<any>> {
     return this.makeRequest(`/api/tasks/${taskId}`, {

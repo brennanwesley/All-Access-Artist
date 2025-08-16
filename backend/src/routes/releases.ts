@@ -144,6 +144,24 @@ releases.delete('/:id', async (c) => {
   }
 })
 
+// POST /api/releases/:releaseId/generate-tasks - Generate tasks for existing release
+releases.post('/:releaseId/generate-tasks', async (c) => {
+  try {
+    const releaseId = c.req.param('releaseId')
+    const supabase = c.get('supabase')
+    const releasesService = new ReleasesService(supabase)
+    
+    const result = await releasesService.generateTasksForExistingRelease(releaseId)
+    return c.json({ success: true, data: result })
+  } catch (error) {
+    console.error('Error generating tasks for release:', error)
+    return c.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to generate tasks' 
+    }, 500)
+  }
+})
+
 // POST /api/releases/:releaseId/songs - Add song to release
 releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (c) => {
   try {

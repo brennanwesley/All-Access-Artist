@@ -80,6 +80,9 @@ export class ReleasesService {
    * @param releaseType - Type of release (single, ep, album)
    */
   private async generateReleaseTasks(releaseId: string, artistId: string, releaseType: string) {
+    // First, ensure task templates exist by creating them if missing
+    await this.ensureTaskTemplatesExist()
+
     // Fetch the appropriate task template
     const { data: template, error: templateError } = await this.supabase
       .from('task_templates')
@@ -119,6 +122,131 @@ export class ReleasesService {
 
     if (tasksError) {
       throw new Error(`Failed to insert release tasks: ${tasksError.message}`)
+    }
+  }
+
+  /**
+   * Ensures task templates exist in the database
+   */
+  private async ensureTaskTemplatesExist() {
+    const templates = [
+      {
+        release_type: 'single',
+        template_name: 'Standard Single Release Checklist',
+        tasks: [
+          "Complete song recording",
+          "Finalize mixing and mastering",
+          "Create album artwork",
+          "Register song with PRO (ASCAP/BMI)",
+          "Obtain ISRC code",
+          "Submit to digital distributors",
+          "Set up pre-save campaigns",
+          "Plan social media promotion",
+          "Schedule release date",
+          "Prepare press kit and bio"
+        ]
+      },
+      {
+        release_type: 'ep',
+        template_name: 'Standard EP Release Checklist',
+        tasks: [
+          "Complete all track recordings",
+          "Finalize mixing and mastering for all tracks",
+          "Create album artwork and track art",
+          "Register all songs with PRO (ASCAP/BMI)",
+          "Obtain ISRC codes for all tracks",
+          "Create track listing and metadata",
+          "Submit to digital distributors",
+          "Set up pre-save campaigns",
+          "Plan social media promotion strategy",
+          "Schedule release date and rollout",
+          "Prepare press kit and bio",
+          "Consider physical release options",
+          "Plan music video for lead single"
+        ]
+      },
+      {
+        release_type: 'album',
+        template_name: 'Standard Album Release Checklist',
+        tasks: [
+          "Complete all track recordings",
+          "Finalize mixing and mastering for all tracks",
+          "Create album artwork and track art",
+          "Register all songs with PRO (ASCAP/BMI)",
+          "Obtain ISRC codes for all tracks",
+          "Create comprehensive track listing and metadata",
+          "Submit to digital distributors",
+          "Set up pre-save campaigns",
+          "Develop comprehensive marketing strategy",
+          "Schedule release date and rollout timeline",
+          "Prepare press kit, bio, and one-sheet",
+          "Plan physical release (vinyl, CD)",
+          "Plan music videos for key tracks",
+          "Book promotional interviews and performances",
+          "Submit to playlist curators",
+          "Plan album release show/tour",
+          "Create merchandise strategy",
+          "Develop sync licensing opportunities"
+        ]
+      }
+    ]
+
+    for (const template of templates) {
+      const { error } = await this.supabase
+        .from('task_templates')
+        .upsert({
+          release_type: template.release_type,
+          template_name: template.template_name,
+          tasks: template.tasks,
+          is_active: true
+        }, {
+          onConflict: 'release_type,template_name'
+        })
+
+      if (error) {
+        console.warn(`Failed to upsert task template for ${template.release_type}:`, error)
+      }
+    }
+  }
+
+  /**
+   * Generates tasks for an existing release if they don't exist
+   * @param releaseId - ID of the release
+   */
+  async generateTasksForExistingRelease(releaseId: string) {
+    // Get release details
+    const { data: release, error: releaseError } = await this.supabase
+      .from('music_releases')
+      .select('artist_id, release_type')
+      .eq('id', releaseId)
+      .single()
+
+    if (releaseError || !release) {
+      throw new Error(`Release not found: ${releaseError?.message || 'Unknown error'}`)
+    }
+
+    // Check if tasks already exist
+    const { data: existingTasks, error: tasksError } = await this.supabase
+      .from('release_tasks')
+      .select('id')
+      .eq('release_id', releaseId)
+      .limit(1)
+
+    if (tasksError) {
+      throw new Error(`Failed to check existing tasks: ${tasksError.message}`)
+    }
+
+    // If tasks already exist, don't generate new ones
+    if (existingTasks && existingTasks.length > 0) {
+      return { message: 'Tasks already exist for this release' }
+    }
+
+    // Generate tasks
+    try {
+      await this.generateReleaseTasks(releaseId, release.artist_id, release.release_type)
+      return { message: 'Tasks generated successfully' }
+    } catch (error) {
+      throw new Error(`Failed to generate tasks: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 

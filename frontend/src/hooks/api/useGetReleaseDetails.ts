@@ -59,7 +59,25 @@ export const useGetReleaseDetails = (releaseId: string) => {
       if (response.status !== 200) {
         throw new Error(response.error || 'Failed to fetch release details')
       }
-      return response.data as ReleaseDetails
+      
+      const releaseData = response.data as ReleaseDetails
+      
+      // If no tasks exist, try to generate them
+      if (!releaseData.release_tasks || releaseData.release_tasks.length === 0) {
+        try {
+          await apiClient.generateTasksForRelease(releaseId)
+          // Refetch the data to get the newly generated tasks
+          const updatedResponse = await apiClient.getReleaseDetails(releaseId)
+          if (updatedResponse.status === 200) {
+            return updatedResponse.data as ReleaseDetails
+          }
+        } catch (error) {
+          console.warn('Failed to generate tasks for release:', error)
+          // Continue with original data even if task generation fails
+        }
+      }
+      
+      return releaseData
     },
     enabled: !!releaseId,
     staleTime: 5 * 60 * 1000, // 5 minutes
