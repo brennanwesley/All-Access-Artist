@@ -10,6 +10,12 @@ import type { Bindings, Variables } from '../types/bindings.js'
 // JWT authentication middleware factory
 export const createJwtAuth = (getSecret: (c: any) => string) => {
   return async (c: any, next: any) => {
+    // Skip JWT validation for OPTIONS requests (CORS preflight)
+    if (c.req.method === 'OPTIONS') {
+      await next()
+      return
+    }
+    
     const secret = getSecret(c)
     const jwtMiddleware = jwt({ secret })
     return jwtMiddleware(c, next)
@@ -19,6 +25,12 @@ export const createJwtAuth = (getSecret: (c: any) => string) => {
 // User-scoped Supabase client middleware
 export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(async (c, next) => {
   try {
+    // Skip authentication for OPTIONS requests (CORS preflight)
+    if (c.req.method === 'OPTIONS') {
+      await next()
+      return
+    }
+
     const authHeader = c.req.header('Authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return c.json({ error: 'Missing or invalid authorization header' }, 401)
@@ -45,9 +57,9 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
       ...payload
     }
 
-    // Attach scoped client and user to context
+    // Attach user-scoped client and user to context
     c.set('supabase', supabase)
-    c.set('user', user)
+    c.set('jwtPayload', user)
     
     await next()
   } catch (error) {

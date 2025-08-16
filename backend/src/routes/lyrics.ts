@@ -1,0 +1,257 @@
+/**
+ * Lyric Sheet Routes - API endpoints for lyric sheet and section management
+ * All Access Artist - Backend API v2.0.0
+ */
+import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
+import type { Bindings, Variables } from '../types/bindings.js'
+
+const lyrics = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+// Schemas for lyric sheet operations
+const CreateLyricSheetSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  language: z.string().min(1, 'Language is required'),
+  notes: z.string().optional()
+})
+
+const CreateLyricSectionSchema = z.object({
+  section_type: z.enum(['verse', 'chorus', 'bridge', 'pre-chorus', 'outro', 'intro', 'other']),
+  section_order: z.number().int().min(0),
+  content: z.string().min(1, 'Content is required')
+})
+
+const UpdateLyricSectionSchema = z.object({
+  section_type: z.enum(['verse', 'chorus', 'bridge', 'pre-chorus', 'outro', 'intro', 'other']).optional(),
+  section_order: z.number().int().min(0).optional(),
+  content: z.string().min(1, 'Content is required').optional()
+})
+
+// GET /api/lyrics/:songId - Get lyric sheet for a song
+lyrics.get('/:songId', async (c) => {
+  try {
+    const songId = c.req.param('songId')
+    const supabase = c.get('supabase')
+    
+    console.log('Lyrics: Fetching lyric sheet for song ID:', songId)
+    
+    // Get lyric sheet with sections
+    const { data: lyricSheet, error: sheetError } = await supabase
+      .from('lyric_sheets')
+      .select('*')
+      .eq('song_id', songId)
+      .single()
+    
+    if (sheetError) {
+      if (sheetError.code === 'PGRST116') { // No rows returned
+        console.log('Lyrics: No lyric sheet found for song', songId)
+        return c.json({
+          success: false,
+          error: 'No lyric sheet found for this song'
+        }, 404)
+      }
+      console.error('Lyrics: Database error fetching lyric sheet:', sheetError)
+      throw new Error(`Database error: ${sheetError.message}`)
+    }
+    
+    // Get sections for this lyric sheet
+    const { data: sections, error: sectionsError } = await supabase
+      .from('lyric_sections')
+      .select('*')
+      .eq('lyric_sheet_id', lyricSheet.id)
+      .order('section_order', { ascending: true })
+    
+    if (sectionsError) {
+      console.error('Lyrics: Database error fetching sections:', sectionsError)
+      // Don't fail the request if sections can't be fetched
+    }
+    
+    const lyricSheetWithSections = {
+      ...lyricSheet,
+      sections: sections || []
+    }
+    
+    console.log('Lyrics: Lyric sheet fetched successfully')
+    return c.json({
+      success: true,
+      data: lyricSheetWithSections
+    })
+  } catch (error) {
+    console.error('Lyrics: Error fetching lyric sheet:', error)
+    return c.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch lyric sheet'
+    }, 500)
+  }
+})
+
+// POST /api/lyrics/:songId - Create new lyric sheet for a song
+lyrics.post('/:songId', zValidator('json', CreateLyricSheetSchema), async (c) => {
+  try {
+    const songId = c.req.param('songId')
+    const lyricSheetData = c.req.valid('json')
+    const supabase = c.get('supabase')
+    const user = c.get('jwtPayload')
+    
+    console.log('Lyrics: Creating lyric sheet for song ID:', songId, 'data:', lyricSheetData)
+    
+    // Get song details to get artist_id for RLS compliance
+    const { data: song, error: songError } = await supabase
+      .from('songs')
+      .select('artist_id')
+      .eq('id', songId)
+      .single()
+    
+    if (songError) {
+      console.error('Lyrics: Database error fetching song:', songError)
+      throw new Error(`Song not found: ${songError.message}`)
+    }
+    
+    const { data, error } = await supabase
+      .from('lyric_sheets')
+      .insert({
+        ...lyricSheetData,
+        song_id: songId,
+        artist_id: song.artist_id // Include artist_id for RLS
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Lyrics: Database error creating lyric sheet:', error)
+      throw new Error(`Database error: ${error.message}`)
+    }
+    
+    console.log('Lyrics: Lyric sheet created successfully')
+    return c.json({
+      success: true,
+      data: { ...data, sections: [] } // Include empty sections array
+    }, 201)
+  } catch (error) {
+    console.error('Lyrics: Error creating lyric sheet:', error)
+    return c.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create lyric sheet'
+    }, 500)
+  }
+})
+
+// POST /api/lyrics/:songId/sections - Add section to lyric sheet
+lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), async (c) => {
+  try {
+    const songId = c.req.param('songId')
+    const sectionData = c.req.valid('json')
+    const supabase = c.get('supabase')
+    
+    console.log('Lyrics: Adding section to song ID:', songId, 'data:', sectionData)
+    
+    // Get lyric sheet ID for this song
+    const { data: lyricSheet, error: sheetError } = await supabase
+      .from('lyric_sheets')
+      .select('id, artist_id')
+      .eq('song_id', songId)
+      .single()
+    
+    if (sheetError) {
+      console.error('Lyrics: Database error fetching lyric sheet:', sheetError)
+      throw new Error(`Lyric sheet not found: ${sheetError.message}`)
+    }
+    
+    const { data, error } = await supabase
+      .from('lyric_sections')
+      .insert({
+        ...sectionData,
+        lyric_sheet_id: lyricSheet.id,
+        artist_id: lyricSheet.artist_id // Include artist_id for RLS
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Lyrics: Database error creating section:', error)
+      throw new Error(`Database error: ${error.message}`)
+    }
+    
+    console.log('Lyrics: Section created successfully')
+    return c.json({
+      success: true,
+      data
+    }, 201)
+  } catch (error) {
+    console.error('Lyrics: Error creating section:', error)
+    return c.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create section'
+    }, 500)
+  }
+})
+
+// PATCH /api/lyrics/sections/:sectionId - Update section
+lyrics.patch('/sections/:sectionId', zValidator('json', UpdateLyricSectionSchema), async (c) => {
+  try {
+    const sectionId = c.req.param('sectionId')
+    const updateData = c.req.valid('json')
+    const supabase = c.get('supabase')
+    
+    console.log('Lyrics: Updating section ID:', sectionId, 'data:', updateData)
+    
+    const { data, error } = await supabase
+      .from('lyric_sections')
+      .update(updateData)
+      .eq('id', sectionId)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Lyrics: Database error updating section:', error)
+      throw new Error(`Database error: ${error.message}`)
+    }
+    
+    console.log('Lyrics: Section updated successfully')
+    return c.json({
+      success: true,
+      data
+    })
+  } catch (error) {
+    console.error('Lyrics: Error updating section:', error)
+    return c.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update section'
+    }, 500)
+  }
+})
+
+// DELETE /api/lyrics/sections/:sectionId - Delete section
+lyrics.delete('/sections/:sectionId', async (c) => {
+  try {
+    const sectionId = c.req.param('sectionId')
+    const supabase = c.get('supabase')
+    
+    console.log('Lyrics: Deleting section ID:', sectionId)
+    
+    const { error } = await supabase
+      .from('lyric_sections')
+      .delete()
+      .eq('id', sectionId)
+    
+    if (error) {
+      console.error('Lyrics: Database error deleting section:', error)
+      throw new Error(`Database error: ${error.message}`)
+    }
+    
+    console.log('Lyrics: Section deleted successfully')
+    return c.json({
+      success: true,
+      message: 'Section deleted successfully'
+    })
+  } catch (error) {
+    console.error('Lyrics: Error deleting section:', error)
+    return c.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete section'
+    }, 500)
+  }
+})
+
+export default lyrics

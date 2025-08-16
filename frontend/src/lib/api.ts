@@ -1,7 +1,11 @@
 import { supabase } from './supabase'
 
-// API base URL - update this to match your deployed backend
-const API_BASE_URL = 'https://allaccessartist-dev.brennanwesley.workers.dev'
+// API base URL from environment variables with fallback
+const API_BASE_URL = import.meta.env['VITE_API_URL'] || 'https://all-access-artist.onrender.com'
+
+if (!import.meta.env['VITE_API_URL']) {
+  console.warn('VITE_API_URL environment variable not set. Using fallback URL.')
+}
 
 interface ApiResponse<T = any> {
   data?: T
@@ -63,7 +67,7 @@ class ApiClient {
         data: response.ok ? data : undefined,
         error: response.ok ? undefined : 'Health check failed',
         status: response.status,
-      }
+      } as ApiResponse
     } catch (error) {
       return {
         error: 'Network error',
@@ -104,6 +108,18 @@ class ApiClient {
     })
   }
 
+  async getReleaseDetails(id: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/releases/${id}`)
+  }
+
+  // Tasks API
+  async updateTask(taskId: string, taskData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/tasks/${taskId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(taskData),
+    })
+  }
+
   // Analytics API
   async getAnalytics(artistId?: string): Promise<ApiResponse<any[]>> {
     const endpoint = artistId ? `/api/analytics?artist_id=${artistId}` : '/api/analytics'
@@ -127,6 +143,66 @@ class ApiClient {
     return this.makeRequest('/api/calendar', {
       method: 'POST',
       body: JSON.stringify(eventData),
+    })
+  }
+
+  // Songs API
+  async addSong(releaseId: string, songData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/releases/${releaseId}/songs`, {
+      method: 'POST',
+      body: JSON.stringify(songData),
+    })
+  }
+
+  async updateSong(songId: string, songData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/songs/${songId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(songData),
+    })
+  }
+
+  async deleteSong(songId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/songs/${songId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Lyric Sheets API
+  async getLyricSheet(songId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/lyrics/${songId}`)
+  }
+
+  async createLyricSheet(songId: string, lyricData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/lyrics/${songId}`, {
+      method: 'POST',
+      body: JSON.stringify(lyricData),
+    })
+  }
+
+  async updateLyricSheet(songId: string, lyricData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/lyrics/${songId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(lyricData),
+    })
+  }
+
+  async addLyricSection(songId: string, sectionData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/lyrics/${songId}/sections`, {
+      method: 'POST',
+      body: JSON.stringify(sectionData),
+    })
+  }
+
+  async updateLyricSection(sectionId: string, sectionData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/lyrics/sections/${sectionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(sectionData),
+    })
+  }
+
+  async deleteLyricSection(sectionId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/lyrics/sections/${sectionId}`, {
+      method: 'DELETE',
     })
   }
 }

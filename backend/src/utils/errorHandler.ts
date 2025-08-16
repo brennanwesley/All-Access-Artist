@@ -42,30 +42,23 @@ export function createErrorResponse(
  * Handle Zod validation errors
  */
 export function handleValidationError(zodError: ZodError, context: HonoContext) {
-  const validationError = new APIError(
-    'Request validation failed',
-    'VALIDATION_FAILED',
-    ErrorCategory.VALIDATION,
-    ErrorSeverity.MEDIUM,
-    400,
-    {
-      validationErrors: zodError.errors.map(err => ({
-        field: err.path.join('.'),
-        message: err.message,
-        code: err.code
-      }))
-    }
-  )
+  const issues = zodError.issues.map(issue => ({
+    path: issue.path.join('.'),
+    message: issue.message,
+    code: issue.code
+  }))
 
-  const response = createErrorResponse(validationError, context)
-  return context.json(response, validationError.statusCode)
+  return context.json({
+    success: false,
+    error: 'Request validation failed',
+    details: issues
+  }, 400)
 }
 
 /**
  * Handle Supabase database errors
  */
 export function handleDatabaseError(supabaseError: any, context: HonoContext, operation: string) {
-  // Log the full error for debugging (server-side only)
   console.error(`Database error during ${operation}:`, {
     message: supabaseError.message,
     code: supabaseError.code,
@@ -74,100 +67,46 @@ export function handleDatabaseError(supabaseError: any, context: HonoContext, op
     timestamp: new Date().toISOString()
   })
 
-  // Create user-friendly error response (no sensitive details)
-  const dbError = new APIError(
-    `Failed to ${operation}`,
-    'DATABASE_ERROR',
-    ErrorCategory.DATABASE,
-    ErrorSeverity.HIGH,
-    500,
-    {
-      operation,
-      // Only include safe error details
-      errorCode: supabaseError.code || 'UNKNOWN'
-    }
-  )
-
-  const response = createErrorResponse(dbError, context)
-  return context.json(response, dbError.statusCode)
+  return context.json({
+    success: false,
+    error: `Failed to ${operation}`
+  }, 500)
 }
 
 /**
  * Handle authentication errors
  */
 export function handleAuthError(message: string, context: HonoContext, code?: string) {
-  const authError = code === 'MISSING_TOKEN' 
-    ? CommonErrors.MISSING_TOKEN 
-    : CommonErrors.INVALID_TOKEN
-
-  // Override message if provided
-  if (message !== authError.message) {
-    const customAuthError = new APIError(
-      message,
-      authError.code,
-      authError.category,
-      authError.severity,
-      authError.statusCode
-    )
-    const response = createErrorResponse(customAuthError, context)
-    return context.json(response, customAuthError.statusCode)
-  }
-
-  const response = createErrorResponse(authError, context)
-  return context.json(response, authError.statusCode)
+  return context.json({
+    success: false,
+    error: message
+  }, 401)
 }
 
 /**
  * Handle generic service errors
  */
 export function handleServiceError(error: Error, context: HonoContext, operation: string) {
-  // Log the full error for debugging
   console.error(`Service error during ${operation}:`, {
     message: error.message,
     stack: error.stack,
     timestamp: new Date().toISOString()
   })
 
-  // If it's already an APIError, use it directly
-  if (error instanceof APIError) {
-    const response = createErrorResponse(error, context)
-    return context.json(response, error.statusCode)
-  }
-
-  // Otherwise, create a generic internal error
-  const serviceError = new APIError(
-    `Failed to ${operation}`,
-    'SERVICE_ERROR',
-    ErrorCategory.INTERNAL,
-    ErrorSeverity.HIGH,
-    500,
-    {
-      operation
-    }
-  )
-
-  const response = createErrorResponse(serviceError, context)
-  return context.json(response, serviceError.statusCode)
+  return context.json({
+    success: false,
+    error: error instanceof Error ? error.message : `Failed to ${operation}`
+  }, 500)
 }
 
 /**
  * Handle not found errors
  */
 export function handleNotFoundError(resource: string, context: HonoContext, id?: string) {
-  const notFoundError = new APIError(
-    `${resource} not found`,
-    'RESOURCE_NOT_FOUND',
-    ErrorCategory.NOT_FOUND,
-    ErrorSeverity.LOW,
-    404,
-    {
-      resource,
-      id
-    }
-  )
-
-  const response = createErrorResponse(notFoundError, context)
-  return context.json(response, notFoundError.statusCode)
+  return context.json({
+    success: false,
+    error: `${resource} not found`
+  }, 404)
 }
 
 /**

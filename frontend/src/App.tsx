@@ -13,6 +13,7 @@ import { ErrorBoundaryTest } from "./components/ErrorBoundaryTest";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorFallback } from "./components/auth/ErrorFallback";
 import Index from "./pages/Index";
+import ReleaseDetail from "./pages/ReleaseDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -54,6 +55,11 @@ const App = () => (
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />
+              </ProtectedRoute>
+            } />
+            <Route path="/releases/:releaseId" element={
+              <ProtectedRoute>
+                <ReleaseDetail />
               </ProtectedRoute>
             } />
             {/* TEMPORARY: Toast Test Route - Remove after verification */}

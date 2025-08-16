@@ -11,9 +11,11 @@ import artists from './routes/artists.js'
 import releases from './routes/releases.js'
 import calendar from './routes/calendar.js'
 import analytics from './routes/analytics.js'
+import lyrics from './routes/lyrics.js'
+import tasks from './routes/tasks.js'
+import songs from './routes/songs.js'
 import type { Bindings, Variables } from './types/bindings.js'
-import { APIError, CommonErrors } from './types/errors.js'
-import { createErrorResponse, logError, generateRequestId } from './utils/errorHandler.js'
+import { generateRequestId } from './utils/errorHandler.js'
 
 // Initialize Hono app with proper typing
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -43,6 +45,9 @@ app.route('/api/artists', artists)
 app.route('/api/releases', releases)
 app.route('/api/calendar', calendar)
 app.route('/api/analytics', analytics)
+app.route('/api/lyrics', lyrics)
+app.route('/api/tasks', tasks)
+app.route('/api/songs', songs)
 
 // 404 handler
 app.notFound((c) => {

@@ -7,7 +7,7 @@ interface Release {
   title: string
   artist_id: string
   release_date: string
-  type: 'single' | 'album' | 'ep'
+  release_type: 'single' | 'ep' | 'album' | 'mixtape'
   status: 'draft' | 'scheduled' | 'released'
   description?: string
   genre?: string
@@ -21,7 +21,7 @@ interface CreateReleaseData {
   title: string
   artist_id: string
   release_date: string
-  type: 'single' | 'album' | 'ep'
+  release_type: 'single' | 'ep' | 'album' | 'mixtape'
   status?: 'draft' | 'scheduled' | 'released'
   description?: string
   genre?: string
@@ -38,7 +38,9 @@ export const useReleases = () => {
       if (response.status !== 200) {
         throw new Error(response.error || 'Failed to fetch releases')
       }
-      return response.data as Release[]
+      // Extract the data array from the backend response format: { success: true, data: [...] }
+      const backendResponse = response.data as any
+      return backendResponse?.data || []
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,

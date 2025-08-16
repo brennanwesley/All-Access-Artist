@@ -42,7 +42,7 @@ export class CalendarService {
   }
 
   async createEvent(eventData: CreateCalendarData) {
-    // Only use properties that exist in the schema
+    // Simple implementation without artist_id for now
     const { data, error } = await this.supabase
       .from('content_calendar')
       .insert([{

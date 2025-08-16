@@ -50,17 +50,81 @@ export class ReleasesService {
   }
 
   async createRelease(releaseData: CreateReleaseData) {
-    const { data, error } = await this.supabase
+    // Start by creating the release record
+    const { data: newRelease, error: releaseError } = await this.supabase
       .from('music_releases')
       .insert([releaseData])
       .select()
       .single()
 
-    if (error) {
-      throw new Error(`Failed to create release: ${error.message}`)
+    if (releaseError) {
+      throw new Error(`Failed to create release: ${releaseError.message}`)
     }
 
-    return data
+    try {
+      // Generate to-do list tasks for the new release
+      await this.generateReleaseTasks(newRelease.id, newRelease.artist_id, releaseData.type)
+      
+      return newRelease
+    } catch (taskError) {
+      // If task generation fails, rollback the release creation
+      await this.supabase
+        .from('music_releases')
+        .delete()
+        .eq('id', newRelease.id)
+      
+      const errorMessage = taskError instanceof Error ? taskError.message : 'Unknown error occurred'
+      throw new Error(`Failed to generate release tasks: ${errorMessage}. Release creation rolled back.`)
+    }
+  }
+
+  /**
+   * Generates release-specific tasks from templates
+   * @param releaseId - ID of the newly created release
+   * @param artistId - ID of the artist creating the release
+   * @param releaseType - Type of release (single, ep, album)
+   */
+  private async generateReleaseTasks(releaseId: string, artistId: string, releaseType: string) {
+    // Fetch the appropriate task template
+    const { data: template, error: templateError } = await this.supabase
+      .from('task_templates')
+      .select('tasks')
+      .eq('release_type', releaseType)
+      .eq('is_active', true)
+      .single()
+
+    if (templateError) {
+      throw new Error(`Failed to fetch task template for ${releaseType}: ${templateError.message}`)
+    }
+
+    if (!template || !template.tasks) {
+      throw new Error(`No active task template found for release type: ${releaseType}`)
+    }
+
+    // Extract tasks array from JSONB
+    const tasks = template.tasks as string[]
+    
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+      throw new Error(`Invalid or empty task template for release type: ${releaseType}`)
+    }
+
+    // Prepare task records for bulk insert
+    const taskRecords = tasks.map((taskDescription: string, index: number) => ({
+      release_id: releaseId,
+      artist_id: artistId,
+      task_description: taskDescription,
+      task_order: index,
+      completed_at: null
+    }))
+
+    // Bulk insert all tasks
+    const { error: tasksError } = await this.supabase
+      .from('release_tasks')
+      .insert(taskRecords)
+
+    if (tasksError) {
+      throw new Error(`Failed to insert release tasks: ${tasksError.message}`)
+    }
   }
 
   async updateRelease(id: string, releaseData: Partial<CreateReleaseData>) {

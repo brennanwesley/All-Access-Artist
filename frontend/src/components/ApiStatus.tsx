@@ -140,7 +140,7 @@ export const ApiStatus: React.FC = () => {
 
         {/* Connection Info */}
         <div className="text-xs text-muted-foreground space-y-1">
-          <p><strong>Backend URL:</strong> https://allaccessartist-dev.brennanwesley.workers.dev</p>
+          <p><strong>Backend URL:</strong> https://all-access-artist.onrender.com</p>
           <p><strong>User:</strong> {user?.email || 'Not authenticated'}</p>
           <p><strong>Framework:</strong> Hono with JWT + Zod validation</p>
         </div>

@@ -10,21 +10,21 @@ The architecture leverages a serverless-first approach with edge computing for o
 
 **Request Flow:**
 ```
-User → Cloudflare CDN → Vercel (Frontend) → Cloudflare Workers (API) → Supabase (Database + Auth)
+User → Vercel (Frontend) → Render (API) → Supabase (Database + Auth)
 ```
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        GLOBAL EDGE NETWORK                     │
+│                        CLOUD INFRASTRUCTURE                    │
 │                                                                 │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
-│  │   CLOUDFLARE    │    │     VERCEL      │    │  SUPABASE   │ │
+│  │     RENDER      │    │     VERCEL      │    │  SUPABASE   │ │
 │  │                 │    │                 │    │             │ │
-│  │ • CDN & Caching │◄──►│ • React Frontend│◄──►│ • PostgreSQL│ │
-│  │ • Workers (API) │    │ • Static Assets │    │ • Auth & RLS│ │
-│  │ • Rate Limiting │    │ • Edge Functions│    │ • Real-time │ │
-│  │ • DDoS Protection│   │ • Auto-scaling │    │ • Storage   │ │
-│  │ • WAF Security  │    │ • Preview Deploys│   │ • Edge Funcs│ │
+│  │ • Node.js API   │◄──►│ • React Frontend│◄──►│ • PostgreSQL│ │
+│  │ • Auto-scaling  │    │ • Static Assets │    │ • Auth & RLS│ │
+│  │ • Load Balancing│    │ • Edge Functions│    │ • Real-time │ │
+│  │ • SSL/TLS       │    │ • Auto-scaling │    │ • Storage   │ │
+│  │ • Health Checks │    │ • Preview Deploys│   │ • Edge Funcs│ │
 │  └─────────────────┘    └─────────────────┘    └─────────────┘ │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -40,11 +40,11 @@ User → Cloudflare CDN → Vercel (Frontend) → Cloudflare Workers (API) → S
 | **Build Tool** | Vite | 5.x | Fast development and optimized builds |
 | **UI Framework** | TailwindCSS + shadcn/ui | 3.x | Design system and components |
 | **Frontend Hosting** | Vercel | Latest | Static site hosting with edge functions |
-| **API Layer** | Cloudflare Workers | Latest | Serverless API endpoints and business logic |
+| **API Layer** | Render (Node.js) | Latest | Serverless API endpoints and business logic |
 | **Database** | Supabase (PostgreSQL) | 16.x | Primary database with real-time features |
 | **Authentication** | Supabase Auth | Latest | User management and security |
 | **File Storage** | Supabase Storage | Latest | Audio files, artwork, documents |
-| **CDN & Security** | Cloudflare | Latest | Global content delivery and protection |
+| **Hosting & Security** | Render | Latest | API hosting with SSL and auto-scaling |
 | **Code Repository** | GitHub | Latest | Version control and CI/CD |
 
 ---
@@ -66,7 +66,7 @@ User → Cloudflare CDN → Vercel (Frontend) → Cloudflare Workers (API) → S
   "env": {
     "VITE_SUPABASE_URL": "@supabase_url",
     "VITE_SUPABASE_ANON_KEY": "@supabase_anon_key",
-    "VITE_CLOUDFLARE_WORKER_URL": "@worker_url"
+    "VITE_RENDER_API_URL": "@render_api_url"
   },
   "functions": {
     "app/api/**/*.ts": {
@@ -79,22 +79,22 @@ User → Cloudflare CDN → Vercel (Frontend) → Cloudflare Workers (API) → S
 **Environment Variables:**
 - `VITE_SUPABASE_URL`: Supabase project URL
 - `VITE_SUPABASE_ANON_KEY`: Public anonymous key
-- `VITE_CLOUDFLARE_WORKER_URL`: API worker endpoint
+- `VITE_RENDER_API_URL`: Render API endpoint
 
 **Deployment:**
 - Automatic deployment on `main` branch push
 - Preview deployments for pull requests
 - Edge functions for API routes if needed
 
-### B. API Layer: Cloudflare Workers
+### B. API Layer: Render (Node.js)
 
-**Role:** Serverless API endpoints, background jobs, and business logic processing.
+**Role:** RESTful API endpoints, background jobs, and business logic processing.
 
 **Project Structure:**
 ```
-workers/
+backend/
 ├── src/
-│   ├── index.ts              # Main worker entry point
+│   ├── index.ts              # Main server entry point
 │   ├── routes/
 │   │   ├── auth.ts           # Authentication endpoints
 │   │   ├── royalties.ts      # Royalty calculations
@@ -107,79 +107,75 @@ workers/
 │   └── utils/
 │       ├── supabase.ts       # Database client
 │       └── validation.ts     # Input validation
-├── wrangler.toml             # Worker configuration
+├── render.yaml               # Render configuration
 └── package.json
 ```
 
-**Worker Configuration (`wrangler.toml`):**
-```toml
-name = "all-access-artist-api"
-main = "src/index.ts"
-compatibility_date = "2024-01-01"
-
-[env.production]
-vars = { ENVIRONMENT = "production" }
-
-[env.staging]
-vars = { ENVIRONMENT = "staging" }
-
-[[env.production.kv_namespaces]]
-binding = "CACHE"
-id = "your-kv-namespace-id"
-
-[triggers]
-crons = [
-  "0 0 * * *",  # Daily royalty calculations
-  "0 */6 * * *" # Bi-daily analytics processing
-]
+**Render Configuration (`render.yaml`):**
+```yaml
+services:
+  - type: web
+    name: all-access-artist-api
+    env: node
+    plan: starter
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        fromDatabase:
+          name: supabase-config
+          property: url
+      - key: SUPABASE_SERVICE_KEY
+        fromDatabase:
+          name: supabase-config
+          property: service_key
+    healthCheckPath: /api/health
 ```
 
-**Example Worker Code:**
+**Example Server Code:**
 ```typescript
 // src/index.ts
-import { Router } from 'itty-router'
+import express from 'express'
+import cors from 'cors'
 import { createClient } from '@supabase/supabase-js'
-import { corsHeaders, handleCORS } from './middleware/cors'
+import { corsOptions } from './middleware/cors'
 import { validateAuth } from './middleware/auth'
+import authRoutes from './routes/auth'
+import royaltiesRoutes from './routes/royalties'
+import analyticsRoutes from './routes/analytics'
+import integrationsRoutes from './routes/integrations'
 
-const router = Router()
+const app = express()
+const port = process.env.PORT || 3000
 
 // Initialize Supabase client
 const supabase = createClient(
-  env.SUPABASE_URL,
-  env.SUPABASE_SERVICE_KEY
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
 )
 
+// Middleware
+app.use(cors(corsOptions))
+app.use(express.json())
+
 // Routes
-router.get('/api/health', () => new Response('OK'))
-router.post('/api/royalties/calculate', validateAuth, calculateRoyalties)
-router.get('/api/analytics/streaming', validateAuth, getStreamingData)
-router.post('/api/integrations/spotify/sync', validateAuth, syncSpotifyData)
+app.get('/api/health', (req, res) => res.json({ status: 'OK' }))
+app.use('/api/auth', authRoutes)
+app.use('/api/royalties', validateAuth, royaltiesRoutes)
+app.use('/api/analytics', validateAuth, analyticsRoutes)
+app.use('/api/integrations', validateAuth, integrationsRoutes)
 
-// Handle scheduled events
-async function scheduled(event: ScheduledEvent, env: Env): Promise<void> {
-  switch (event.cron) {
-    case '0 0 * * *':
-      await processDailyRoyalties()
-      break
-    case '0 */6 * * *':
-      await processAnalytics()
-      break
-  }
-}
+// Error handling
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error(err.stack)
+  res.status(500).json({ error: 'Something went wrong!' })
+})
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    if (request.method === 'OPTIONS') {
-      return handleCORS(request)
-    }
-    
-    return router.handle(request, env).catch(() => {
-      return new Response('Not Found', { status: 404 })
-    })
-  },
-  scheduled
-}
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`)
+})
 ```
 
 ### C. Database: Supabase
@@ -306,27 +302,32 @@ export const subscribeToReleases = (artistId: string, callback: (payload: any) =
 }
 ```
 
-### D. Security & Performance: Cloudflare
+### D. Security & Performance: Render
 
-**Role:** CDN, DDoS protection, WAF, rate limiting, and edge caching.
+**Role:** API hosting, SSL/TLS, auto-scaling, and health monitoring.
 
 **Security Configuration:**
-- **SSL/TLS**: Full (strict) encryption
-- **WAF Rules**: Custom rules for API protection
-- **Rate Limiting**: 100 requests per minute per IP
-- **DDoS Protection**: Automatic mitigation
-- **Bot Management**: Challenge suspicious traffic
+- **SSL/TLS**: Automatic HTTPS with Let's Encrypt
+- **Environment Variables**: Secure secret management
+- **Health Checks**: Automatic service monitoring
+- **Auto-scaling**: Horizontal scaling based on traffic
+- **Load Balancing**: Built-in load distribution
 
-**Caching Strategy:**
-```javascript
-// Cache static assets
-const cacheRules = {
-  '*.js': { ttl: 31536000 }, // 1 year
-  '*.css': { ttl: 31536000 }, // 1 year
-  '*.png|*.jpg|*.jpeg': { ttl: 2592000 }, // 30 days
-  '/api/*': { ttl: 0 }, // No cache for API
-  '/': { ttl: 3600 } // 1 hour for homepage
-}
+**Performance Features:**
+```yaml
+# render.yaml performance settings
+services:
+  - type: web
+    name: all-access-artist-api
+    scaling:
+      minInstances: 1
+      maxInstances: 10
+    resources:
+      cpu: 0.5
+      memory: 512MB
+    healthCheckPath: /api/health
+    healthCheckInterval: 30s
+    healthCheckTimeout: 10s
 ```
 
 ---
@@ -353,8 +354,8 @@ npx supabase start
 # 5. Start development server
 npm run dev
 
-# 6. Start worker development (separate terminal)
-cd workers
+# 6. Start backend development (separate terminal)
+cd backend
 npm run dev
 ```
 
@@ -364,13 +365,15 @@ npm run dev
 # .env.local
 VITE_SUPABASE_URL=your-supabase-url
 VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_CLOUDFLARE_WORKER_URL=your-worker-url
+VITE_RENDER_API_URL=your-render-api-url
 
-# Workers environment
+# Render environment
 SUPABASE_URL=your-supabase-url
 SUPABASE_SERVICE_KEY=your-service-key
 SPOTIFY_CLIENT_ID=your-spotify-client-id
 SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
+NODE_ENV=production
+PORT=3000
 ```
 
 ### Deployment Pipeline
@@ -401,14 +404,17 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
 
-  deploy-workers:
+  deploy-backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: cloudflare/wrangler-action@v3
+      - uses: actions/setup-node@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          workingDirectory: 'workers'
+          node-version: '18'
+      - name: Deploy to Render
+        run: |
+          curl -X POST "https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}"
 ```
 
 ---
@@ -420,7 +426,7 @@ jobs:
 1. **User Registration/Login**: Supabase Auth handles OAuth and email/password
 2. **JWT Tokens**: Automatic token management with refresh
 3. **Row Level Security**: Database-level access control
-4. **API Authentication**: Workers validate JWT tokens
+4. **API Authentication**: Render API validates JWT tokens
 
 ### Data Protection
 
@@ -459,7 +465,7 @@ Sentry.init({
 ### Performance Monitoring
 
 - **Vercel Analytics**: Built-in performance metrics
-- **Cloudflare Analytics**: Traffic and security insights
+- **Render Metrics**: API performance and uptime monitoring
 - **Supabase Dashboard**: Database performance metrics
 - **Custom Metrics**: Business KPIs tracking
 
@@ -473,15 +479,15 @@ Sentry.init({
 |---------|------|------|
 | Supabase | Pro | $25 |
 | Vercel | Pro | $20 |
-| Cloudflare | Pro + Workers | $25 |
+| Render | Starter | $7 |
 | GitHub | Team | $4/user |
 | Sentry | Developer | $26 |
-| **Total** | | **~$100/month** |
+| **Total** | | **~$82/month** |
 
 ### Scaling Thresholds
 
 - **0-10K users**: Current setup handles easily
-- **10K-100K users**: Upgrade Supabase plan, add more Workers
+- **10K-100K users**: Upgrade Supabase plan, scale Render instances
 - **100K+ users**: Consider dedicated infrastructure
 
 ---
@@ -490,7 +496,7 @@ Sentry.init({
 
 ### Phase 1: Foundation (Week 1)
 - Set up Supabase project and database schema
-- Configure Cloudflare Workers with basic API endpoints
+- Configure Render API service with basic endpoints
 - Implement authentication flow
 - Deploy to staging environment
 
