@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, CreditCard, Users, Loader2, AlertCircle, Copy, Check } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { 
+  useProfile, 
+  useUpdateProfile, 
+  useReferralStats, 
+  useApplyReferralCode,
+} from '@/hooks/api/useProfile';
 
 // Profile update schema
 const updateProfileSchema = z.object({
@@ -40,47 +45,35 @@ interface ProfileModalProps {
 }
 
 export const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [copiedReferralCode, setCopiedReferralCode] = useState(false);
 
-  // Mock profile data - will be replaced with API calls
-  const mockProfile = {
-    id: user?.id || '',
-    first_name: 'Brennan',
-    last_name: 'Tharaldson',
-    email: user?.email || '',
-    phone: null,
-    phone_verified: false,
-    billing_address: {
-      street: '123 Test St',
-      city: 'Test City',
-      state: 'CA',
-      zip: '90210'
-    },
-    payment_method_last4: null,
-    referral_code: '7WHAS2',
-    referral_credits: 0,
-    created_at: '2025-08-04T01:54:54.270653Z',
-    updated_at: '2025-08-17T18:42:24.375249Z'
-  };
+  // API hooks
+  const { data: profile } = useProfile();
+  const { data: referralStats } = useReferralStats();
+  const updateProfileMutation = useUpdateProfile();
+  const applyReferralMutation = useApplyReferralCode();
 
-  // Mock referral stats - will be replaced with API calls
-  const mockReferralStats = {
-    total_referrals: 0,
-    total_credits: 0,
-    pending_credits: 0
-  };
-
-  // Profile form
+  // Profile form with dynamic defaults
   const profileForm = useForm<UpdateProfileFormData>({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
-      first_name: mockProfile.first_name,
-      last_name: mockProfile.last_name,
-      billing_address: mockProfile.billing_address,
+      first_name: '',
+      last_name: '',
+      billing_address: {},
     },
   });
+
+  // Update form when profile data loads
+  React.useEffect(() => {
+    if (profile) {
+      profileForm.reset({
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        billing_address: profile.billing_address || {},
+      });
+    }
+  }, [profile, profileForm]);
 
   // Referral form
   const referralForm = useForm<ReferralFormData>({
@@ -92,30 +85,40 @@ export const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
 
   const onUpdateProfile = async (data: UpdateProfileFormData) => {
     try {
-      // TODO: Replace with actual API call
-      console.log('Updating profile:', data);
+      // Ensure billing_address is properly formatted
+      const profileData = {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        ...(data.billing_address && Object.keys(data.billing_address).length > 0 && {
+          billing_address: data.billing_address
+        })
+      };
+      await updateProfileMutation.mutateAsync(profileData);
       toast.success('Profile updated successfully!');
     } catch (error) {
       console.error('Profile update error:', error);
-      toast.error('Failed to update profile. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
   const onApplyReferral = async (data: ReferralFormData) => {
     try {
-      // TODO: Replace with actual API call
-      console.log('Applying referral code:', data.referral_code);
-      toast.success('Referral code applied successfully!');
+      const result = await applyReferralMutation.mutateAsync(data.referral_code);
+      toast.success(`Referral code applied! You earned ${result.credits_awarded} credits.`);
       referralForm.reset();
     } catch (error) {
       console.error('Referral application error:', error);
-      toast.error('Failed to apply referral code. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to apply referral code. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
   const copyReferralCode = async () => {
+    if (!profile?.referral_code) return;
+    
     try {
-      await navigator.clipboard.writeText(mockProfile.referral_code);
+      await navigator.clipboard.writeText(profile.referral_code);
       setCopiedReferralCode(true);
       toast.success('Referral code copied to clipboard!');
       setTimeout(() => setCopiedReferralCode(false), 2000);
@@ -192,7 +195,7 @@ export const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
-                      value={mockProfile.email}
+                      value={profile?.email || ''}
                       disabled
                       className="bg-muted"
                     />
@@ -206,12 +209,12 @@ export const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                     <div className="flex items-center gap-2">
                       <Input
                         id="phone"
-                        value={mockProfile.phone || 'Not provided'}
+                        value={profile?.phone || 'Not provided'}
                         disabled
                         className="bg-muted"
                       />
-                      <Badge variant={mockProfile.phone_verified ? "default" : "secondary"}>
-                        {mockProfile.phone_verified ? "Verified" : "Not Verified"}
+                      <Badge variant={profile?.phone_verified ? "default" : "secondary"}>
+                        {profile?.phone_verified ? "Verified" : "Not Verified"}
                       </Badge>
                     </div>
                   </div>
@@ -325,7 +328,7 @@ export const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
                       <Input
-                        value={mockProfile.referral_code}
+                        value={profile?.referral_code || ''}
                         readOnly
                         className="font-mono text-lg text-center"
                       />
@@ -360,15 +363,15 @@ export const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span className="text-sm font-medium">Total Referrals:</span>
-                      <Badge variant="secondary">{mockReferralStats.total_referrals}</Badge>
+                      <Badge variant="secondary">{referralStats?.total_referrals || 0}</Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm font-medium">Credits Earned:</span>
-                      <Badge variant="default">{mockReferralStats.total_credits}</Badge>
+                      <Badge variant="default">{referralStats?.total_credits || 0}</Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm font-medium">Available Credits:</span>
-                      <Badge variant="outline">{mockProfile.referral_credits}</Badge>
+                      <Badge variant="outline">{profile?.referral_credits || 0}</Badge>
                     </div>
                   </div>
                 </CardContent>

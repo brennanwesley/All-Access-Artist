@@ -218,6 +218,36 @@ class ApiClient {
       method: 'DELETE',
     })
   }
+
+  // Profile API
+  async getProfile(): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/profile')
+  }
+
+  async updateProfile(profileData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    })
+  }
+
+  async validateReferralCode(referralCode: string): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/profile/validate-referral', {
+      method: 'POST',
+      body: JSON.stringify({ referral_code: referralCode }),
+    })
+  }
+
+  async applyReferralCode(referralCode: string): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/profile/referral', {
+      method: 'POST',
+      body: JSON.stringify({ referral_code: referralCode }),
+    })
+  }
+
+  async getReferralStats(): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/profile/referral-stats')
+  }
 }
 
 export const apiClient = new ApiClient()
