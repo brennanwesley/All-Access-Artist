@@ -62,9 +62,19 @@ export const useGetReleaseDetails = (releaseId: string) => {
         throw new Error(response.error)
       }
       
-      // Backend returns { success: true, data: releaseWithDetails }
-      // We need to extract the data property
-      const releaseData = response.data?.data || response.data
+      // The response is double-wrapped: response.data contains { success: true, data: releaseWithDetails }
+      // We need to extract the inner data property
+      let releaseData;
+      if (response.data?.success && response.data?.data) {
+        // Double-wrapped response structure
+        releaseData = response.data.data;
+      } else if (response.data?.data) {
+        // Single-wrapped response structure  
+        releaseData = response.data.data;
+      } else {
+        // Direct response structure
+        releaseData = response.data;
+      }
       
       console.log('useGetReleaseDetails: Extracted release data:', releaseData)
       
