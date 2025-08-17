@@ -6,8 +6,8 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { MetadataPrep } from "./MetadataPrep";
 import { ReleaseChecklist } from "./ReleaseChecklist";
-import { EditReleaseModal } from "./EditReleaseModal";
-import { useGetReleaseDetails, useUpdateRelease } from "@/hooks/api/useReleaseDetail";
+// import { EditReleaseModal } from "./EditReleaseModal";
+import { useGetReleaseDetails } from "@/hooks/api/useReleaseDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ReleaseDetailProps {
@@ -18,7 +18,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
   const [showMetadata, setShowMetadata] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const { releaseId } = useParams<{ releaseId: string }>();
-  const updateReleaseMutation = useUpdateRelease();
+  // const updateReleaseMutation = useUpdateRelease();
   
   const {
     data: release,
@@ -160,14 +160,14 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
               <h1 className="text-3xl font-bold">{release.title}</h1>
               <p className="text-muted-foreground">Release Management Dashboard</p>
             </div>
-            <Button 
+            {/* <Button 
               variant="outline" 
               size="sm"
               onClick={() => setShowEditModal(true)}
               className="ml-2"
             >
               Edit Release
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>
@@ -291,8 +291,8 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
         </Card>
       </div>
 
-      {/* Edit Release Modal */}
-      <EditReleaseModal
+      {/* Edit Release Modal - TEMPORARILY DISABLED FOR DEBUGGING */}
+      {/* <EditReleaseModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         release={release}
@@ -302,7 +302,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
             updateData
           })
         }}
-      />
+      /> */}
     </div>
   );
 };
