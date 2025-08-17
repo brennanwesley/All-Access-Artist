@@ -51,15 +51,28 @@ export const useGetReleaseDetails = (releaseId: string) => {
   return useQuery({
     queryKey: ['release-details', releaseId],
     queryFn: async () => {
+      console.log('useGetReleaseDetails: Fetching release details for ID:', releaseId)
+      
       const response = await apiClient.getReleaseDetails(releaseId)
-      if (response.status !== 200) {
-        throw new Error(response.error || 'Failed to fetch release details')
+      
+      console.log('useGetReleaseDetails: Raw API response:', response)
+      
+      if (response.error) {
+        console.error('useGetReleaseDetails: API Error:', response.error)
+        throw new Error(response.error)
       }
       
-      // Backend now handles task generation automatically
-      // Extract the actual release data from the success wrapper
-      const backendResponse = response.data as any
-      return backendResponse?.data || backendResponse
+      // Backend returns { success: true, data: releaseWithDetails }
+      // We need to extract the data property
+      const releaseData = response.data?.data || response.data
+      
+      console.log('useGetReleaseDetails: Extracted release data:', releaseData)
+      
+      if (!releaseData) {
+        throw new Error('No release data found in response')
+      }
+      
+      return releaseData as ReleaseDetails
     },
     enabled: !!releaseId,
     staleTime: 5 * 60 * 1000, // 5 minutes
