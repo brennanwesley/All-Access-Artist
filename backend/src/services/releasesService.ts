@@ -284,6 +284,18 @@ export class ReleasesService {
   }
 
   async updateRelease(id: string, releaseData: Partial<CreateReleaseData>) {
+    // First, get the current release to check if release_type is changing
+    const { data: currentRelease, error: fetchError } = await this.supabase
+      .from('music_releases')
+      .select('release_type, artist_id')
+      .eq('id', id)
+      .single()
+
+    if (fetchError) {
+      throw new Error(`Failed to fetch current release: ${fetchError.message}`)
+    }
+
+    // Update the release
     const { data, error } = await this.supabase
       .from('music_releases')
       .update(releaseData)
@@ -293,6 +305,33 @@ export class ReleasesService {
 
     if (error) {
       throw new Error(`Failed to update release: ${error.message}`)
+    }
+
+    // Check if release_type changed and handle task regeneration
+    if (releaseData.release_type && releaseData.release_type !== currentRelease.release_type) {
+      console.log(`Release type changed from ${currentRelease.release_type} to ${releaseData.release_type}`)
+      
+      try {
+        // Clear existing tasks
+        const { error: deleteError } = await this.supabase
+          .from('release_tasks')
+          .delete()
+          .eq('release_id', id)
+
+        if (deleteError) {
+          console.warn(`Failed to clear existing tasks: ${deleteError.message}`)
+        } else {
+          console.log('Existing tasks cleared successfully')
+        }
+
+        // Generate new tasks for the new release type
+        await this.generateReleaseTasks(id, currentRelease.artist_id, releaseData.release_type)
+        console.log(`New tasks generated for release type: ${releaseData.release_type}`)
+        
+      } catch (taskError) {
+        console.error('Failed to regenerate tasks after release type change:', taskError)
+        // Don't fail the update if task regeneration fails
+      }
     }
 
     return data
