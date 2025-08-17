@@ -171,6 +171,25 @@ releases.put('/:id', zValidator('json', CreateReleaseSchema.partial()), async (c
   }
 })
 
+// PATCH /api/releases/:id - Update release (alternative method for frontend compatibility)
+releases.patch('/:id', zValidator('json', CreateReleaseSchema.partial()), async (c) => {
+  try {
+    const id = c.req.param('id')
+    const releaseData = c.req.valid('json')
+    const supabase = c.get('supabase')
+    const releasesService = new ReleasesService(supabase)
+    
+    const data = await releasesService.updateRelease(id, releaseData)
+    return c.json({ success: true, data })
+  } catch (error) {
+    console.error('Error updating release:', error)
+    return c.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to update release' 
+    }, 500)
+  }
+})
+
 // DELETE /api/releases/:id - Delete release
 releases.delete('/:id', async (c) => {
   try {
