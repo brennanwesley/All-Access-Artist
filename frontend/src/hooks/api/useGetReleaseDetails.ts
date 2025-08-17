@@ -62,21 +62,31 @@ export const useGetReleaseDetails = (releaseId: string) => {
         throw new Error(response.error)
       }
       
-      // The response is double-wrapped: response.data contains { success: true, data: releaseWithDetails }
+      // The response structure is: response.data = { success: true, data: releaseWithDetails }
       // We need to extract the inner data property
       let releaseData;
-      if (response.data?.success && response.data?.data) {
-        // Double-wrapped response structure
+      
+      console.log('useGetReleaseDetails: Response structure check:', {
+        hasData: !!response.data,
+        hasSuccess: !!response.data?.success,
+        hasNestedData: !!response.data?.data,
+        responseDataType: typeof response.data
+      });
+      
+      // Extract the actual release data from the nested structure
+      if (response.data && typeof response.data === 'object' && 'success' in response.data && 'data' in response.data) {
         releaseData = response.data.data;
-      } else if (response.data?.data) {
-        // Single-wrapped response structure  
-        releaseData = response.data.data;
-      } else {
-        // Direct response structure
+        console.log('useGetReleaseDetails: Using nested data extraction');
+      } else if (response.data && typeof response.data === 'object' && 'title' in response.data) {
         releaseData = response.data;
+        console.log('useGetReleaseDetails: Using direct data');
+      } else {
+        console.error('useGetReleaseDetails: Unexpected response structure:', response.data);
+        releaseData = null;
       }
       
-      console.log('useGetReleaseDetails: Extracted release data:', releaseData)
+      console.log('useGetReleaseDetails: Final extracted release data:', releaseData)
+      console.log('useGetReleaseDetails: Release title from extracted data:', releaseData?.title)
       
       if (!releaseData) {
         throw new Error('No release data found in response')
