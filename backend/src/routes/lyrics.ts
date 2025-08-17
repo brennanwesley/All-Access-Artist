@@ -1,5 +1,6 @@
 /**
- * Lyric Sheet Routes - API endpoints for lyric sheet and section management
+ * Lyric Sheet Routes - API endpoints for lyric sheet and section management routes
+// Updated for unified navigation system deployment trigger
  * All Access Artist - Backend API v2.0.0
  */
 import { Hono } from 'hono'
