@@ -1,25 +1,30 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserProfile } from "@/components/auth/UserProfile";
+import { useNavigation } from "@/contexts/NavigationContext";
 import { 
   Calendar, 
-  Music, 
   Video, 
-  TrendingUp, 
   DollarSign, 
   Settings,
   Home,
-  BarChart3,
   Users,
   Palette
 } from "lucide-react";
 
 interface NavigationProps {
-  activeSection: string;
-  onSectionChange: (section: string) => void;
+  // Props are now optional - context provides the state
+  activeSection?: string;
+  onSectionChange?: (section: string) => void;
 }
 
-export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) => {
+export const Navigation = ({ activeSection: propActiveSection, onSectionChange: propOnSectionChange }: NavigationProps) => {
+  const navigation = useNavigation()
+  
+  // Use context values, fallback to props for backward compatibility
+  const activeSection = propActiveSection || navigation.activeSection
+  const handleSectionChange = propOnSectionChange || navigation.navigateToSection
+
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "releases", label: "Release Manager", icon: Calendar },
@@ -52,7 +57,7 @@ export const Navigation = ({ activeSection, onSectionChange }: NavigationProps) 
               className={`w-full justify-start h-12 ${
                 isActive ? "shadow-elegant" : "hover:bg-secondary/50"
               }`}
-              onClick={() => onSectionChange(item.id)}
+              onClick={() => handleSectionChange(item.id)}
             >
               <Icon className="mr-3 h-5 w-5" />
               {item.label}

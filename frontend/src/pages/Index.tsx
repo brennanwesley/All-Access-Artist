@@ -10,25 +10,23 @@ import { Fans } from "@/components/Fans";
 import { Create } from "@/components/Create";
 import { Community } from "@/components/Community";
 import { Settings } from "@/components/Settings";
-import { MetadataPrep } from "@/components/MetadataPrep";
 import { Onboarding } from "@/components/Onboarding";
-import { UserProfile } from "@/components/auth/UserProfile";
-import { useAuth } from "@/contexts/AuthContext";
+import { useNavigation } from "@/contexts/NavigationContext";
 
 const Index = () => {
   const location = useLocation();
-  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const navigation = useNavigation();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Handle navigation state to set active section
+  // Handle navigation state from route transitions
   useEffect(() => {
     if (location.state?.activeSection) {
-      setActiveSection(location.state.activeSection);
+      navigation.setActiveSection(location.state.activeSection);
     }
-  }, [location.state]);
+  }, [location.state, navigation]);
 
   const renderActiveSection = () => {
-    switch (activeSection) {
+    switch (navigation.activeSection) {
       case "dashboard":
         return <Dashboard />;
       case "releases":
@@ -75,12 +73,12 @@ const Index = () => {
   if (showOnboarding) {
     return <Onboarding onComplete={() => {
       setShowOnboarding(false);
-      setActiveSection("dashboard");
+      navigation.setActiveSection("dashboard");
     }} />;
   }
 
   // Landing page view
-  if (!activeSection) {
+  if (!navigation.activeSection) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4">
         <div className="max-w-4xl mx-auto text-center">
@@ -112,7 +110,7 @@ const Index = () => {
   // Dashboard view
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      <Navigation activeSection={activeSection} onSectionChange={setActiveSection} />
+      <Navigation />
       <main className="ml-64 p-8">
         {renderActiveSection()}
       </main>
