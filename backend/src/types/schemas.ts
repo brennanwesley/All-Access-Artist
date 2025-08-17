@@ -47,6 +47,8 @@ export const UpdateTaskSchema = CreateTaskSchema.partial().omit({ release_id: tr
 
 // Lyric Sheet Schemas
 export const CreateLyricSheetSchema = z.object({
+  song_id: z.string().uuid('Invalid song ID'),
+  artist_id: z.string().uuid('Invalid artist ID'),
   written_by: z.string().max(200, 'Written by too long').optional(),
   additional_notes: z.string().max(2000, 'Notes too long').optional()
 })

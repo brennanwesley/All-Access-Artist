@@ -126,11 +126,11 @@ export class LyricSheetService {
       : 0
 
     // Create the new section
-    const { lyric_sheet_id, ...cleanSectionData } = sectionData
     const newSection = {
       lyric_sheet_id: sheetId,
-      section_order: nextOrder,
-      ...cleanSectionData
+      section_type: sectionData.section_type,
+      section_lyrics: sectionData.content,
+      section_order: nextOrder
     }
 
     const { data, error } = await this.supabase
