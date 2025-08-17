@@ -290,15 +290,9 @@ export const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                   <div className="space-y-2">
                     <Label>Payment Method</Label>
                     <div className="p-4 border rounded-lg bg-muted/50">
-                      {mockProfile.payment_method_last4 ? (
-                        <p className="text-sm">
-                          Card ending in {mockProfile.payment_method_last4}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          No payment method on file
-                        </p>
-                      )}
+                      <p className="text-sm text-muted-foreground">
+                        No payment method on file
+                      </p>
                     </div>
                   </div>
 
