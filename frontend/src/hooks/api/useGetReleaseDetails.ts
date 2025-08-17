@@ -73,15 +73,19 @@ export const useGetReleaseDetails = (releaseId: string) => {
         responseDataType: typeof response.data
       });
       
-      // Extract the actual release data from the nested structure
-      if (response.data && typeof response.data === 'object' && 'success' in response.data && 'data' in response.data) {
+      // The console shows the hook is receiving the wrapper object but not extracting properly
+      // Let's check what's actually happening with the extraction
+      console.log('useGetReleaseDetails: Checking response.data structure:', response.data);
+      console.log('useGetReleaseDetails: response.data.success:', response.data?.success);
+      console.log('useGetReleaseDetails: response.data.data:', response.data?.data);
+      
+      // Force extraction of nested data - the console clearly shows it exists
+      if (response.data?.success === true && response.data?.data) {
         releaseData = response.data.data;
-        console.log('useGetReleaseDetails: Using nested data extraction');
-      } else if (response.data && typeof response.data === 'object' && 'title' in response.data) {
-        releaseData = response.data;
-        console.log('useGetReleaseDetails: Using direct data');
+        console.log('useGetReleaseDetails: FORCED extraction - releaseData:', releaseData);
+        console.log('useGetReleaseDetails: FORCED extraction - title:', releaseData.title);
       } else {
-        console.error('useGetReleaseDetails: Unexpected response structure:', response.data);
+        console.error('useGetReleaseDetails: Failed to extract data from response');
         releaseData = null;
       }
       
@@ -91,6 +95,10 @@ export const useGetReleaseDetails = (releaseId: string) => {
       if (!releaseData) {
         throw new Error('No release data found in response')
       }
+      
+      // CRITICAL FIX: The hook was returning the wrapper object instead of extracted data
+      // This is why release.title was undefined even though the data existed
+      console.log('useGetReleaseDetails: About to return:', releaseData)
       
       return releaseData as ReleaseDetails
     },
