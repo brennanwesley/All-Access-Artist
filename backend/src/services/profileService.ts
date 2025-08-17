@@ -12,52 +12,69 @@ export class ProfileService {
    * Get user profile with email from auth.users
    */
   async getUserProfile(userId: string) {
-    // Get user profile data
-    const { data: profileData, error: profileError } = await this.supabase
-      .from('user_profiles')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        phone_verified,
-        billing_address,
-        payment_method_last4,
-        referral_code,
-        referral_credits,
-        created_at,
-        updated_at
-      `)
-      .eq('id', userId)
-      .single()
+    console.log('ProfileService.getUserProfile called with userId:', userId)
+    
+    try {
+      console.log('Fetching user profile from database...')
+      // Get user profile data
+      const { data: profileData, error: profileError } = await this.supabase
+        .from('user_profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          phone_verified,
+          billing_address,
+          payment_method_last4,
+          referral_code,
+          referral_credits,
+          created_at,
+          updated_at
+        `)
+        .eq('id', userId)
+        .single()
 
-    if (profileError) {
-      // If user profile doesn't exist, create one
-      if (profileError.code === 'PGRST116') {
-        const newProfile = await this.createUserProfile(userId)
-        return {
-          ...newProfile,
-          email: null,
-          phone: null
+      console.log('Profile query result:', { profileData, profileError })
+
+      if (profileError) {
+        console.log('Profile error detected:', profileError)
+        // If user profile doesn't exist, create one
+        if (profileError.code === 'PGRST116') {
+          console.log('Profile not found, creating new profile...')
+          const newProfile = await this.createUserProfile(userId)
+          console.log('New profile created:', newProfile)
+          return {
+            ...newProfile,
+            email: null,
+            phone: null
+          }
         }
+        throw new Error(`Failed to fetch user profile: ${profileError.message}`)
       }
-      throw new Error(`Failed to fetch user profile: ${profileError.message}`)
+
+      console.log('Fetching auth user data...')
+      // Get auth user data separately using auth.admin
+      const { data: authData, error: authError } = await this.supabase.auth.admin.getUserById(userId)
+      console.log('Auth query result:', { authData, authError })
+
+      if (authError) {
+        console.log('Auth error:', authError)
+        throw new Error(`Failed to fetch user auth data: ${authError.message}`)
+      }
+
+      // Combine the data
+      const profile = {
+        ...profileData,
+        email: authData.user?.email,
+        phone: authData.user?.phone
+      }
+
+      console.log('Final combined profile:', profile)
+      return profile
+    } catch (error) {
+      console.log('ProfileService.getUserProfile ERROR:', error)
+      throw error
     }
-
-    // Get auth user data separately using auth.admin
-    const { data: authData, error: authError } = await this.supabase.auth.admin.getUserById(userId)
-
-    if (authError) {
-      throw new Error(`Failed to fetch user auth data: ${authError.message}`)
-    }
-
-    // Combine the data
-    const profile = {
-      ...profileData,
-      email: authData.user?.email,
-      phone: authData.user?.phone
-    }
-
-    return profile
   }
 
   /**

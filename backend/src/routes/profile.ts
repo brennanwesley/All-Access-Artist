@@ -17,19 +17,31 @@ const profile = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 // GET /api/profile - Get current user's profile
 profile.get('/', async (c) => {
+  console.log('=== PROFILE GET REQUEST START ===')
   try {
+    console.log('1. Checking JWT payload...')
     const jwtPayload = c.get('jwtPayload')
+    console.log('JWT payload:', jwtPayload)
+    
     if (!jwtPayload?.sub) {
+      console.log('ERROR: No JWT payload or sub found')
       return c.json({ 
         success: false, 
         error: 'Authentication required' 
       }, 401)
     }
 
+    console.log('2. Getting Supabase client...')
     const supabase = c.get('supabase')
+    console.log('Supabase client exists:', !!supabase)
+    
+    console.log('3. Creating ProfileService...')
     const profileService = new ProfileService(supabase)
     
+    console.log('4. Calling getUserProfile with userId:', jwtPayload.sub)
     const data = await profileService.getUserProfile(jwtPayload.sub)
+    console.log('5. Profile data retrieved:', data)
+    
     return c.json({ 
       success: true, 
       data,
@@ -39,6 +51,10 @@ profile.get('/', async (c) => {
       }
     })
   } catch (error) {
+    console.log('=== PROFILE GET ERROR ===')
+    console.error('Error details:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.log('=== END PROFILE GET ERROR ===')
     return handleServiceError(error as Error, c, 'fetch user profile')
   }
 })
