@@ -17,8 +17,9 @@ export interface ReleaseTask {
 export interface Song {
   id: string
   release_id: string
-  title: string
-  duration?: number
+  artist_id: string
+  song_title: string
+  duration_seconds?: number
   track_number: number
   created_at: string
   updated_at: string
@@ -181,7 +182,7 @@ export const useAddSong = () => {
   return useMutation({
     mutationFn: async ({ releaseId, songData }: { 
       releaseId: string; 
-      songData: { title: string; duration?: number; track_number: number } 
+      songData: { song_title: string; duration_seconds?: number; track_number: number } 
     }) => {
       console.log('useAddSong: Adding song to release', releaseId, songData)
       
@@ -215,7 +216,7 @@ export const useUpdateSong = () => {
   return useMutation({
     mutationFn: async ({ songId, songData }: { 
       songId: string; 
-      songData: { title?: string; duration?: number; track_number?: number } 
+      songData: { song_title?: string; duration_seconds?: number; track_number?: number } 
     }) => {
       console.log('useUpdateSong: Updating song', songId, songData)
       

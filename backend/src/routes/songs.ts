@@ -11,16 +11,16 @@ const songs = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 // Schema for creating a new song
 const CreateSongSchema = z.object({
-  title: z.string().min(1, 'Song title is required'),
+  song_title: z.string().min(1, 'Song title is required'),
   track_number: z.number().int().positive(),
-  duration: z.number().int().positive().optional()
+  duration_seconds: z.number().int().positive().optional()
 })
 
 // Schema for updating a song
 const UpdateSongSchema = z.object({
-  title: z.string().min(1, 'Song title is required').optional(),
+  song_title: z.string().min(1, 'Song title is required').optional(),
   track_number: z.number().int().positive().optional(),
-  duration: z.number().int().positive().optional()
+  duration_seconds: z.number().int().positive().optional()
 })
 
 // PATCH /api/songs/:songId - Update song

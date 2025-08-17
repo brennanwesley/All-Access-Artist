@@ -35,13 +35,13 @@ export const SongManager = ({ releaseId, songs }: SongManagerProps) => {
     const nextTrackNumber = Math.max(0, ...songs.map(s => s.track_number)) + 1
     const duration = newSongDuration ? parseInt(newSongDuration) : undefined
 
-    const songData: { title: string; track_number: number; duration?: number } = {
-      title: newSongTitle.trim(),
+    const songData: { song_title: string; track_number: number; duration_seconds?: number } = {
+      song_title: newSongTitle.trim(),
       track_number: nextTrackNumber
     }
     
     if (duration !== undefined) {
-      songData.duration = duration
+      songData.duration_seconds = duration
     }
 
     addSongMutation.mutate({
@@ -57,8 +57,8 @@ export const SongManager = ({ releaseId, songs }: SongManagerProps) => {
 
   const handleEditSong = (song: Song) => {
     setEditingSong(song)
-    setEditTitle(song.title)
-    setEditDuration(song.duration ? song.duration.toString() : '')
+    setEditTitle(song.song_title)
+    setEditDuration(song.duration_seconds?.toString() || '')
   }
 
   const handleUpdateSong = async (e: React.FormEvent) => {
@@ -71,12 +71,14 @@ export const SongManager = ({ releaseId, songs }: SongManagerProps) => {
 
     const duration = editDuration ? parseInt(editDuration) : undefined
 
-    const songData: Partial<Song> = {
-      title: editTitle.trim()
+    const songData: { song_title?: string; track_number?: number; duration_seconds?: number } = {}
+    
+    if (editTitle.trim() !== editingSong.song_title) {
+      songData.song_title = editTitle.trim()
     }
     
-    if (duration !== undefined) {
-      songData.duration = duration
+    if (duration !== undefined && duration !== editingSong.duration_seconds) {
+      songData.duration_seconds = duration
     }
 
     updateSongMutation.mutate({
@@ -250,9 +252,9 @@ export const SongManager = ({ releaseId, songs }: SongManagerProps) => {
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium truncate">{song.title}</h4>
+                        <h3 className="font-medium">{song.song_title}</h3>
                         <p className="text-sm text-muted-foreground">
-                          Duration: {formatDuration(song.duration)}
+                          Duration: {formatDuration(song.duration_seconds)}
                         </p>
                       </div>
 
