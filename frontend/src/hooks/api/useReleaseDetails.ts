@@ -316,7 +316,7 @@ export const useGetLyricSheet = (songId: string | null) => {
         throw new Error(response.error)
       }
       
-      console.log('useGetLyricSheet: Success')
+      console.log('useGetLyricSheet: Success', response.data)
       return response.data as LyricSheet
     },
     enabled: !!songId,

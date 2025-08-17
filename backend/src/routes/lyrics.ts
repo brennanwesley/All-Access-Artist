@@ -81,7 +81,7 @@ lyrics.get('/:songId', async (c) => {
       sections: mappedSections || []
     }
     
-    console.log('Lyrics: Lyric sheet fetched successfully')
+    console.log('Lyrics: Lyric sheet fetched successfully', JSON.stringify(lyricSheetWithSections, null, 2))
     return c.json({
       success: true,
       data: lyricSheetWithSections

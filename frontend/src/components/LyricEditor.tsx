@@ -133,6 +133,10 @@ export const LyricEditor = ({ songs }: LyricEditorProps) => {
 
   // Sort sections by order
   const sortedSections = lyricSheet?.sections ? [...lyricSheet.sections].sort((a, b) => a.section_order - b.section_order) : []
+  
+  // Debug logging
+  console.log('LyricEditor: lyricSheet data:', lyricSheet)
+  console.log('LyricEditor: sortedSections:', sortedSections)
 
   return (
     <div className="space-y-6">
