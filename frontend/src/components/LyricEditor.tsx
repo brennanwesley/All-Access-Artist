@@ -24,11 +24,13 @@ interface LyricEditorProps {
 const SECTION_TYPES = [
   { value: 'verse', label: 'Verse' },
   { value: 'chorus', label: 'Chorus' },
-  { value: 'bridge', label: 'Bridge' },
   { value: 'pre-chorus', label: 'Pre-Chorus' },
+  { value: 'bridge', label: 'Bridge' },
+  { value: 'refrain', label: 'Refrain' },
   { value: 'intro', label: 'Intro' },
   { value: 'outro', label: 'Outro' },
-  { value: 'other', label: 'Other' },
+  { value: 'hook', label: 'Hook' },
+  { value: 'ad-lib', label: 'Ad-Lib' },
 ] as const
 
 export const LyricEditor = ({ songs }: LyricEditorProps) => {

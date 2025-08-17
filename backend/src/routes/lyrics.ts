@@ -11,19 +11,18 @@ const lyrics = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 // Schemas for lyric sheet operations
 const CreateLyricSheetSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  language: z.string().min(1, 'Language is required'),
-  notes: z.string().optional()
+  written_by: z.string().optional(),
+  additional_notes: z.string().optional()
 })
 
 const CreateLyricSectionSchema = z.object({
-  section_type: z.enum(['verse', 'chorus', 'bridge', 'pre-chorus', 'outro', 'intro', 'other']),
+  section_type: z.enum(['verse', 'chorus', 'pre-chorus', 'bridge', 'refrain', 'outro', 'intro', 'hook', 'ad-lib']),
   section_order: z.number().int().min(0),
   content: z.string().min(1, 'Content is required')
 })
 
 const UpdateLyricSectionSchema = z.object({
-  section_type: z.enum(['verse', 'chorus', 'bridge', 'pre-chorus', 'outro', 'intro', 'other']).optional(),
+  section_type: z.enum(['verse', 'chorus', 'pre-chorus', 'bridge', 'refrain', 'outro', 'intro', 'hook', 'ad-lib']).optional(),
   section_order: z.number().int().min(0).optional(),
   content: z.string().min(1, 'Content is required').optional()
 })

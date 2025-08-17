@@ -47,22 +47,24 @@ export const UpdateTaskSchema = CreateTaskSchema.partial().omit({ release_id: tr
 
 // Lyric Sheet Schemas
 export const CreateLyricSheetSchema = z.object({
-  song_id: z.string().uuid('Invalid song ID'),
   written_by: z.string().max(200, 'Written by too long').optional(),
   additional_notes: z.string().max(2000, 'Notes too long').optional()
 })
 
-export const UpdateLyricSheetSchema = CreateLyricSheetSchema.partial().omit({ song_id: true })
+export const UpdateLyricSheetSchema = CreateLyricSheetSchema.partial()
 
-// Lyric Section Schemas
+// Lyric Section Schemas (matching database constraints)
 export const CreateLyricSectionSchema = z.object({
-  lyric_sheet_id: z.string().uuid('Invalid lyric sheet ID'),
-  section_name: z.string().min(1, 'Section name is required'),
-  lyrics: z.string().min(1, 'Lyrics are required'),
-  order_index: z.number().int().min(0).optional()
+  section_type: z.enum(['verse', 'chorus', 'pre-chorus', 'bridge', 'refrain', 'outro', 'intro', 'hook', 'ad-lib']),
+  section_order: z.number().int().min(0),
+  content: z.string().min(1, 'Content is required')
 })
 
-export const UpdateLyricSectionSchema = CreateLyricSectionSchema.partial().omit({ lyric_sheet_id: true })
+export const UpdateLyricSectionSchema = z.object({
+  section_type: z.enum(['verse', 'chorus', 'pre-chorus', 'bridge', 'refrain', 'outro', 'intro', 'hook', 'ad-lib']).optional(),
+  section_order: z.number().int().min(0).optional(),
+  content: z.string().min(1, 'Content is required').optional()
+})
 
 // Placeholder schemas for missing imports
 export const CreateAnalyticsSchema = z.object({

@@ -27,7 +27,7 @@ export interface Song {
 
 export interface LyricSection {
   id: string
-  section_type: 'verse' | 'chorus' | 'bridge' | 'pre-chorus' | 'intro' | 'outro' | 'other'
+  section_type: 'verse' | 'chorus' | 'pre-chorus' | 'bridge' | 'refrain' | 'outro' | 'intro' | 'hook' | 'ad-lib'
   content: string
   section_order: number
   created_at: string
@@ -38,8 +38,6 @@ export interface LyricSheet {
   id: string
   song_id: string
   artist_id: string
-  title: string
-  language: string
   written_by?: string
   additional_notes?: string
   total_sections?: number
