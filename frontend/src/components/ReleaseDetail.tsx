@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { MetadataPrep } from "./MetadataPrep";
 import { ReleaseChecklist } from "./ReleaseChecklist";
+import { SongManager } from "./SongManager";
 import { EditReleaseModal } from "./EditReleaseModal";
 import { useGetReleaseDetails, useUpdateRelease } from "@/hooks/api/useReleaseDetails";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -224,17 +225,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
         </TabsContent>
         
         <TabsContent value="songs" className="space-y-6">
-          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-            <CardHeader>
-              <CardTitle>Songs</CardTitle>
-              <CardDescription>Manage tracks for this release</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Songs management will be implemented in the next phase.</p>
-              </div>
-            </CardContent>
-          </Card>
+          <SongManager releaseId={release.id} songs={release.songs || []} />
         </TabsContent>
         
         <TabsContent value="lyrics" className="space-y-6">

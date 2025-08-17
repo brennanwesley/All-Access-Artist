@@ -174,5 +174,104 @@ export const useUpdateRelease = () => {
   })
 }
 
+// Hook to add a song to a release
+export const useAddSong = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ releaseId, songData }: { 
+      releaseId: string; 
+      songData: { title: string; duration?: number; track_number: number } 
+    }) => {
+      console.log('useAddSong: Adding song to release', releaseId, songData)
+      
+      const response = await apiClient.addSong(releaseId, songData)
+      
+      if (response.error) {
+        console.error('useAddSong: API Error:', response.error)
+        throw new Error(response.error)
+      }
+      
+      console.log('useAddSong: Success')
+      return response.data
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate and refetch release details to update the song list
+      queryClient.invalidateQueries({ queryKey: ['release-details', variables.releaseId] })
+      
+      toast.success('Song added successfully!')
+    },
+    onError: (error) => {
+      console.error('useAddSong: Mutation failed:', error)
+      toast.error(`Failed to add song: ${error.message}`)
+    }
+  })
+}
+
+// Hook to update a song
+export const useUpdateSong = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ songId, songData }: { 
+      songId: string; 
+      songData: { title?: string; duration?: number; track_number?: number } 
+    }) => {
+      console.log('useUpdateSong: Updating song', songId, songData)
+      
+      const response = await apiClient.updateSong(songId, songData)
+      
+      if (response.error) {
+        console.error('useUpdateSong: API Error:', response.error)
+        throw new Error(response.error)
+      }
+      
+      console.log('useUpdateSong: Success')
+      return response.data
+    },
+    onSuccess: () => {
+      // Invalidate and refetch release details to update the song list
+      queryClient.invalidateQueries({ queryKey: ['release-details'] })
+      
+      toast.success('Song updated successfully!')
+    },
+    onError: (error) => {
+      console.error('useUpdateSong: Mutation failed:', error)
+      toast.error(`Failed to update song: ${error.message}`)
+    }
+  })
+}
+
+// Hook to delete a song
+export const useDeleteSong = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (songId: string) => {
+      console.log('useDeleteSong: Deleting song', songId)
+      
+      const response = await apiClient.deleteSong(songId)
+      
+      if (response.error) {
+        console.error('useDeleteSong: API Error:', response.error)
+        throw new Error(response.error)
+      }
+      
+      console.log('useDeleteSong: Success')
+      return response.data
+    },
+    onSuccess: () => {
+      // Invalidate and refetch release details to update the song list
+      queryClient.invalidateQueries({ queryKey: ['release-details'] })
+      
+      toast.success('Song deleted successfully!')
+    },
+    onError: (error) => {
+      console.error('useDeleteSong: Mutation failed:', error)
+      toast.error(`Failed to delete song: ${error.message}`)
+    }
+  })
+}
+
 // Legacy exports for backward compatibility
 export type ReleaseDetail = ReleaseDetails

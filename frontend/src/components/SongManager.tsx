@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Music, Plus, Loader2, Edit2, Trash2 } from 'lucide-react'
-import { useAddSong, useUpdateSong, useDeleteSong, Song } from '@/hooks/api/useReleaseDetail'
+import { useAddSong, useUpdateSong, useDeleteSong, Song } from '@/hooks/api/useReleaseDetails'
 import { toast } from 'sonner'
 
 interface SongManagerProps {
