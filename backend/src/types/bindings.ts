@@ -18,6 +18,7 @@ export type Bindings = {
  */
 export type Variables = {
   supabase: SupabaseClient
+  supabaseAdmin: SupabaseClient
   user: {
     sub: string
     email?: string

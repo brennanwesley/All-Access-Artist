@@ -53,16 +53,20 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
     console.log('SUPABASE_SERVICE_KEY exists:', !!supabaseServiceKey)
     console.log('SUPABASE_URL value:', supabaseUrl)
 
-    console.log('4. Creating Supabase client...')
-    // Create service-role Supabase client for admin operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    console.log('4. Creating Supabase clients...')
+    // Create user-scoped Supabase client for RLS operations
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
           Authorization: `Bearer ${token}`
         }
       }
     })
-    console.log('Supabase client created successfully')
+    
+    // Create admin Supabase client for admin operations (no JWT token)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+    console.log('Supabase clients created successfully')
 
     console.log('5. Getting JWT payload...')
     // Get user from JWT payload (already validated by jwt middleware)
@@ -77,8 +81,10 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
     console.log('User object created:', user)
 
     console.log('6. Setting context variables...')
-    // Attach user-scoped client and user to context
+    // Attach user and both supabase clients to context
+    c.set('user', user)
     c.set('supabase', supabase)
+    c.set('supabaseAdmin', supabaseAdmin)
     c.set('user', user)
     c.set('jwtPayload', user)
     

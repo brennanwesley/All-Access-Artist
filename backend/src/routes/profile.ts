@@ -35,16 +35,15 @@ profile.get('/', async (c) => {
     const supabase = c.get('supabase')
     console.log('Supabase client exists:', !!supabase)
     
-    console.log('3. Creating ProfileService...')
+    console.log('3. Creating ProfileService and calling getUserProfile...')
+    const supabaseAdmin = c.get('supabaseAdmin')
     const profileService = new ProfileService(supabase)
-    
-    console.log('4. Calling getUserProfile with userId:', jwtPayload.sub)
-    const data = await profileService.getUserProfile(jwtPayload.sub)
-    console.log('5. Profile data retrieved:', data)
+    const profile = await profileService.getUserProfile(jwtPayload.sub, supabaseAdmin)
+    console.log('5. Profile data retrieved:', profile)
     
     return c.json({ 
       success: true, 
-      data,
+      data: profile,
       meta: {
         timestamp: new Date().toISOString(),
         version: '2.0.0'

@@ -11,12 +11,12 @@ export class ProfileService {
   /**
    * Get user profile with email from auth.users
    */
-  async getUserProfile(userId: string) {
+  async getUserProfile(userId: string, supabaseAdmin: SupabaseClient) {
     console.log('ProfileService.getUserProfile called with userId:', userId)
     
     try {
       console.log('Fetching user profile from database...')
-      // Get user profile data
+      // Get user profile data using user-scoped client (for RLS)
       const { data: profileData, error: profileError } = await this.supabase
         .from('user_profiles')
         .select(`
@@ -34,7 +34,7 @@ export class ProfileService {
         .eq('id', userId)
         .single()
 
-      console.log('Profile query result:', { profileData, profileError })
+      console.log('Database query result:', { profileData, profileError })
 
       if (profileError) {
         console.log('Profile error detected:', profileError)
@@ -52,21 +52,21 @@ export class ProfileService {
         throw new Error(`Failed to fetch user profile: ${profileError.message}`)
       }
 
-      console.log('Fetching auth user data...')
-      // Get auth user data separately using auth.admin
-      const { data: authData, error: authError } = await this.supabase.auth.admin.getUserById(userId)
-      console.log('Auth query result:', { authData, authError })
+      console.log('2. Fetching auth user data with admin client...')
+      // Get user data from Supabase Auth using admin client (no JWT conflicts)
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId)
+      console.log('Auth admin API result:', { authUser, authError })
 
       if (authError) {
-        console.log('Auth error:', authError)
+        console.log('ProfileService.getUserProfile ERROR: Auth error:', authError)
         throw new Error(`Failed to fetch user auth data: ${authError.message}`)
       }
 
       // Combine the data
       const profile = {
         ...profileData,
-        email: authData.user?.email,
-        phone: authData.user?.phone
+        email: authUser.user?.email,
+        phone: authUser.user?.phone
       }
 
       console.log('Final combined profile:', profile)
