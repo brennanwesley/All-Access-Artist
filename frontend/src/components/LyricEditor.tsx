@@ -60,11 +60,8 @@ export const LyricEditor = ({ songs }: LyricEditorProps) => {
 
     createLyricSheetMutation.mutate({
       songId: selectedSong.id,
-      lyricData: {
-        title: `${selectedSong.song_title} - Lyrics`,
-        language: 'en',
-        notes: ''
-      }
+      writtenBy: '',
+      notes: ''
     })
   }
 

@@ -47,19 +47,12 @@ export const UpdateTaskSchema = CreateTaskSchema.partial().omit({ release_id: tr
 
 // Lyric Sheet Schemas
 export const CreateLyricSheetSchema = z.object({
-  release_id: z.string().uuid('Invalid release ID'),
-  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  lyrics: z.string().min(1, 'Lyrics are required'),
-  structure: z.array(z.object({
-    section: z.string(),
-    start_line: z.number().int().min(1),
-    end_line: z.number().int().min(1)
-  })).optional(),
-  notes: z.string().max(2000, 'Notes too long').optional(),
-  version: z.string().max(50, 'Version too long').default('1.0')
+  song_id: z.string().uuid('Invalid song ID'),
+  written_by: z.string().max(200, 'Written by too long').optional(),
+  additional_notes: z.string().max(2000, 'Notes too long').optional()
 })
 
-export const UpdateLyricSheetSchema = CreateLyricSheetSchema.partial().omit({ release_id: true })
+export const UpdateLyricSheetSchema = CreateLyricSheetSchema.partial().omit({ song_id: true })
 
 // Lyric Section Schemas
 export const CreateLyricSectionSchema = z.object({

@@ -57,15 +57,15 @@ export class LyricSheetService {
    * @returns Created lyric sheet
    */
   async createLyricSheet(lyricSheetData: CreateLyricSheetData) {
-    // Check if lyric sheet already exists for this release
+    // Check if lyric sheet already exists for this song
     const { data: existingSheets } = await this.supabase
       .from('lyric_sheets')
       .select('id')
-      .eq('release_id', lyricSheetData.release_id)
+      .eq('song_id', lyricSheetData.song_id)
       .limit(1)
     
     if (existingSheets && existingSheets.length > 0) {
-      throw new Error('Lyric sheet already exists for this release')
+      throw new Error('Lyric sheet already exists for this song')
     }
 
     const { data, error } = await this.supabase

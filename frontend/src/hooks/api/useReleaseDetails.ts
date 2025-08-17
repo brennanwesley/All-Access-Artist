@@ -298,25 +298,31 @@ export const useDeleteSong = () => {
 }
 
 // Hook to get lyric sheet for a song
-export const useGetLyricSheet = (songId: string) => {
+export const useGetLyricSheet = (songId: string | null) => {
   return useQuery({
     queryKey: ['lyricSheet', songId],
     queryFn: async () => {
       if (!songId) return null
       
       console.log('useGetLyricSheet: Fetching lyric sheet for song', songId)
-      
       const response = await apiClient.getLyricSheet(songId)
       
+      // Handle 404 gracefully - no lyric sheet exists yet
+      if (response.error && response.error.includes('No lyric sheet found')) {
+        console.log('useGetLyricSheet: No lyric sheet found for song', songId)
+        return null
+      }
+      
       if (response.error) {
-        console.error('useGetLyricSheet: API Error:', response.error)
+        console.log('useGetLyricSheet: API Error:', response.error)
         throw new Error(response.error)
       }
       
       console.log('useGetLyricSheet: Success')
       return response.data as LyricSheet
     },
-    enabled: !!songId
+    enabled: !!songId,
+    retry: false // Don't retry 404s
   })
 }
 
@@ -325,13 +331,16 @@ export const useCreateLyricSheet = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: async ({ songId, lyricData }: { 
-      songId: string; 
-      lyricData: { title: string; language: string; notes?: string } 
+    mutationFn: async ({ songId, writtenBy, notes }: {
+      songId: string
+      writtenBy?: string
+      notes?: string
     }) => {
-      console.log('useCreateLyricSheet: Creating lyric sheet for song', songId, lyricData)
-      
-      const response = await apiClient.createLyricSheet(songId, lyricData)
+      console.log('useCreateLyricSheet: Creating lyric sheet for song', songId, { writtenBy, notes })
+      const response = await apiClient.createLyricSheet(songId, { 
+        written_by: writtenBy || '',
+        additional_notes: notes || ''
+      })
       
       if (response.error) {
         console.error('useCreateLyricSheet: API Error:', response.error)
@@ -342,6 +351,7 @@ export const useCreateLyricSheet = () => {
       return response.data
     },
     onSuccess: (data, variables) => {
+      // Invalidate and refetch the lyric sheet query
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
       toast.success('Lyric sheet created successfully')
     },
