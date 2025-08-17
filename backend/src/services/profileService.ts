@@ -31,6 +31,15 @@ export class ProfileService {
       .single()
 
     if (profileError) {
+      // If user profile doesn't exist, create one
+      if (profileError.code === 'PGRST116') {
+        const newProfile = await this.createUserProfile(userId)
+        return {
+          ...newProfile,
+          email: null,
+          phone: null
+        }
+      }
       throw new Error(`Failed to fetch user profile: ${profileError.message}`)
     }
 
