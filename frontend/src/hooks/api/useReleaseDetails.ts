@@ -348,10 +348,10 @@ export const useCreateLyricSheet = () => {
       console.log('useCreateLyricSheet: Success')
       return response.data
     },
-    onSuccess: (data, variables) => {
-      // Invalidate and refetch the lyric sheet query
+    onSuccess: (_, variables) => {
+      // Invalidate and refetch the lyric sheet sections
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
-      toast.success('Lyric sheet created successfully')
+      toast.success('Lyric section updated successfully')
     },
     onError: (error) => {
       console.error('useCreateLyricSheet: Error:', error)
@@ -367,7 +367,7 @@ export const useAddLyricSection = () => {
   return useMutation({
     mutationFn: async ({ songId, sectionData }: { 
       songId: string; 
-      sectionData: { section_type: LyricSection['section_type']; section_order: number; content: string } 
+      sectionData: { section_type: LyricSection['section_type']; content: string } 
     }) => {
       console.log('useAddLyricSection: Adding section to song', songId, sectionData)
       
@@ -381,7 +381,7 @@ export const useAddLyricSection = () => {
       console.log('useAddLyricSection: Success')
       return response.data
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
       toast.success('Lyric section added successfully')
     },
@@ -397,7 +397,7 @@ export const useUpdateLyricSection = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: async ({ sectionId, sectionData, songId }: { 
+    mutationFn: async ({ sectionId, sectionData }: { 
       sectionId: string; 
       sectionData: { section_type?: LyricSection['section_type']; content?: string; section_order?: number };
       songId: string;
@@ -414,7 +414,7 @@ export const useUpdateLyricSection = () => {
       console.log('useUpdateLyricSection: Success')
       return response.data
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
       toast.success('Lyric section updated successfully')
     },
@@ -430,7 +430,7 @@ export const useDeleteLyricSection = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: async ({ sectionId, songId }: { sectionId: string; songId: string }) => {
+    mutationFn: async ({ sectionId }: { sectionId: string; songId: string }) => {
       console.log('useDeleteLyricSection: Deleting section', sectionId)
       
       const response = await apiClient.deleteLyricSection(sectionId)

@@ -6,6 +6,7 @@ import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import type { Bindings, Variables } from '../types/bindings.js'
+import { LyricSheetService } from '../services/LyricSheetService.js'
 
 const lyrics = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -17,7 +18,6 @@ const CreateLyricSheetSchema = z.object({
 
 const CreateLyricSectionSchema = z.object({
   section_type: z.enum(['verse', 'chorus', 'pre-chorus', 'bridge', 'refrain', 'outro', 'intro', 'hook', 'ad-lib']),
-  section_order: z.number().int().min(0),
   content: z.string().min(1, 'Content is required')
 })
 
@@ -66,8 +66,8 @@ lyrics.get('/:songId', async (c) => {
       // Don't fail the request if sections can't be fetched
     }
     
-    // Map database fields to frontend expected fields
-    const mappedSections = (sections || []).map(section => ({
+    // Map sections to frontend format
+    const mappedSections = sections?.map((section: any) => ({
       id: section.id,
       section_type: section.section_type,
       content: section.section_lyrics,
@@ -78,7 +78,7 @@ lyrics.get('/:songId', async (c) => {
 
     const lyricSheetWithSections = {
       ...lyricSheet,
-      sections: mappedSections
+      sections: mappedSections || []
     }
     
     console.log('Lyrics: Lyric sheet fetched successfully')
@@ -167,30 +167,18 @@ lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), a
       throw new Error(`Lyric sheet not found: ${sheetError.message}`)
     }
     
-    const { data, error } = await supabase
-      .from('lyric_sheet_sections')
-      .insert({
-        section_type: sectionData.section_type,
-        section_lyrics: sectionData.content,
-        section_order: sectionData.section_order,
-        lyric_sheet_id: lyricSheet.id
-      })
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Lyrics: Database error creating section:', error)
-      throw new Error(`Database error: ${error.message}`)
-    }
+    // Let LyricSheetService handle section_order calculation
+    const lyricSheetService = new LyricSheetService(supabase)
+    const result = await lyricSheetService.addSectionToSheet(lyricSheet.id, sectionData)
     
     // Map database response back to frontend format
     const mappedData = {
-      id: data.id,
-      section_type: data.section_type,
-      content: data.section_lyrics,
-      section_order: data.section_order,
-      created_at: data.created_at,
-      updated_at: data.updated_at
+      id: result.id,
+      section_type: result.section_type,
+      content: result.section_lyrics,
+      section_order: result.section_order,
+      created_at: result.created_at,
+      updated_at: result.updated_at
     }
 
     console.log('Lyrics: Section created successfully')

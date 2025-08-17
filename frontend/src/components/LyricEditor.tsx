@@ -75,13 +75,11 @@ export const LyricEditor = ({ songs }: LyricEditorProps) => {
       return
     }
 
-    const nextOrder = lyricSheet?.sections ? Math.max(0, ...lyricSheet.sections.map(s => s.section_order)) + 1 : 0
-
+    // Let backend calculate section_order to avoid race conditions
     addSectionMutation.mutate({
       songId: selectedSongId,
       sectionData: {
         section_type: newSectionType,
-        section_order: nextOrder,
         content: newSectionContent.trim()
       }
     }, {

@@ -58,7 +58,6 @@ export const UpdateLyricSheetSchema = CreateLyricSheetSchema.partial()
 // Lyric Section Schemas (matching database constraints)
 export const CreateLyricSectionSchema = z.object({
   section_type: z.enum(['verse', 'chorus', 'pre-chorus', 'bridge', 'refrain', 'outro', 'intro', 'hook', 'ad-lib']),
-  section_order: z.number().int().min(0),
   content: z.string().min(1, 'Content is required')
 })
 
