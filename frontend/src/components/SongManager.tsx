@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Music, Plus, Loader2, Edit2, Trash2 } from 'lucide-react'
 import { useAddSong, useUpdateSong, useDeleteSong, Song } from '@/hooks/api/useReleaseDetails'
 import { toast } from 'sonner'
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
 
 interface SongManagerProps {
   releaseId: string
@@ -19,6 +20,8 @@ export const SongManager = ({ releaseId, songs }: SongManagerProps) => {
   const [editingSong, setEditingSong] = useState<Song | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editDuration, setEditDuration] = useState('')
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [songToDelete, setSongToDelete] = useState<string | null>(null)
 
   const addSongMutation = useAddSong()
   const updateSongMutation = useUpdateSong()
@@ -94,8 +97,14 @@ export const SongManager = ({ releaseId, songs }: SongManagerProps) => {
   }
 
   const handleDeleteSong = (songId: string) => {
-    if (confirm('Are you sure you want to delete this song? This action cannot be undone.')) {
-      deleteSongMutation.mutate(songId)
+    setSongToDelete(songId)
+    setDeleteConfirmOpen(true)
+  }
+
+  const confirmDeleteSong = () => {
+    if (songToDelete) {
+      deleteSongMutation.mutate(songToDelete)
+      setSongToDelete(null)
     }
   }
 
@@ -174,7 +183,7 @@ export const SongManager = ({ releaseId, songs }: SongManagerProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Music className="h-5 w-5" />
-            Tracklist ({sortedSongs.length} songs)
+            Tracklist
           </CardTitle>
           <CardDescription>
             Manage the songs in this release
@@ -285,6 +294,17 @@ export const SongManager = ({ releaseId, songs }: SongManagerProps) => {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Song"
+        description="Are you sure you want to delete this song? This action cannot be undone."
+        confirmText="Delete Song"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={confirmDeleteSong}
+      />
     </div>
   )
 }
