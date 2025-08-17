@@ -36,7 +36,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Calendar
+            Back to Releases
           </Button>
           <div>
             <Skeleton className="h-8 w-64 mb-2" />
@@ -68,7 +68,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Calendar
+            Back to Releases
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Error Loading Release</h1>
@@ -106,7 +106,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Calendar
+            Back to Releases
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Release Not Found</h1>
@@ -120,7 +120,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
               The requested release could not be found.
             </p>
             <Button onClick={onBack}>
-              Back to Calendar
+              Back to Releases
             </Button>
           </CardContent>
         </Card>
@@ -155,7 +155,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Calendar
+            Back to Releases
           </Button>
           <div className="flex items-center gap-3">
             <div>
