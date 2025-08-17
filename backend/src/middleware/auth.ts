@@ -38,10 +38,10 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
 
     const token = authHeader.substring(7)
     const supabaseUrl = process.env.SUPABASE_URL!
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!
 
-    // Create user-scoped Supabase client with the JWT token
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    // Create service-role Supabase client for admin operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       global: {
         headers: {
           Authorization: `Bearer ${token}`
