@@ -317,7 +317,8 @@ export const useGetLyricSheet = (songId: string | null) => {
       }
       
       console.log('useGetLyricSheet: Success', response.data)
-      return response.data as LyricSheet
+      // Extract the actual lyric sheet data from the API response wrapper
+      return response.data.data as LyricSheet
     },
     enabled: !!songId,
     retry: false // Don't retry 404s
@@ -346,7 +347,7 @@ export const useCreateLyricSheet = () => {
       }
       
       console.log('useCreateLyricSheet: Success')
-      return response.data
+      return response.data.data
     },
     onSuccess: (_, variables) => {
       // Invalidate and refetch the lyric sheet sections
@@ -379,7 +380,7 @@ export const useAddLyricSection = () => {
       }
       
       console.log('useAddLyricSection: Success')
-      return response.data
+      return response.data.data
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
@@ -412,7 +413,7 @@ export const useUpdateLyricSection = () => {
       }
       
       console.log('useUpdateLyricSection: Success')
-      return response.data
+      return response.data.data
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
@@ -441,9 +442,9 @@ export const useDeleteLyricSection = () => {
       }
       
       console.log('useDeleteLyricSection: Success')
-      return response.data
+      return response.data.data
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
       toast.success('Lyric section deleted successfully')
     },
