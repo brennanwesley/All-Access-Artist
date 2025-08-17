@@ -40,7 +40,7 @@ export const LyricEditor = ({ songs }: LyricEditorProps) => {
   const [editSectionContent, setEditSectionContent] = useState('')
 
   // Hooks for lyric sheet operations
-  const { data: lyricSheet, isLoading, error } = useGetLyricSheet(selectedSongId)
+  const { data: lyricSheet, isLoading } = useGetLyricSheet(selectedSongId)
   const createLyricSheetMutation = useCreateLyricSheet()
   const addSectionMutation = useAddLyricSection()
   const updateSectionMutation = useUpdateLyricSection()
@@ -192,7 +192,7 @@ export const LyricEditor = ({ songs }: LyricEditorProps) => {
             </Card>
           )}
 
-          {error && !isLoading && (
+          {!lyricSheet && !isLoading && (
             <Card className="bg-card/50 backdrop-blur-sm border-border/50">
               <CardContent className="text-center py-8">
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
