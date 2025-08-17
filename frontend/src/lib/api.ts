@@ -108,6 +108,13 @@ class ApiClient {
     })
   }
 
+  async updateRelease(releaseId: string, releaseData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/releases/${releaseId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(releaseData),
+    })
+  }
+
   async getReleaseDetails(id: string): Promise<ApiResponse<any>> {
     return this.makeRequest(`/api/releases/${id}`)
   }

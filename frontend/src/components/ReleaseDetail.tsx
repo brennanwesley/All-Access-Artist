@@ -6,7 +6,8 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { MetadataPrep } from "./MetadataPrep";
 import { ReleaseChecklist } from "./ReleaseChecklist";
-import { useGetReleaseDetails } from "@/hooks/api/useGetReleaseDetails";
+import { EditReleaseModal } from "./EditReleaseModal";
+import { useGetReleaseDetails, useUpdateRelease } from "@/hooks/api/useReleaseDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ReleaseDetailProps {
@@ -15,7 +16,9 @@ interface ReleaseDetailProps {
 
 export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
   const [showMetadata, setShowMetadata] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const { releaseId } = useParams<{ releaseId: string }>();
+  const updateReleaseMutation = useUpdateRelease();
   
   const {
     data: release,
@@ -142,14 +145,26 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Calendar
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold">{release.title}</h1>
-          <p className="text-muted-foreground">Release Management Dashboard</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Calendar
+          </Button>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-3xl font-bold">{release.title}</h1>
+              <p className="text-muted-foreground">Release Management Dashboard</p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowEditModal(true)}
+              className="ml-2"
+            >
+              Edit Release
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -181,7 +196,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">
-                {release.total_tracks || 'TBD'}
+                {release.songs?.length || 0}
               </div>
               <p className="text-sm text-muted-foreground">Total Tracks</p>
             </div>
@@ -271,6 +286,19 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Release Modal */}
+      <EditReleaseModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        release={release}
+        onUpdate={async (updateData) => {
+          await updateReleaseMutation.mutateAsync({
+            releaseId: release.id,
+            updateData
+          })
+        }}
+      />
     </div>
   );
 };

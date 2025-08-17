@@ -94,6 +94,45 @@ export const useUpdateTask = () => {
   })
 }
 
+// Hook to update a release
+export const useUpdateRelease = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ releaseId, updateData }: { 
+      releaseId: string
+      updateData: {
+        title: string
+        release_date: string
+        release_type: string
+        genre?: string
+        description?: string
+      }
+    }) => {
+      console.log('useUpdateRelease: Updating release', releaseId, updateData)
+      
+      const response = await apiClient.updateRelease(releaseId, updateData)
+      
+      if (response.error) {
+        console.error('useUpdateRelease: API Error:', response.error)
+        throw new Error(response.error)
+      }
+      
+      console.log('useUpdateRelease: Success')
+      return response.data
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate and refetch release details to update the UI
+      queryClient.invalidateQueries({ queryKey: ['release-details', variables.releaseId] })
+      queryClient.invalidateQueries({ queryKey: ['releases'] })
+    },
+    onError: (error) => {
+      console.error('useUpdateRelease: Mutation error:', error)
+      throw error // Re-throw to let the component handle the error message
+    },
+  })
+}
+
 // Hook to add a new song to a release
 export const useAddSong = () => {
   const queryClient = useQueryClient()
