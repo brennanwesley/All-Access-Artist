@@ -26,7 +26,7 @@ interface EditReleaseModalProps {
 export const EditReleaseModal = ({ isOpen, onClose, release, onUpdate }: EditReleaseModalProps) => {
   const [formData, setFormData] = useState({
     title: release.title,
-    release_date: release.release_date.split('T')[0], // Convert to YYYY-MM-DD format
+    release_date: release.release_date ? release.release_date.split('T')[0] : '', // Convert to YYYY-MM-DD format
     release_type: release.release_type,
     genre: release.genre || '',
     description: release.description || ''
@@ -77,7 +77,8 @@ export const EditReleaseModal = ({ isOpen, onClose, release, onUpdate }: EditRel
       await onUpdate(updateData)
       
       // Show success toast with different message based on what changed
-      const dateChanged = formData.release_date !== release.release_date.split('T')[0]
+      const originalDate = release.release_date ? release.release_date.split('T')[0] : ''
+      const dateChanged = formData.release_date !== originalDate
       if (dateChanged) {
         toast.success('Release updated successfully! Project timeline dates have been recalculated.')
       } else {
@@ -141,9 +142,11 @@ export const EditReleaseModal = ({ isOpen, onClose, release, onUpdate }: EditRel
                 />
                 <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Current: {formatDateForDisplay(release.release_date)}
-              </p>
+              {release.release_date && (
+                <p className="text-xs text-muted-foreground">
+                  Current: {formatDateForDisplay(release.release_date)}
+                </p>
+              )}
             </div>
 
             {/* Type of Release */}
