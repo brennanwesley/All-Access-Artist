@@ -250,15 +250,18 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Apple Music Button */}
-              <button className="flex-1 bg-gradient-to-b from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 flex items-center justify-center gap-2 shadow-lg">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M23.997 6.124c0-.738-.065-1.47-.24-2.19-.317-1.31-1.062-2.31-2.18-3.043C21.003.517 20.373.285 19.7.164c-.517-.093-1.038-.135-1.564-.14-.04-.003-.083-.01-.124-.013H5.988c-.152.01-.303.017-.455.034C4.786.07 4.043.15 3.34.428 2.004.958 1.04 1.88.475 3.208c-.192.448-.292.925-.363 1.408-.056.392-.088.785-.1 1.18-.006.226-.014.455-.014.68v10.91c0 .72.067 1.444.24 2.153.35 1.425 1.135 2.449 2.425 3.139.423.225.884.358 1.357.441.416.073.838.104 1.26.118.15.005.298.014.448.014h12.024c.15 0 .298-.009.448-.014.422-.014.844-.045 1.26-.118.473-.083.934-.216 1.357-.441 1.29-.69 2.075-1.714 2.425-3.139.173-.709.24-1.433.24-2.153V6.124zm-9.928 7.825L12.5 15.5c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5z"/>
-                </svg>
+              <button 
+                className="flex-1 bg-gradient-to-b from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 flex items-center justify-center shadow-lg"
+                onClick={() => window.open('https://artists.apple.com', '_blank')}
+              >
                 Apple Music
               </button>
               
               {/* Spotify Button */}
-              <button className="flex-1 bg-[#1DB954] hover:bg-[#1ed760] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#1DB954] focus:ring-offset-2 flex items-center justify-center gap-2">
+              <button 
+                className="flex-1 bg-[#1DB954] hover:bg-[#1ed760] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#1DB954] focus:ring-offset-2 flex items-center justify-center gap-2"
+                onClick={() => window.open('https://artists.spotify.com', '_blank')}
+              >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
                 </svg>
