@@ -100,7 +100,14 @@ export const useGetReleaseDetails = (releaseId: string) => {
       // This is why release.title was undefined even though the data existed
       console.log('useGetReleaseDetails: About to return:', releaseData)
       
-      return releaseData as ReleaseDetails
+      // EMERGENCY FIX: Force return the correct data structure
+      // The console clearly shows response.data = {success: true, data: actualReleaseData}
+      // But the hook keeps returning the wrapper instead of extracted data
+      const finalData = releaseData?.title ? releaseData : response.data?.data;
+      console.log('useGetReleaseDetails: EMERGENCY FIX - Final data being returned:', finalData);
+      console.log('useGetReleaseDetails: EMERGENCY FIX - Title check:', finalData?.title);
+      
+      return finalData as ReleaseDetails
     },
     enabled: !!releaseId,
     staleTime: 5 * 60 * 1000, // 5 minutes
