@@ -66,7 +66,7 @@ export const useUpdateTask = () => {
   
   return useMutation({
     mutationFn: async ({ taskId, completed }: { taskId: string; completed: boolean }) => {
-      console.log('useUpdateTask: Updating task', taskId, 'completed:', completed)
+      console.log('useUpdateTask: Updating task', taskId, 'completion status:', completed)
       
       const response = await apiClient.updateTask(taskId, {
         completed_at: completed ? new Date().toISOString() : null
