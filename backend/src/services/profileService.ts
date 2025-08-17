@@ -34,12 +34,8 @@ export class ProfileService {
       throw new Error(`Failed to fetch user profile: ${profileError.message}`)
     }
 
-    // Get auth user data separately
-    const { data: authData, error: authError } = await this.supabase
-      .from('auth.users')
-      .select('email, phone')
-      .eq('id', userId)
-      .single()
+    // Get auth user data separately using auth.admin
+    const { data: authData, error: authError } = await this.supabase.auth.admin.getUserById(userId)
 
     if (authError) {
       throw new Error(`Failed to fetch user auth data: ${authError.message}`)
@@ -48,8 +44,8 @@ export class ProfileService {
     // Combine the data
     const profile = {
       ...profileData,
-      email: authData.email,
-      phone: authData.phone
+      email: authData.user?.email,
+      phone: authData.user?.phone
     }
 
     return profile
