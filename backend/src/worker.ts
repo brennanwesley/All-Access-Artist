@@ -27,11 +27,10 @@ app.use('*', corsMiddleware)
 // Health check endpoint (no authentication required)
 app.get('/health', (c) => {
   return c.json({
-    status: 'healthy',
+    status: 'ok',
     timestamp: new Date().toISOString(),
     version: '2.0.0',
-    service: 'All Access Artist Backend API',
-    environment: process.env.NODE_ENV || 'development'
+    deployment_trigger: 'profile-api-fixes'
   })
 })
 
