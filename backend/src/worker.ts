@@ -14,6 +14,7 @@ import analytics from './routes/analytics.js'
 import lyrics from './routes/lyrics.js'
 import tasks from './routes/tasks.js'
 import songs from './routes/songs.js'
+import profile from './routes/profile.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
 
@@ -48,6 +49,7 @@ app.route('/api/analytics', analytics)
 app.route('/api/lyrics', lyrics)
 app.route('/api/tasks', tasks)
 app.route('/api/songs', songs)
+app.route('/api/profile', profile)
 
 // 404 handler
 app.notFound((c) => {
@@ -59,7 +61,10 @@ app.notFound((c) => {
       'GET|POST /api/artists',
       'GET|POST /api/releases', 
       'GET|POST /api/calendar',
-      'GET|POST /api/analytics'
+      'GET|POST /api/analytics',
+      'GET|PUT /api/profile',
+      'POST /api/profile/referral',
+      'GET /api/profile/referral-stats'
     ]
   }, 404)
 })

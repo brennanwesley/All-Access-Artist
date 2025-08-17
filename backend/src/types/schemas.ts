@@ -88,6 +88,27 @@ export const ApiResponseSchema = z.object({
   requestId: z.string().optional()
 })
 
+// User Profile Schemas
+export const CreateUserProfileSchema = z.object({
+  first_name: z.string().min(1, 'First name is required').max(100, 'First name too long').optional(),
+  last_name: z.string().min(1, 'Last name is required').max(100, 'Last name too long').optional(),
+  phone_verified: z.boolean().optional(),
+  billing_address: z.object({
+    street: z.string().max(200, 'Street too long').optional(),
+    city: z.string().max(100, 'City too long').optional(),
+    state: z.string().max(100, 'State too long').optional(),
+    zip: z.string().max(20, 'ZIP too long').optional(),
+    country: z.string().max(100, 'Country too long').optional()
+  }).optional(),
+  payment_method_last4: z.string().regex(/^\d{4}$/, 'Must be 4 digits').optional()
+})
+
+export const UpdateUserProfileSchema = CreateUserProfileSchema.partial()
+
+export const ReferralValidationSchema = z.object({
+  referral_code: z.string().regex(/^[A-Z0-9]{6}$/, 'Invalid referral code format')
+})
+
 // Export types
 export type CreateReleaseData = z.infer<typeof CreateReleaseSchema>
 export type UpdateReleaseData = z.infer<typeof UpdateReleaseSchema>
@@ -101,4 +122,7 @@ export type CreateLyricSectionData = z.infer<typeof CreateLyricSectionSchema>
 export type UpdateLyricSectionData = z.infer<typeof UpdateLyricSectionSchema>
 export type CreateAnalyticsData = z.infer<typeof CreateAnalyticsSchema>
 export type CreateCalendarData = z.infer<typeof CreateCalendarSchema>
+export type CreateUserProfileData = z.infer<typeof CreateUserProfileSchema>
+export type UpdateUserProfileData = z.infer<typeof UpdateUserProfileSchema>
+export type ReferralValidationData = z.infer<typeof ReferralValidationSchema>
 export type ApiResponse = z.infer<typeof ApiResponseSchema>
