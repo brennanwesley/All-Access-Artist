@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { CheckCircle2, Circle, Loader2, RotateCcw } from "lucide-react"
-import { useUpdateTask, ReleaseTask } from "@/hooks/api/useReleaseDetail"
+import { useUpdateTask, ReleaseTask } from "@/hooks/api/useReleaseDetails"
 import { ProjectTimeline } from "./ProjectTimeline"
 
 interface ReleaseChecklistProps {

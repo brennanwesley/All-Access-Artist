@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom";
 import { MetadataPrep } from "./MetadataPrep";
 import { ReleaseChecklist } from "./ReleaseChecklist";
 // import { EditReleaseModal } from "./EditReleaseModal";
-import { useGetReleaseDetails } from "@/hooks/api/useGetReleaseDetails";
+import { useGetReleaseDetails } from "@/hooks/api/useReleaseDetails";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ReleaseDetailProps {
