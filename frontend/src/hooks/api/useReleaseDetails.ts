@@ -25,6 +25,29 @@ export interface Song {
   updated_at: string
 }
 
+export interface LyricSection {
+  id: string
+  section_type: 'verse' | 'chorus' | 'bridge' | 'pre-chorus' | 'intro' | 'outro' | 'other'
+  content: string
+  section_order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface LyricSheet {
+  id: string
+  song_id: string
+  artist_id: string
+  title: string
+  language: string
+  written_by?: string
+  additional_notes?: string
+  total_sections?: number
+  created_at: string
+  updated_at: string
+  sections: LyricSection[]
+}
+
 export interface ReleaseDetails {
   id: string
   title: string
@@ -268,8 +291,157 @@ export const useDeleteSong = () => {
       toast.success('Song deleted successfully!')
     },
     onError: (error) => {
-      console.error('useDeleteSong: Mutation failed:', error)
-      toast.error(`Failed to delete song: ${error.message}`)
+      console.error('useDeleteSong: Error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete song')
+    }
+  })
+}
+
+// Hook to get lyric sheet for a song
+export const useGetLyricSheet = (songId: string) => {
+  return useQuery({
+    queryKey: ['lyricSheet', songId],
+    queryFn: async () => {
+      if (!songId) return null
+      
+      console.log('useGetLyricSheet: Fetching lyric sheet for song', songId)
+      
+      const response = await apiClient.getLyricSheet(songId)
+      
+      if (response.error) {
+        console.error('useGetLyricSheet: API Error:', response.error)
+        throw new Error(response.error)
+      }
+      
+      console.log('useGetLyricSheet: Success')
+      return response.data as LyricSheet
+    },
+    enabled: !!songId
+  })
+}
+
+// Hook to create a lyric sheet
+export const useCreateLyricSheet = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ songId, lyricData }: { 
+      songId: string; 
+      lyricData: { title: string; language: string; notes?: string } 
+    }) => {
+      console.log('useCreateLyricSheet: Creating lyric sheet for song', songId, lyricData)
+      
+      const response = await apiClient.createLyricSheet(songId, lyricData)
+      
+      if (response.error) {
+        console.error('useCreateLyricSheet: API Error:', response.error)
+        throw new Error(response.error)
+      }
+      
+      console.log('useCreateLyricSheet: Success')
+      return response.data
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
+      toast.success('Lyric sheet created successfully')
+    },
+    onError: (error) => {
+      console.error('useCreateLyricSheet: Error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to create lyric sheet')
+    }
+  })
+}
+
+// Hook to add a lyric section
+export const useAddLyricSection = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ songId, sectionData }: { 
+      songId: string; 
+      sectionData: { section_type: LyricSection['section_type']; section_order: number; content: string } 
+    }) => {
+      console.log('useAddLyricSection: Adding section to song', songId, sectionData)
+      
+      const response = await apiClient.addLyricSection(songId, sectionData)
+      
+      if (response.error) {
+        console.error('useAddLyricSection: API Error:', response.error)
+        throw new Error(response.error)
+      }
+      
+      console.log('useAddLyricSection: Success')
+      return response.data
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
+      toast.success('Lyric section added successfully')
+    },
+    onError: (error) => {
+      console.error('useAddLyricSection: Error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to add lyric section')
+    }
+  })
+}
+
+// Hook to update a lyric section
+export const useUpdateLyricSection = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ sectionId, sectionData, songId }: { 
+      sectionId: string; 
+      sectionData: { section_type?: LyricSection['section_type']; content?: string; section_order?: number };
+      songId: string;
+    }) => {
+      console.log('useUpdateLyricSection: Updating section', sectionId, sectionData)
+      
+      const response = await apiClient.updateLyricSection(sectionId, sectionData)
+      
+      if (response.error) {
+        console.error('useUpdateLyricSection: API Error:', response.error)
+        throw new Error(response.error)
+      }
+      
+      console.log('useUpdateLyricSection: Success')
+      return response.data
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
+      toast.success('Lyric section updated successfully')
+    },
+    onError: (error) => {
+      console.error('useUpdateLyricSection: Error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update lyric section')
+    }
+  })
+}
+
+// Hook to delete a lyric section
+export const useDeleteLyricSection = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ sectionId, songId }: { sectionId: string; songId: string }) => {
+      console.log('useDeleteLyricSection: Deleting section', sectionId)
+      
+      const response = await apiClient.deleteLyricSection(sectionId)
+      
+      if (response.error) {
+        console.error('useDeleteLyricSection: API Error:', response.error)
+        throw new Error(response.error)
+      }
+      
+      console.log('useDeleteLyricSection: Success')
+      return response.data
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
+      toast.success('Lyric section deleted successfully')
+    },
+    onError: (error) => {
+      console.error('useDeleteLyricSection: Error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete lyric section')
     }
   })
 }

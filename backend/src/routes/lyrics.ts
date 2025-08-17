@@ -57,7 +57,7 @@ lyrics.get('/:songId', async (c) => {
     
     // Get sections for this lyric sheet
     const { data: sections, error: sectionsError } = await supabase
-      .from('lyric_sections')
+      .from('lyric_sheet_sections')
       .select('*')
       .eq('lyric_sheet_id', lyricSheet.id)
       .order('section_order', { ascending: true })
@@ -67,9 +67,19 @@ lyrics.get('/:songId', async (c) => {
       // Don't fail the request if sections can't be fetched
     }
     
+    // Map database fields to frontend expected fields
+    const mappedSections = (sections || []).map(section => ({
+      id: section.id,
+      section_type: section.section_type,
+      content: section.section_lyrics,
+      section_order: section.section_order,
+      created_at: section.created_at,
+      updated_at: section.updated_at
+    }))
+
     const lyricSheetWithSections = {
       ...lyricSheet,
-      sections: sections || []
+      sections: mappedSections
     }
     
     console.log('Lyrics: Lyric sheet fetched successfully')
@@ -159,11 +169,12 @@ lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), a
     }
     
     const { data, error } = await supabase
-      .from('lyric_sections')
+      .from('lyric_sheet_sections')
       .insert({
-        ...sectionData,
-        lyric_sheet_id: lyricSheet.id,
-        artist_id: lyricSheet.artist_id // Include artist_id for RLS
+        section_type: sectionData.section_type,
+        section_lyrics: sectionData.content,
+        section_order: sectionData.section_order,
+        lyric_sheet_id: lyricSheet.id
       })
       .select()
       .single()
@@ -173,10 +184,20 @@ lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), a
       throw new Error(`Database error: ${error.message}`)
     }
     
+    // Map database response back to frontend format
+    const mappedData = {
+      id: data.id,
+      section_type: data.section_type,
+      content: data.section_lyrics,
+      section_order: data.section_order,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    }
+
     console.log('Lyrics: Section created successfully')
     return c.json({
       success: true,
-      data
+      data: mappedData
     }, 201)
   } catch (error) {
     console.error('Lyrics: Error creating section:', error)
@@ -196,9 +217,15 @@ lyrics.patch('/sections/:sectionId', zValidator('json', UpdateLyricSectionSchema
     
     console.log('Lyrics: Updating section ID:', sectionId, 'data:', updateData)
     
+    // Map frontend fields to database fields
+    const dbUpdateData: any = {}
+    if (updateData.section_type) dbUpdateData.section_type = updateData.section_type
+    if (updateData.content) dbUpdateData.section_lyrics = updateData.content
+    if (updateData.section_order !== undefined) dbUpdateData.section_order = updateData.section_order
+
     const { data, error } = await supabase
-      .from('lyric_sections')
-      .update(updateData)
+      .from('lyric_sheet_sections')
+      .update(dbUpdateData)
       .eq('id', sectionId)
       .select()
       .single()
@@ -208,10 +235,20 @@ lyrics.patch('/sections/:sectionId', zValidator('json', UpdateLyricSectionSchema
       throw new Error(`Database error: ${error.message}`)
     }
     
+    // Map database response back to frontend format
+    const mappedData = {
+      id: data.id,
+      section_type: data.section_type,
+      content: data.section_lyrics,
+      section_order: data.section_order,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    }
+
     console.log('Lyrics: Section updated successfully')
     return c.json({
       success: true,
-      data
+      data: mappedData
     })
   } catch (error) {
     console.error('Lyrics: Error updating section:', error)
@@ -231,7 +268,7 @@ lyrics.delete('/sections/:sectionId', async (c) => {
     console.log('Lyrics: Deleting section ID:', sectionId)
     
     const { error } = await supabase
-      .from('lyric_sections')
+      .from('lyric_sheet_sections')
       .delete()
       .eq('id', sectionId)
     

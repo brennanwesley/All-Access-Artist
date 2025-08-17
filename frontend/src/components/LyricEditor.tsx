@@ -6,15 +6,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { FileText, Plus, Loader2, Edit2, Trash2, Music } from 'lucide-react'
-import { Song } from '@/hooks/api/useReleaseDetail'
 import { 
+  Song,
+  LyricSection,
   useGetLyricSheet, 
   useCreateLyricSheet,
   useAddLyricSection, 
   useUpdateLyricSection, 
-  useDeleteLyricSection,
-  LyricSection 
-} from '@/hooks/api/useLyricSheet'
+  useDeleteLyricSection
+} from '@/hooks/api/useReleaseDetails'
 import { toast } from 'sonner'
 
 interface LyricEditorProps {
@@ -61,7 +61,7 @@ export const LyricEditor = ({ songs }: LyricEditorProps) => {
     createLyricSheetMutation.mutate({
       songId: selectedSong.id,
       lyricData: {
-        title: `${selectedSong.title} - Lyrics`,
+        title: `${selectedSong.song_title} - Lyrics`,
         language: 'en',
         notes: ''
       }
@@ -124,12 +124,10 @@ export const LyricEditor = ({ songs }: LyricEditorProps) => {
   }
 
   const handleDeleteSection = (sectionId: string) => {
-    if (confirm('Are you sure you want to delete this lyric section? This action cannot be undone.')) {
-      deleteSectionMutation.mutate({
-        sectionId,
-        songId: selectedSongId
-      })
-    }
+    deleteSectionMutation.mutate({
+      sectionId,
+      songId: selectedSongId
+    })
   }
 
   const getSectionTypeLabel = (type: LyricSection['section_type']) => {
@@ -167,7 +165,7 @@ export const LyricEditor = ({ songs }: LyricEditorProps) => {
                         <Badge variant="secondary" className="text-xs">
                           {song.track_number}
                         </Badge>
-                        {song.title}
+                        {song.song_title}
                       </div>
                     </SelectItem>
                   ))}
@@ -229,7 +227,7 @@ export const LyricEditor = ({ songs }: LyricEditorProps) => {
                     Add New Section
                   </CardTitle>
                   <CardDescription>
-                    Add a new lyric section to "{selectedSong?.title}"
+                    Add a new lyric section to "{selectedSong?.song_title}"
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -288,10 +286,10 @@ export const LyricEditor = ({ songs }: LyricEditorProps) => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    Lyric Sections ({sortedSections.length})
+                    Lyric Sections
                   </CardTitle>
                   <CardDescription>
-                    Manage the lyric sections for "{selectedSong?.title}"
+                    Manage the lyric sections for "{selectedSong?.song_title}"
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

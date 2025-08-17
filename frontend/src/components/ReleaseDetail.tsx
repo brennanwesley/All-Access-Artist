@@ -6,7 +6,8 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { MetadataPrep } from "./MetadataPrep";
 import { ReleaseChecklist } from "./ReleaseChecklist";
-import { SongManager } from "./SongManager";
+import { SongManager } from '@/components/SongManager'
+import { LyricEditor } from '@/components/LyricEditor';
 import { EditReleaseModal } from "./EditReleaseModal";
 import { useGetReleaseDetails, useUpdateRelease } from "@/hooks/api/useReleaseDetails";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -234,11 +235,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
               <CardTitle>Lyric Sheets</CardTitle>
               <CardDescription>Create and manage lyric sheets for your tracks</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Lyric sheets management will be implemented in the next phase.</p>
-              </div>
-            </CardContent>
+            <LyricEditor songs={release.songs || []} />
           </Card>
         </TabsContent>
       </Tabs>
