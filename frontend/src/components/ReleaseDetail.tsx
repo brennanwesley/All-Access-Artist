@@ -20,7 +20,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
   const [showMetadata, setShowMetadata] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const updateReleaseMutation = useUpdateRelease();
-  const { releaseId } = useParams<{ releaseId: string }>();
+  const { id: releaseId } = useParams<{ id: string }>();
   
   const {
     data: release,
