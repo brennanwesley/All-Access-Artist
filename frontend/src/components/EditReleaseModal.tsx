@@ -7,17 +7,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Calendar, CalendarDays, Loader2 } from "lucide-react"
-import { ReleaseDetail } from "@/hooks/api/useReleaseDetail"
+import { ReleaseDetails } from "@/hooks/api/useReleaseDetails"
 import { toast } from "sonner"
 
 interface EditReleaseModalProps {
   isOpen: boolean
   onClose: () => void
-  release: ReleaseDetail
+  release: ReleaseDetails
   onUpdate: (updatedData: {
     title: string
     release_date: string
-    release_type: string
+    release_type: 'single' | 'ep' | 'album' | 'mixtape'
     genre?: string
     description?: string
   }) => Promise<void>

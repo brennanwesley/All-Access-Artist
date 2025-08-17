@@ -6,8 +6,8 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { MetadataPrep } from "./MetadataPrep";
 import { ReleaseChecklist } from "./ReleaseChecklist";
-// import { EditReleaseModal } from "./EditReleaseModal";
-import { useGetReleaseDetails } from "@/hooks/api/useReleaseDetails";
+import { EditReleaseModal } from "./EditReleaseModal";
+import { useGetReleaseDetails, useUpdateRelease } from "@/hooks/api/useReleaseDetails";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ReleaseDetailProps {
@@ -17,8 +17,8 @@ interface ReleaseDetailProps {
 export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
   const [showMetadata, setShowMetadata] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const updateReleaseMutation = useUpdateRelease();
   const { releaseId } = useParams<{ releaseId: string }>();
-  // const updateReleaseMutation = useUpdateRelease();
   
   const {
     data: release,
@@ -160,14 +160,12 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
               <h1 className="text-3xl font-bold">{release.title}</h1>
               <p className="text-muted-foreground">Release Management Dashboard</p>
             </div>
-            {/* <Button 
-              variant="outline" 
-              size="sm"
+            <Button
               onClick={() => setShowEditModal(true)}
-              className="ml-2"
+              className="bg-primary hover:bg-primary/90"
             >
               Edit Release
-            </Button> */}
+            </Button>
           </div>
         </div>
       </div>
@@ -291,18 +289,20 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
         </Card>
       </div>
 
-      {/* Edit Release Modal - TEMPORARILY DISABLED FOR DEBUGGING */}
-      {/* <EditReleaseModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        release={release}
-        onUpdate={async (updateData) => {
-          await updateReleaseMutation.mutateAsync({
-            releaseId: release.id,
-            updateData
-          })
-        }}
-      /> */}
+      {/* Edit Release Modal */}
+      {showEditModal && release && (
+        <EditReleaseModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          release={release}
+          onUpdate={async (updateData) => {
+            await updateReleaseMutation.mutateAsync({
+              releaseId: release.id,
+              updateData
+            })
+          }}
+        />
+      )}
     </div>
   );
 };
