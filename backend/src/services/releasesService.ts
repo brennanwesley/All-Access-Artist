@@ -9,20 +9,29 @@ export class ReleasesService {
   constructor(private supabase: SupabaseClient) {}
 
   async getAllReleases(userId: string) {
+    console.log('=== GET ALL RELEASES DEBUG ===')
+    console.log('User ID:', userId)
+    
     // First get the user's artist_id from artist_profiles
     const { data: artistProfile, error: artistError } = await this.supabase
       .from('artist_profiles')
-      .select('id')
+      .select('id, artist_name')
       .eq('user_id', userId)
       .single()
 
+    console.log('Artist profile query result:', { artistProfile, artistError })
+
     if (artistError) {
+      console.log('Artist profile error:', artistError.message)
       throw new Error(`Failed to fetch artist profile: ${artistError.message}`)
     }
 
     if (!artistProfile) {
+      console.log('No artist profile found for user:', userId)
       throw new Error('No artist profile found for user')
     }
+
+    console.log('Found artist profile:', artistProfile)
 
     // Then get releases for this artist only
     const { data, error } = await this.supabase
@@ -31,28 +40,41 @@ export class ReleasesService {
       .eq('artist_id', artistProfile.id)
       .order('release_date', { ascending: false })
 
+    console.log('Releases query result:', { count: data?.length || 0, error })
+    console.log('=== END GET ALL RELEASES DEBUG ===')
+
     if (error) {
       throw new Error(`Failed to fetch releases: ${error.message}`)
     }
 
-    return data
+    return data || []
   }
 
   async getReleaseById(id: string, userId: string) {
+    console.log('=== GET RELEASE BY ID DEBUG ===')
+    console.log('Release ID:', id)
+    console.log('User ID:', userId)
+    
     // First get the user's artist_id from artist_profiles
     const { data: artistProfile, error: artistError } = await this.supabase
       .from('artist_profiles')
-      .select('id')
+      .select('id, artist_name')
       .eq('user_id', userId)
       .single()
 
+    console.log('Artist profile query result:', { artistProfile, artistError })
+
     if (artistError) {
+      console.log('Artist profile error:', artistError.message)
       throw new Error(`Failed to fetch artist profile: ${artistError.message}`)
     }
 
     if (!artistProfile) {
+      console.log('No artist profile found for user:', userId)
       throw new Error('No artist profile found for user')
     }
+
+    console.log('Found artist profile:', artistProfile)
 
     // Get release only if it belongs to this user's artist
     const { data, error } = await this.supabase
@@ -62,7 +84,11 @@ export class ReleasesService {
       .eq('artist_id', artistProfile.id)
       .single()
 
+    console.log('Release query result:', { data: !!data, error })
+    console.log('=== END GET RELEASE BY ID DEBUG ===')
+
     if (error) {
+      console.log('Release query error:', error.message)
       throw new Error(`Failed to fetch release: ${error.message}`)
     }
 
