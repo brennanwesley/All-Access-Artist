@@ -32,7 +32,11 @@ export const ReleaseCalendar = () => {
   const handleNewReleaseClick = () => {
     console.log('New Release button clicked, opening modal');
     setIsModalOpen(true);
+    console.log('Modal state after setIsModalOpen(true):', true);
   };
+  
+  // Debug modal state changes
+  console.log('ReleaseCalendar render - isModalOpen:', isModalOpen);
   
   // Fetch releases from API
   const { data: releases, isLoading, isError, error } = useReleases();
