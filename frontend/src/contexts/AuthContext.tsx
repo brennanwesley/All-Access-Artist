@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface AuthContextType {
   user: User | null
@@ -30,6 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     // Get initial session
@@ -50,6 +52,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email)
+        
+        // Clear all cached data when user changes or signs out
+        if (event === 'SIGNED_OUT' || (event === 'SIGNED_IN' && user?.id !== session?.user?.id)) {
+          console.log('Clearing React Query cache due to auth state change')
+          queryClient.clear()
+        }
+        
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
@@ -57,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [user?.id, queryClient])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({

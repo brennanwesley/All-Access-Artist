@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
 import { toast } from 'sonner'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Unified types for release details with comprehensive metadata
 export interface ReleaseTask {
@@ -84,8 +85,10 @@ export interface ReleaseDetails {
 
 // Query hook for fetching release details with proper data extraction
 export const useGetReleaseDetails = (releaseId: string) => {
+  const { user } = useAuth()
+  
   return useQuery({
-    queryKey: ['release-details', releaseId],
+    queryKey: ['release-details', releaseId, user?.id],
     queryFn: async () => {
       console.log('useGetReleaseDetails: Fetching release details for ID:', releaseId)
       
@@ -123,13 +126,14 @@ export const useGetReleaseDetails = (releaseId: string) => {
       console.log('useGetReleaseDetails: Final data to return:', finalData)
       return finalData as ReleaseDetails
     },
-    enabled: !!releaseId,
+    enabled: !!releaseId && !!user,
   })
 }
 
 // Hook to update a task's completion status
 export const useUpdateTask = () => {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   
   return useMutation({
     mutationFn: async ({ taskId, completed }: { taskId: string; completed: boolean }) => {
@@ -148,8 +152,10 @@ export const useUpdateTask = () => {
       return response.data
     },
     onSuccess: (_, variables) => {
-      // Invalidate and refetch release details to update the task list
-      queryClient.invalidateQueries({ queryKey: ['release-details'] })
+      // Invalidate user-specific release details cache
+      queryClient.invalidateQueries({ queryKey: ['release-details'], predicate: (query) => 
+        query.queryKey.includes(user?.id) 
+      })
       
       const action = variables.completed ? 'completed' : 'reopened'
       toast.success(`Task ${action} successfully!`)

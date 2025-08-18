@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api'
+import { useAuth } from '../../contexts/AuthContext'
 
 // Types for release data
 interface Release {
@@ -31,8 +32,10 @@ interface CreateReleaseData {
 
 // Query hook for fetching releases
 export const useReleases = () => {
+  const { user } = useAuth()
+  
   return useQuery({
-    queryKey: ['releases'],
+    queryKey: ['releases', user?.id],
     queryFn: async () => {
       const response = await apiClient.getReleases()
       if (response.status !== 200) {
@@ -42,6 +45,7 @@ export const useReleases = () => {
       const backendResponse = response.data as any
       return backendResponse?.data || []
     },
+    enabled: !!user, // Only run query when user is authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
   })
@@ -50,6 +54,7 @@ export const useReleases = () => {
 // Mutation hook for creating releases
 export const useCreateRelease = () => {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   
   return useMutation({
     mutationFn: async (releaseData: CreateReleaseData) => {
@@ -90,10 +95,9 @@ export const useCreateRelease = () => {
       }
       return response.data as Release
     },
-    onSuccess: (data) => {
-      // Invalidate and refetch releases lists
-      queryClient.invalidateQueries({ queryKey: ['releases'] })
-      queryClient.invalidateQueries({ queryKey: ['releases', data.artist_id] })
+    onSuccess: () => {
+      // Invalidate user-specific releases cache
+      queryClient.invalidateQueries({ queryKey: ['releases', user?.id] })
     },
   })
 }
