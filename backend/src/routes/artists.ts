@@ -58,9 +58,16 @@ artists.post('/', async (c) => {
     const validatedData = CreateArtistSchema.parse(body)
     
     const supabase = c.get('supabase')
+    const user = c.get('user')
     const artistsService = new ArtistsService(supabase)
     
-    const data = await artistsService.createArtist(validatedData)
+    // Add user_id to associate artist profile with authenticated user
+    const artistDataWithUser = {
+      ...validatedData,
+      user_id: user.sub // Associate with authenticated user
+    }
+    
+    const data = await artistsService.createArtist(artistDataWithUser)
     return c.json({ 
       success: true, 
       data,
