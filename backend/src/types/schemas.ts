@@ -24,13 +24,21 @@ export const UpdateReleaseSchema = CreateReleaseSchema.partial()
 // Artist Schemas
 export const CreateArtistSchema = z.object({
   artist_name: z.string().min(1, 'Artist name is required').max(100, 'Artist name too long'),
-  email: z.string().email('Invalid email address'),
+  real_name: z.string().max(100, 'Real name too long').optional(),
   bio: z.string().max(2000, 'Bio too long').optional(),
   genre: z.string().max(100, 'Genre too long').optional(),
   location: z.string().max(100, 'Location too long').optional(),
+  website_url: z.string().url('Invalid website URL').optional(),
+  spotify_url: z.string().url('Invalid Spotify URL').optional(),
+  apple_music_url: z.string().url('Invalid Apple Music URL').optional(),
+  youtube_url: z.string().url('Invalid YouTube URL').optional(),
+  instagram_url: z.string().url('Invalid Instagram URL').optional(),
+  tiktok_url: z.string().url('Invalid TikTok URL').optional(),
+  twitter_url: z.string().url('Invalid Twitter URL').optional(),
   profile_image_url: z.string().url('Invalid profile image URL').optional(),
+  banner_image_url: z.string().url('Invalid banner image URL').optional(),
   is_public: z.boolean().default(true),
-  social_media_links: z.record(z.string().url('Invalid social media link')).optional(),
+  email_notifications: z.boolean().default(true),
   user_id: z.string().uuid('Invalid user ID').optional() // Will be set by backend
 })
 
