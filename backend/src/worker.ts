@@ -6,7 +6,7 @@
 
 import { Hono } from 'hono'
 import { corsMiddleware } from './middleware/cors.js'
-import { createJwtAuth, supabaseAuth } from './middleware/auth.js'
+import { supabaseAuth } from './middleware/auth.js'
 import artists from './routes/artists.js'
 import releases from './routes/releases.js'
 import calendar from './routes/calendar.js'
@@ -34,10 +34,7 @@ app.get('/health', (c) => {
   })
 })
 
-// JWT authentication middleware for all API routes
-app.use('/api/*', createJwtAuth(() => process.env.SUPABASE_JWT_SECRET!))
-
-// Supabase user-scoped client middleware for all API routes
+// Supabase authentication middleware for all API routes (includes JWT validation)
 app.use('/api/*', supabaseAuth)
 
 // Mount route modules
