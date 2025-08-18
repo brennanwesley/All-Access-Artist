@@ -225,7 +225,24 @@ frontend/src/
 
 ---
 
-## Recent Updates (v2.4.0 - 8/17/25)
+## Recent Updates (v2.5.0 - 8/17/25)
+
+### ✅ UI Enhancement and DSP Integration Updates
+
+21. **ProfileModal Desktop and Mobile Optimization**
+    - Fixed desktop modal sizing with consistent height across Profile, Billing, and Referrals tabs
+    - Implemented full-screen responsive modal design for mobile devices
+    - Enhanced typography, spacing, and input/button sizing for mobile usability
+    - Maintained seamless user experience across all device sizes
+
+22. **DSP Pitch Tool Implementation**
+    - Updated ReleaseDetail page DSP Pitch Tool section with modern button design
+    - Removed old "Start Playlist Pitch" button and descriptive text
+    - Added side-by-side Apple Music and Spotify buttons with platform-specific styling
+    - Implemented click handlers for external navigation to artists.apple.com and artists.spotify.com
+    - Apple Music button features black glossy gradient background with clean text label
+    - Spotify button maintains official green (#1DB954) branding with icon
+    - Responsive layout: stacked on mobile, side-by-side on desktop
 
 ### ✅ Profile Management System Implementation
 

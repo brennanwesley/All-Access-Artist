@@ -15,9 +15,14 @@ const releases = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 releases.get('/', async (c) => {
   try {
     const supabase = c.get('supabase')
+    const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
-    const data = await releasesService.getAllReleases()
+    if (!user?.id) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    const data = await releasesService.getAllReleases(user.id)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error fetching releases:', error)
@@ -33,20 +38,24 @@ releases.get('/:id', async (c) => {
   try {
     const id = c.req.param('id')
     const supabase = c.get('supabase')
+    const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
     console.log('Releases: Fetching release details for ID:', id)
     
-    // Get release details
-    const { data: release, error: releaseError } = await supabase
-      .from('music_releases')
-      .select('*')
-      .eq('id', id)
-      .single()
+    if (!user?.id) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
     
-    if (releaseError) {
-      console.error('Releases: Database error fetching release:', releaseError)
-      throw new Error(`Database error: ${releaseError.message}`)
+    // Get release details (user-scoped)
+    const release = await releasesService.getReleaseById(id, user.id)
+    
+    if (!release) {
+      console.log('Releases: No release found with ID:', id)
+      return c.json({ 
+        success: false, 
+        error: 'Release not found' 
+      }, 404)
     }
     
     // Get release tasks
@@ -65,7 +74,7 @@ releases.get('/:id', async (c) => {
     if (!tasks || tasks.length === 0) {
       try {
         console.log('Releases: No tasks found, generating tasks for release:', id)
-        await releasesService.generateTasksForExistingRelease(id)
+        await releasesService.generateTasksForExistingRelease(id, user.id)
         
         // Refetch tasks after generation
         const { data: newTasks } = await supabase
@@ -126,13 +135,34 @@ releases.post('/', zValidator('json', CreateReleaseSchema), async (c) => {
     const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
+    if (!user?.id) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    // Validate that the artist_id belongs to the authenticated user
+    const { data: artistProfile, error: artistError } = await supabase
+      .from('artist_profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (artistError || !artistProfile) {
+      return c.json({ success: false, error: 'No artist profile found for user' }, 403)
+    }
+
+    // Ensure the release is created for the user's artist
+    const validatedReleaseData = {
+      ...releaseData,
+      artist_id: artistProfile.id
+    }
+    
     // Phase 1 Diagnostic Logging
     console.log('=== RELEASE CREATION DEBUG START ===')
-    console.log('1. Request Data:', JSON.stringify(releaseData, null, 2))
+    console.log('1. Request Data:', JSON.stringify(validatedReleaseData, null, 2))
     console.log('2. User Context:', user ? { id: user.id, email: user.email } : 'NO USER CONTEXT')
     console.log('3. Supabase Client Type:', supabase ? 'AVAILABLE' : 'MISSING')
     
-    const data = await releasesService.createRelease(releaseData)
+    const data = await releasesService.createRelease(validatedReleaseData)
     
     console.log('4. Release Created Successfully:', { id: data.id, title: data.title })
     console.log('=== RELEASE CREATION DEBUG END ===')
@@ -158,9 +188,14 @@ releases.put('/:id', zValidator('json', CreateReleaseSchema.partial()), async (c
     const id = c.req.param('id')
     const releaseData = c.req.valid('json')
     const supabase = c.get('supabase')
+    const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
-    const data = await releasesService.updateRelease(id, releaseData)
+    if (!user?.id) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    const data = await releasesService.updateRelease(id, releaseData, user.id)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error updating release:', error)
@@ -171,15 +206,20 @@ releases.put('/:id', zValidator('json', CreateReleaseSchema.partial()), async (c
   }
 })
 
-// PATCH /api/releases/:id - Update release (alternative method for frontend compatibility)
+// PATCH /api/releases/:id - Partial update release
 releases.patch('/:id', zValidator('json', CreateReleaseSchema.partial()), async (c) => {
   try {
     const id = c.req.param('id')
     const releaseData = c.req.valid('json')
     const supabase = c.get('supabase')
+    const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
-    const data = await releasesService.updateRelease(id, releaseData)
+    if (!user?.id) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    const data = await releasesService.updateRelease(id, releaseData, user.id)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error updating release:', error)
@@ -195,9 +235,14 @@ releases.delete('/:id', async (c) => {
   try {
     const id = c.req.param('id')
     const supabase = c.get('supabase')
+    const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
-    const data = await releasesService.deleteRelease(id)
+    if (!user?.id) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    const data = await releasesService.deleteRelease(id, user.id)
     return c.json({ success: true, data })
   } catch (error) {
     console.error('Error deleting release:', error)
@@ -213,9 +258,14 @@ releases.post('/:releaseId/generate-tasks', async (c) => {
   try {
     const releaseId = c.req.param('releaseId')
     const supabase = c.get('supabase')
+    const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
-    const result = await releasesService.generateTasksForExistingRelease(releaseId)
+    if (!user?.id) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    const result = await releasesService.generateTasksForExistingRelease(releaseId, user.id)
     return c.json({ success: true, data: result })
   } catch (error) {
     console.error('Error generating tasks for release:', error)

@@ -8,10 +8,27 @@ import type { CreateReleaseData } from '../types/schemas.js'
 export class ReleasesService {
   constructor(private supabase: SupabaseClient) {}
 
-  async getAllReleases() {
+  async getAllReleases(userId: string) {
+    // First get the user's artist_id from artist_profiles
+    const { data: artistProfile, error: artistError } = await this.supabase
+      .from('artist_profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .single()
+
+    if (artistError) {
+      throw new Error(`Failed to fetch artist profile: ${artistError.message}`)
+    }
+
+    if (!artistProfile) {
+      throw new Error('No artist profile found for user')
+    }
+
+    // Then get releases for this artist only
     const { data, error } = await this.supabase
       .from('music_releases')
       .select('*')
+      .eq('artist_id', artistProfile.id)
       .order('release_date', { ascending: false })
 
     if (error) {
@@ -21,11 +38,28 @@ export class ReleasesService {
     return data
   }
 
-  async getReleaseById(id: string) {
+  async getReleaseById(id: string, userId: string) {
+    // First get the user's artist_id from artist_profiles
+    const { data: artistProfile, error: artistError } = await this.supabase
+      .from('artist_profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .single()
+
+    if (artistError) {
+      throw new Error(`Failed to fetch artist profile: ${artistError.message}`)
+    }
+
+    if (!artistProfile) {
+      throw new Error('No artist profile found for user')
+    }
+
+    // Get release only if it belongs to this user's artist
     const { data, error } = await this.supabase
       .from('music_releases')
       .select('*')
       .eq('id', id)
+      .eq('artist_id', artistProfile.id)
       .single()
 
     if (error) {
@@ -246,12 +280,28 @@ export class ReleasesService {
    * Generates tasks for an existing release if they don't exist
    * @param releaseId - ID of the release
    */
-  async generateTasksForExistingRelease(releaseId: string) {
-    // Get release details
+  async generateTasksForExistingRelease(releaseId: string, userId: string) {
+    // First get the user's artist_id from artist_profiles
+    const { data: artistProfile, error: artistError } = await this.supabase
+      .from('artist_profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .single()
+
+    if (artistError) {
+      throw new Error(`Failed to fetch artist profile: ${artistError.message}`)
+    }
+
+    if (!artistProfile) {
+      throw new Error('No artist profile found for user')
+    }
+
+    // Get release details (user-scoped)
     const { data: release, error: releaseError } = await this.supabase
       .from('music_releases')
       .select('artist_id, release_type')
       .eq('id', releaseId)
+      .eq('artist_id', artistProfile.id)
       .single()
 
     if (releaseError || !release) {
@@ -283,12 +333,28 @@ export class ReleasesService {
     }
   }
 
-  async updateRelease(id: string, releaseData: Partial<CreateReleaseData>) {
-    // First, get the current release to check if release_type is changing
+  async updateRelease(id: string, releaseData: Partial<CreateReleaseData>, userId: string) {
+    // First get the user's artist_id from artist_profiles
+    const { data: artistProfile, error: artistError } = await this.supabase
+      .from('artist_profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .single()
+
+    if (artistError) {
+      throw new Error(`Failed to fetch artist profile: ${artistError.message}`)
+    }
+
+    if (!artistProfile) {
+      throw new Error('No artist profile found for user')
+    }
+
+    // Get the current release (user-scoped) to check if release_type is changing
     const { data: currentRelease, error: fetchError } = await this.supabase
       .from('music_releases')
       .select('release_type, artist_id')
       .eq('id', id)
+      .eq('artist_id', artistProfile.id)
       .single()
 
     if (fetchError) {
@@ -337,11 +403,28 @@ export class ReleasesService {
     return data
   }
 
-  async deleteRelease(id: string) {
+  async deleteRelease(id: string, userId: string) {
+    // First get the user's artist_id from artist_profiles
+    const { data: artistProfile, error: artistError } = await this.supabase
+      .from('artist_profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .single()
+
+    if (artistError) {
+      throw new Error(`Failed to fetch artist profile: ${artistError.message}`)
+    }
+
+    if (!artistProfile) {
+      throw new Error('No artist profile found for user')
+    }
+
+    // Delete release only if it belongs to this user's artist
     const { error } = await this.supabase
       .from('music_releases')
       .delete()
       .eq('id', id)
+      .eq('artist_id', artistProfile.id)
 
     if (error) {
       throw new Error(`Failed to delete release: ${error.message}`)
