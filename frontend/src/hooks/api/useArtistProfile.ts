@@ -39,14 +39,21 @@ export const useArtistProfile = () => {
     queryFn: async () => {
       if (!user?.id) return null
       
+      console.log('Fetching artist profile for user:', user.id)
+      
       const response = await apiClient.getArtists()
+      console.log('Artist profile API response:', { status: response.status, error: response.error })
+      
       if (response.status !== 200) {
+        console.error('Failed to fetch artists:', response.error)
         throw new Error(response.error || 'Failed to fetch artist profile')
       }
       
       // Find the artist profile for the current user
       const artists = response.data as ArtistProfile[]
-      const userProfile = artists.find(artist => artist.user_id === user.id)
+      console.log('All artists:', artists?.length || 0)
+      const userProfile = artists?.find(artist => artist.user_id === user.id)
+      console.log('User artist profile found:', !!userProfile)
       
       return userProfile || null
     },
@@ -105,15 +112,26 @@ export const useEnsureArtistProfile = () => {
   const createProfile = useCreateArtistProfile()
   const { user } = useAuth()
   
+  console.log('useEnsureArtistProfile state:', {
+    profile: !!profile,
+    isLoading,
+    error: error?.message,
+    user: !!user,
+    hasProfile: !!profile
+  })
+  
   const ensureProfile = async () => {
+    console.log('ensureProfile called')
     if (!user) {
       throw new Error('User must be authenticated')
     }
     
     if (profile) {
+      console.log('Profile already exists, returning existing profile')
       return profile // Profile already exists
     }
     
+    console.log('Creating new artist profile...')
     // Create profile if it doesn't exist
     return await createProfile.mutateAsync({})
   }
