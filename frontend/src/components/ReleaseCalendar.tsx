@@ -278,6 +278,22 @@ export const ReleaseCalendar = () => {
         open={isModalOpen} 
         onOpenChange={setIsModalOpen} 
       />
+      {/* Force render a simple modal to test */}
+      {isModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'red',
+          color: 'white',
+          padding: '20px',
+          zIndex: 9999,
+          border: '2px solid white'
+        }}>
+          TEST MODAL IS VISIBLE - isModalOpen: {String(isModalOpen)}
+        </div>
+      )}
     </div>
   );
 };
