@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Calendar, Music, Loader2, AlertCircle } from "lucide-react";
 import { useCreateRelease } from '@/hooks/api/useReleases';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEnsureArtistProfile } from '@/hooks/api/useArtistProfile';
 import { toast } from 'sonner';
 
 // Schema for form validation
@@ -33,6 +34,7 @@ interface NewReleaseModalProps {
 export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) => {
   const createReleaseMutation = useCreateRelease();
   const { user } = useAuth();
+  const { profile, hasProfile, ensureProfile, isCreating } = useEnsureArtistProfile();
   
   const {
     register,
@@ -61,10 +63,22 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
     }
 
     try {
+      // Ensure user has an artist profile before creating release
+      let artistProfile = profile;
+      if (!hasProfile) {
+        toast.info('Creating your artist profile...');
+        artistProfile = await ensureProfile();
+      }
+
+      if (!artistProfile) {
+        toast.error('Failed to create artist profile. Please try again.');
+        return;
+      }
+
       // Transform form data to match backend API schema
       const releaseData = {
         title: data.title,
-        artist_id: user.id, // Use authenticated user's ID
+        artist_id: artistProfile.id, // Use artist profile ID, not user ID
         release_date: new Date(data.release_date).toISOString(), // Convert to ISO datetime string
         release_type: data.release_type, // Backend expects 'release_type' to match database schema
         status: data.status,
@@ -233,12 +247,12 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
                 type="submit" 
                 variant="hero" 
                 className="flex-1"
-                disabled={!user || isSubmitting || createReleaseMutation.isPending}
+                disabled={!user || isSubmitting || createReleaseMutation.isPending || isCreating}
               >
-                {(isSubmitting || createReleaseMutation.isPending) ? (
+                {(isSubmitting || createReleaseMutation.isPending || isCreating) ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
+                    {isCreating ? 'Setting up profile...' : 'Creating...'}
                   </>
                 ) : (
                   'Create Release'

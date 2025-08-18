@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api'
+import { useAuth } from '../../contexts/AuthContext'
 
 // Types for artist data
 interface Artist {
@@ -29,8 +30,10 @@ interface CreateArtistData {
 
 // Query hook for fetching artists
 export const useArtists = () => {
+  const { user } = useAuth()
+  
   return useQuery({
-    queryKey: ['artists'],
+    queryKey: ['artists', user?.id],
     queryFn: async () => {
       const response = await apiClient.getArtists()
       if (response.status !== 200) {
@@ -38,6 +41,7 @@ export const useArtists = () => {
       }
       return response.data as Artist[]
     },
+    enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
   })
@@ -46,6 +50,7 @@ export const useArtists = () => {
 // Mutation hook for creating artists
 export const useCreateArtist = () => {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   
   return useMutation({
     mutationFn: async (artistData: CreateArtistData) => {
@@ -56,8 +61,9 @@ export const useCreateArtist = () => {
       return response.data as Artist
     },
     onSuccess: () => {
-      // Invalidate and refetch artists list
-      queryClient.invalidateQueries({ queryKey: ['artists'] })
+      // Invalidate user-specific artists cache
+      queryClient.invalidateQueries({ queryKey: ['artists', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['artist-profile', user?.id] })
     },
   })
 }
