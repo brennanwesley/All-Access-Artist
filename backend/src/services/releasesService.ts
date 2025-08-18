@@ -82,7 +82,7 @@ export class ReleasesService {
       .select('*')
       .eq('id', id)
       .eq('artist_id', artistProfile.id)
-      .single()
+      .maybeSingle()
 
     console.log('Release query result:', { data: !!data, error })
     console.log('=== END GET RELEASE BY ID DEBUG ===')
@@ -90,6 +90,11 @@ export class ReleasesService {
     if (error) {
       console.log('Release query error:', error.message)
       throw new Error(`Failed to fetch release: ${error.message}`)
+    }
+
+    if (!data) {
+      console.log('Release not found or access denied for user:', userId)
+      throw new Error('Release not found or access denied')
     }
 
     return data
