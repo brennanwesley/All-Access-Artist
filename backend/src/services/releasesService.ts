@@ -17,7 +17,7 @@ export class ReleasesService {
       .from('artist_profiles')
       .select('id, artist_name')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
 
     console.log('Artist profile query result:', { artistProfile, artistError })
 
@@ -28,7 +28,8 @@ export class ReleasesService {
 
     if (!artistProfile) {
       console.log('No artist profile found for user:', userId)
-      throw new Error('No artist profile found for user')
+      // Return empty array instead of throwing error - user hasn't created artist profile yet
+      return []
     }
 
     console.log('Found artist profile:', artistProfile)
@@ -60,7 +61,7 @@ export class ReleasesService {
       .from('artist_profiles')
       .select('id, artist_name')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
 
     console.log('Artist profile query result:', { artistProfile, artistError })
 
