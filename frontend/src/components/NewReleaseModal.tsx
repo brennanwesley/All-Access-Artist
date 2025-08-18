@@ -34,7 +34,19 @@ interface NewReleaseModalProps {
 export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) => {
   const createReleaseMutation = useCreateRelease();
   const { user } = useAuth();
-  const { profile, hasProfile, ensureProfile, isCreating } = useEnsureArtistProfile();
+  
+  // Add debug logging for modal opening
+  console.log('NewReleaseModal render:', { open, user: !!user });
+  
+  const { profile, hasProfile, ensureProfile, isCreating, error: profileError } = useEnsureArtistProfile();
+  
+  // Debug artist profile state
+  console.log('Artist profile state:', { 
+    hasProfile, 
+    profile: !!profile, 
+    isCreating, 
+    profileError: profileError?.message 
+  });
   
   const {
     register,

@@ -28,6 +28,12 @@ interface Release {
 export const ReleaseCalendar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+  // Add debug logging for button clicks
+  const handleNewReleaseClick = () => {
+    console.log('New Release button clicked, opening modal');
+    setIsModalOpen(true);
+  };
+  
   // Fetch releases from API
   const { data: releases, isLoading, isError, error } = useReleases();
 
@@ -83,7 +89,7 @@ export const ReleaseCalendar = () => {
               Plan, track, and manage your music releases
             </p>
           </div>
-          <Button variant="hero" size="lg" onClick={() => setIsModalOpen(true)}>
+          <Button variant="hero" size="lg" onClick={handleNewReleaseClick}>
             <Plus className="mr-2 h-5 w-5" />
             New Release
           </Button>
@@ -118,7 +124,7 @@ export const ReleaseCalendar = () => {
               Plan, track, and manage your music releases
             </p>
           </div>
-          <Button variant="hero" size="lg" onClick={() => setIsModalOpen(true)}>
+          <Button variant="hero" size="lg" onClick={handleNewReleaseClick}>
             <Plus className="mr-2 h-5 w-5" />
             New Release
           </Button>
@@ -145,7 +151,7 @@ export const ReleaseCalendar = () => {
               Plan, track, and manage your music releases
             </p>
           </div>
-          <Button variant="hero" size="lg" onClick={() => setIsModalOpen(true)}>
+          <Button variant="hero" size="lg" onClick={handleNewReleaseClick}>
             <Plus className="mr-2 h-5 w-5" />
             New Release
           </Button>
@@ -158,7 +164,7 @@ export const ReleaseCalendar = () => {
             <p className="text-muted-foreground mb-6">
               Start by adding a New Release...
             </p>
-            <Button onClick={() => setIsModalOpen(true)}>
+            <Button onClick={handleNewReleaseClick}>
               <Plus className="mr-2 h-4 w-4" />
               Create Your First Release
             </Button>
@@ -178,7 +184,7 @@ export const ReleaseCalendar = () => {
             Plan, track, and manage your music releases
           </p>
         </div>
-        <Button variant="hero" size="lg" onClick={() => setIsModalOpen(true)}>
+        <Button variant="hero" size="lg" onClick={handleNewReleaseClick}>
           <Plus className="mr-2 h-5 w-5" />
           New Release
         </Button>
