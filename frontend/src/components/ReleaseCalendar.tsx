@@ -279,48 +279,76 @@ export const ReleaseCalendar = () => {
         onOpenChange={setIsModalOpen} 
       />
       
-      {/* Temporary visibility test - high z-index modal */}
+      {/* Portal-based test modal to bypass parent containers */}
       {isModalOpen && (
-        <div style={{
-          position: 'fixed',
-          top: '0',
-          left: '0',
-          right: '0',
-          bottom: '0',
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          zIndex: 99999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '40px',
-            borderRadius: '8px',
-            maxWidth: '500px',
-            width: '90%',
-            textAlign: 'center',
-            color: 'black'
-          }}>
-            <h2 style={{ marginBottom: '20px', fontSize: '24px', fontWeight: 'bold' }}>🔍 VISIBILITY TEST MODAL</h2>
-            <p style={{ marginBottom: '20px' }}>If you can see this, the modal positioning works!</p>
-            <p style={{ marginBottom: '30px', color: '#666' }}>Modal State: {String(isModalOpen)}</p>
-            <button 
-              onClick={() => setIsModalOpen(false)}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
-            >
-              Close Test Modal
-            </button>
-          </div>
-        </div>
+        <>
+          {/* Create portal to document.body to bypass all parent containers */}
+          {typeof document !== 'undefined' && 
+            document.body && 
+            (() => {
+              const portalDiv = document.createElement('div');
+              portalDiv.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.8);
+                z-index: 999999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                pointer-events: auto;
+              `;
+              
+              const modalContent = document.createElement('div');
+              modalContent.style.cssText = `
+                background: white;
+                padding: 40px;
+                border-radius: 8px;
+                max-width: 500px;
+                width: 90%;
+                text-align: center;
+                color: black;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+              `;
+              
+              modalContent.innerHTML = `
+                <h2 style="margin-bottom: 20px; font-size: 24px; font-weight: bold;">🔍 PORTAL TEST MODAL</h2>
+                <p style="margin-bottom: 20px;">This modal uses document.body portal to bypass parent containers!</p>
+                <p style="margin-bottom: 30px; color: #666;">Modal State: ${String(isModalOpen)}</p>
+                <button id="closePortalModal" style="
+                  padding: 10px 20px;
+                  background-color: #007bff;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 16px;
+                ">Close Portal Modal</button>
+              `;
+              
+              portalDiv.appendChild(modalContent);
+              document.body.appendChild(portalDiv);
+              
+              // Add click handler
+              const closeBtn = modalContent.querySelector('#closePortalModal');
+              if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                  document.body.removeChild(portalDiv);
+                  setIsModalOpen(false);
+                });
+              }
+              
+              // Cleanup on unmount
+              return () => {
+                if (document.body.contains(portalDiv)) {
+                  document.body.removeChild(portalDiv);
+                }
+              };
+            })()
+          }
+        </>
       )}
     </div>
   );
