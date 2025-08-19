@@ -1,3 +1,4 @@
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
@@ -112,34 +113,86 @@ export const useEnsureArtistProfile = () => {
   const createProfile = useCreateArtistProfile()
   const { user } = useAuth()
   
-  console.log('useEnsureArtistProfile state:', {
-    profile: !!profile,
+  // Log initial state
+  console.log('useEnsureArtistProfile - Initial state:', {
+    hasUser: !!user,
+    userId: user?.id,
+    hasProfile: !!profile,
+    profileId: profile?.id,
     isLoading,
     error: error?.message,
-    user: !!user,
-    hasProfile: !!profile
+    isCreating: createProfile.isPending
   })
   
+  // Log when profile data changes
+  React.useEffect(() => {
+    console.log('useEnsureArtistProfile - Profile data changed:', {
+      hasProfile: !!profile,
+      profileId: profile?.id,
+      profileName: profile?.artist_name
+    })
+  }, [profile])
+  
+  // Log when create state changes
+  React.useEffect(() => {
+    if (createProfile.isPending) {
+      console.log('useEnsureArtistProfile - Profile creation started')
+    }
+    
+    if (createProfile.isSuccess) {
+      console.log('useEnsureArtistProfile - Profile creation successful:', {
+        profile: createProfile.data
+      })
+    }
+    
+    if (createProfile.isError) {
+      console.error('useEnsureArtistProfile - Profile creation failed:', {
+        error: createProfile.error
+      })
+    }
+  }, [createProfile.isPending, createProfile.isSuccess, createProfile.isError, createProfile.data, createProfile.error])
+  
   const ensureProfile = async () => {
-    console.log('ensureProfile called')
+    console.log('ensureProfile - Starting profile check/creation')
+    
     if (!user) {
-      throw new Error('User must be authenticated')
+      const errorMsg = 'User must be authenticated to ensure artist profile'
+      console.error(errorMsg)
+      throw new Error(errorMsg)
     }
     
     if (profile) {
-      console.log('Profile already exists, returning existing profile')
-      return profile // Profile already exists
+      console.log('ensureProfile - Profile already exists, returning existing profile:', {
+        profileId: profile.id,
+        name: profile.artist_name
+      })
+      return profile
     }
     
-    console.log('Creating new artist profile...')
-    // Create profile if it doesn't exist
-    return await createProfile.mutateAsync({})
+    console.log('ensureProfile - No existing profile found, creating new one...')
+    try {
+      const newProfile = await createProfile.mutateAsync({
+        artist_name: user.email?.split('@')[0] || 'Artist',
+        email: user.email || '',
+        is_public: true
+      })
+      
+      console.log('ensureProfile - Successfully created new profile:', {
+        profileId: newProfile.id,
+        name: newProfile.artist_name
+      })
+      
+      return newProfile
+    } catch (err) {
+      console.error('ensureProfile - Error creating profile:', err)
+      throw err
+    }
   }
   
   return {
     profile,
-    isLoading,
-    error,
+    isLoading: isLoading || createProfile.isPending,
+    error: error || createProfile.error,
     hasProfile: !!profile,
     ensureProfile,
     isCreating: createProfile.isPending

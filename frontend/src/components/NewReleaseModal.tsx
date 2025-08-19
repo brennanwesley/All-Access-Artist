@@ -32,36 +32,28 @@ interface NewReleaseModalProps {
 }
 
 export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) => {
-  // Add debug logging for modal opening FIRST
+  // Add debug logging for modal opening
   console.log('NewReleaseModal render START:', { open });
   
   const createReleaseMutation = useCreateRelease();
   const { user } = useAuth();
+  const artistProfileHook = useEnsureArtistProfile();
   
-  console.log('NewReleaseModal auth state:', { user: !!user });
+  // Destructure the hook values
+  const { 
+    profile, 
+    hasProfile, 
+    ensureProfile, 
+    isCreating, 
+    error: profileError 
+  } = artistProfileHook;
   
-  // Wrap useEnsureArtistProfile in try-catch to prevent crashes
-  let profile: any = null;
-  let hasProfile = false;
-  let ensureProfile: any = null;
-  let isCreating = false;
-  let profileError: Error | null = null;
-  
-  try {
-    console.log('About to call useEnsureArtistProfile...');
-    const artistProfileHook = useEnsureArtistProfile();
-    profile = artistProfileHook.profile;
-    hasProfile = artistProfileHook.hasProfile;
-    ensureProfile = artistProfileHook.ensureProfile;
-    isCreating = artistProfileHook.isCreating;
-    profileError = artistProfileHook.error;
-    console.log('useEnsureArtistProfile completed successfully');
-  } catch (error) {
-    console.error('useEnsureArtistProfile failed:', error);
-    profileError = error as Error;
-    hasProfile = false;
-    isCreating = false;
-  }
+  console.log('NewReleaseModal auth state:', { 
+    user: !!user,
+    hasProfile,
+    isCreating,
+    profileError: profileError?.message 
+  });
   
   // Debug artist profile state
   console.log('Artist profile state:', { 
