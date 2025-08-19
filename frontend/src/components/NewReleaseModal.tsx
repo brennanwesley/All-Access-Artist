@@ -10,13 +10,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Calendar, Music, Loader2, AlertCircle } from "lucide-react";
 import { useCreateRelease } from '@/hooks/api/useReleases';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEnsureArtistProfile } from '@/hooks/api/useArtistProfile';
 import { toast } from 'sonner';
 
-// Schema for form validation
+// Schema for form validation - simplified to use user_id directly
 const createReleaseSchema = z.object({
   title: z.string().min(1, 'Title is required'),
-  artist_id: z.string().min(1, 'Artist ID is required'),
   release_date: z.string().min(1, 'Release date is required'),
   release_type: z.enum(['single', 'ep', 'album', 'mixtape']),
   status: z.enum(['draft', 'scheduled', 'released']).default('draft'),
@@ -32,37 +30,10 @@ interface NewReleaseModalProps {
 }
 
 export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) => {
-  // Add debug logging for modal opening
-  console.log('NewReleaseModal render START:', { open });
-  console.log('NewReleaseModal - Authentication architecture fixes applied');
+  console.log('NewReleaseModal render - simplified auth system');
   
   const createReleaseMutation = useCreateRelease();
   const { user } = useAuth();
-  const artistProfileHook = useEnsureArtistProfile();
-  
-  // Destructure the hook values
-  const { 
-    profile, 
-    hasProfile, 
-    ensureProfile, 
-    isCreating, 
-    error: profileError 
-  } = artistProfileHook;
-  
-  console.log('NewReleaseModal auth state:', { 
-    user: !!user,
-    hasProfile,
-    isCreating,
-    profileError: profileError?.message 
-  });
-  
-  // Debug artist profile state
-  console.log('Artist profile state:', { 
-    hasProfile, 
-    profile: !!profile, 
-    isCreating, 
-    profileError: profileError?.message 
-  });
   
   const {
     register,
@@ -74,7 +45,6 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
     resolver: zodResolver(createReleaseSchema),
     defaultValues: {
       title: '',
-      artist_id: profile?.id || '', // Use artist profile ID, not user ID
       release_date: '',
       release_type: 'single',
       status: 'draft',
@@ -84,46 +54,28 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
   });
 
   const onSubmit = async (data: CreateReleaseFormData) => {
-    // Ensure user is authenticated
     if (!user?.id) {
       toast.error('You must be logged in to create a release.');
       return;
     }
 
     try {
-      // Ensure user has an artist profile before creating release
-      let artistProfile = profile;
-      if (!hasProfile) {
-        toast.info('Creating your artist profile...');
-        artistProfile = await ensureProfile();
-      }
-
-      if (!artistProfile) {
-        toast.error('Failed to create artist profile. Please try again.');
-        return;
-      }
-
-      // Transform form data to match backend API schema
+      // Transform form data to include user_id
       const releaseData = {
         title: data.title,
-        artist_id: artistProfile.id, // Use artist profile ID, not user ID
-        release_date: new Date(data.release_date).toISOString(), // Convert to ISO datetime string
-        release_type: data.release_type, // Backend expects 'release_type' to match database schema
+        user_id: user.id, // Use user ID directly
+        release_date: new Date(data.release_date).toISOString(),
+        release_type: data.release_type,
         status: data.status,
         ...(data.description && { description: data.description }),
         ...(data.genre && { genre: data.genre }),
       };
       
       await createReleaseMutation.mutateAsync(releaseData);
-      
-      // Show success message
       toast.success('Release created successfully!');
-      
-      // Reset form and close modal on success
       reset();
       onOpenChange(false);
     } catch (error) {
-      // Enhanced error handling with proper message extraction
       console.error('Form submission error:', error);
       
       let errorMessage = 'Failed to create release. Please try again.';
@@ -259,28 +211,23 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
               )}
             </div>
 
-
-
-            <div className="flex gap-4 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)} 
-                className="flex-1"
-                disabled={isSubmitting || createReleaseMutation.isPending}
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                variant="hero" 
-                className="flex-1"
-                disabled={!user || isSubmitting || createReleaseMutation.isPending || isCreating}
+              <Button
+                type="submit"
+                disabled={isSubmitting || createReleaseMutation.isPending}
+                className="min-w-[120px]"
               >
-                {(isSubmitting || createReleaseMutation.isPending || isCreating) ? (
+                {isSubmitting || createReleaseMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isCreating ? 'Setting up profile...' : 'Creating...'}
+                    Creating...
                   </>
                 ) : (
                   'Create Release'

@@ -139,21 +139,10 @@ releases.post('/', zValidator('json', CreateReleaseSchema), async (c) => {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    // Validate that the artist_id belongs to the authenticated user
-    const { data: artistProfile, error: artistError } = await supabase
-      .from('artist_profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (artistError || !artistProfile) {
-      return c.json({ success: false, error: 'No artist profile found for user' }, 403)
-    }
-
-    // Ensure the release is created for the user's artist
+    // Ensure the release is created for the authenticated user
     const validatedReleaseData = {
       ...releaseData,
-      artist_id: artistProfile.id
+      user_id: user.id
     }
     
     // Phase 1 Diagnostic Logging
@@ -282,20 +271,25 @@ releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (
     const releaseId = c.req.param('releaseId')
     const songData = c.req.valid('json')
     const supabase = c.get('supabase')
-    const user = c.get('jwtPayload')
+    const user = c.get('user')
+    
+    if (!user?.id) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
     
     console.log('Releases: Adding song to release', releaseId, 'data:', songData)
     
-    // Get artist_id from the release for RLS compliance
+    // Verify the release belongs to the authenticated user
     const { data: release, error: releaseError } = await supabase
       .from('music_releases')
-      .select('artist_id')
+      .select('user_id')
       .eq('id', releaseId)
+      .eq('user_id', user.id)
       .single()
     
-    if (releaseError) {
-      console.error('Releases: Database error fetching release:', releaseError)
-      throw new Error(`Release not found: ${releaseError.message}`)
+    if (releaseError || !release) {
+      console.error('Releases: Release not found or access denied:', releaseError)
+      throw new Error(`Release not found or access denied`)
     }
     
     const { data, error } = await supabase
@@ -303,7 +297,7 @@ releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (
       .insert({
         ...songData,
         release_id: releaseId,
-        artist_id: release.artist_id // Include artist_id for RLS
+        user_id: user.id // Use user_id for direct user association
       })
       .select()
       .single()

@@ -5,29 +5,25 @@ import { useAuth } from '../../contexts/AuthContext'
 // Types for release data
 interface Release {
   id: string
+  user_id: string
   title: string
-  artist_id: string
   release_date: string
   release_type: 'single' | 'ep' | 'album' | 'mixtape'
   status: 'draft' | 'scheduled' | 'released'
   description?: string
   genre?: string
-  cover_art_url?: string
-  streaming_links?: Record<string, string>
   created_at: string
   updated_at: string
 }
 
 interface CreateReleaseData {
   title: string
-  artist_id: string
+  user_id: string
   release_date: string
   release_type: 'single' | 'ep' | 'album' | 'mixtape'
-  status?: 'draft' | 'scheduled' | 'released'
+  status: 'draft' | 'scheduled' | 'released'
   description?: string
   genre?: string
-  cover_art_url?: string
-  streaming_links?: Record<string, string>
 }
 
 // Query hook for fetching releases
