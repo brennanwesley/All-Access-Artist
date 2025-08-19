@@ -34,6 +34,7 @@ interface NewReleaseModalProps {
 export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) => {
   // Add debug logging for modal opening
   console.log('NewReleaseModal render START:', { open });
+  console.log('NewReleaseModal - Authentication architecture fixes applied');
   
   const createReleaseMutation = useCreateRelease();
   const { user } = useAuth();
