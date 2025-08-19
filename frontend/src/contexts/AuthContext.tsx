@@ -54,7 +54,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('Auth state changed:', event, session?.user?.email)
         
         // Clear all cached data when user changes or signs out
-        if (event === 'SIGNED_OUT' || (event === 'SIGNED_IN' && user?.id !== session?.user?.id)) {
+        // Only clear on actual user changes, not on session refresh events
+        if (event === 'SIGNED_OUT' || (event === 'SIGNED_IN' && user?.id && user?.id !== session?.user?.id)) {
           console.log('Clearing React Query cache due to auth state change')
           queryClient.clear()
         }
