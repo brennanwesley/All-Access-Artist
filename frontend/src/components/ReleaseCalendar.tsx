@@ -289,11 +289,27 @@ export const ReleaseCalendar = () => {
           color: 'white',
           padding: '20px',
           zIndex: 9999,
-          border: '2px solid white'
+          border: '2px solid white',
+          fontSize: '18px',
+          fontWeight: 'bold'
         }}>
-          TEST MODAL IS VISIBLE - isModalOpen: {String(isModalOpen)}
+          🔴 TEST MODAL IS VISIBLE - isModalOpen: {String(isModalOpen)}
         </div>
       )}
+      
+      {/* Debug: Always show modal state */}
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        right: '10px',
+        background: 'blue',
+        color: 'white',
+        padding: '10px',
+        zIndex: 10000,
+        fontSize: '14px'
+      }}>
+        Modal State: {String(isModalOpen)}
+      </div>
     </div>
   );
 };
