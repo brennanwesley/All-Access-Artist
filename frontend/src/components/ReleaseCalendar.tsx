@@ -278,38 +278,50 @@ export const ReleaseCalendar = () => {
         open={isModalOpen} 
         onOpenChange={setIsModalOpen} 
       />
-      {/* Force render a simple modal to test */}
+      
+      {/* Temporary visibility test - high z-index modal */}
       {isModalOpen && (
         <div style={{
           position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'red',
-          color: 'white',
-          padding: '20px',
-          zIndex: 9999,
-          border: '2px solid white',
-          fontSize: '18px',
-          fontWeight: 'bold'
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}>
-          🔴 TEST MODAL IS VISIBLE - isModalOpen: {String(isModalOpen)}
+          <div style={{
+            background: 'white',
+            padding: '40px',
+            borderRadius: '8px',
+            maxWidth: '500px',
+            width: '90%',
+            textAlign: 'center',
+            color: 'black'
+          }}>
+            <h2 style={{ marginBottom: '20px', fontSize: '24px', fontWeight: 'bold' }}>🔍 VISIBILITY TEST MODAL</h2>
+            <p style={{ marginBottom: '20px' }}>If you can see this, the modal positioning works!</p>
+            <p style={{ marginBottom: '30px', color: '#666' }}>Modal State: {String(isModalOpen)}</p>
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Close Test Modal
+            </button>
+          </div>
         </div>
       )}
-      
-      {/* Debug: Always show modal state */}
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        right: '10px',
-        background: 'blue',
-        color: 'white',
-        padding: '10px',
-        zIndex: 10000,
-        fontSize: '14px'
-      }}>
-        Modal State: {String(isModalOpen)}
-      </div>
     </div>
   );
 };
