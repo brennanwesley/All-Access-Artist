@@ -9,6 +9,8 @@ export class ArtistsService {
   constructor(private supabase: SupabaseClient) {}
 
   async getAllArtists() {
+    // This method should only return artists for the authenticated user
+    // RLS policies will handle the filtering, but we should be explicit
     const { data, error } = await this.supabase
       .from('artist_profiles')
       .select('*')
@@ -16,6 +18,20 @@ export class ArtistsService {
 
     if (error) {
       throw new Error(`Failed to fetch artists: ${error.message}`)
+    }
+
+    return data
+  }
+
+  async getArtistByUserId(userId: string) {
+    const { data, error } = await this.supabase
+      .from('artist_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (error) {
+      throw new Error(`Failed to fetch artist profile: ${error.message}`)
     }
 
     return data

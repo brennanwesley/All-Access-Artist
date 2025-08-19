@@ -73,7 +73,7 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
     resolver: zodResolver(createReleaseSchema),
     defaultValues: {
       title: '',
-      artist_id: user?.id || '', // Get from authenticated user
+      artist_id: profile?.id || '', // Use artist profile ID, not user ID
       release_date: '',
       release_type: 'single',
       status: 'draft',
