@@ -9,7 +9,7 @@ interface UpdateTaskData {
 interface UpdateTaskResponse {
   id: string
   release_id: string
-  artist_id: string
+  user_id: string
   task_name: string
   task_description: string
   is_completed: boolean

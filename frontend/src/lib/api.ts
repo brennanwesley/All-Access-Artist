@@ -134,8 +134,8 @@ class ApiClient {
   }
 
   // Analytics API
-  async getAnalytics(artistId?: string): Promise<ApiResponse<any[]>> {
-    const endpoint = artistId ? `/api/analytics?artist_id=${artistId}` : '/api/analytics'
+  async getAnalytics(userId?: string): Promise<ApiResponse<any[]>> {
+    const endpoint = userId ? `/api/analytics?user_id=${userId}` : '/api/analytics'
     return this.makeRequest(endpoint)
   }
 
@@ -147,8 +147,8 @@ class ApiClient {
   }
 
   // Calendar API
-  async getCalendar(artistId?: string): Promise<ApiResponse<any[]>> {
-    const endpoint = artistId ? `/api/calendar?artist_id=${artistId}` : '/api/calendar'
+  async getCalendar(userId?: string): Promise<ApiResponse<any[]>> {
+    const endpoint = userId ? `/api/calendar?user_id=${userId}` : '/api/calendar'
     return this.makeRequest(endpoint)
   }
 

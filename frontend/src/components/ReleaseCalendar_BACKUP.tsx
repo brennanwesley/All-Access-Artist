@@ -13,7 +13,7 @@ import { useReleases } from "@/hooks/api/useReleases";
 interface Release {
   id: string;
   title: string;
-  artist_id: string;
+  user_id: string;
   release_date: string;
   release_type: 'single' | 'ep' | 'album' | 'mixtape';
   status: 'draft' | 'scheduled' | 'released';

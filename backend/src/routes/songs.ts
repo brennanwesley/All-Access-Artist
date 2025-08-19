@@ -29,13 +29,19 @@ songs.patch('/:songId', zValidator('json', UpdateSongSchema), async (c) => {
     const songId = c.req.param('songId')
     const songData = c.req.valid('json')
     const supabase = c.get('supabase')
+    const user = c.get('jwtPayload')
     
-    console.log('Songs: Updating song', songId, 'data:', songData)
+    if (!user?.sub) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    console.log('Songs: Updating song', songId, 'for user', user.sub, 'data:', songData)
     
     const { data, error } = await supabase
       .from('songs')
       .update(songData)
       .eq('id', songId)
+      .eq('user_id', user.sub)
       .select()
       .single()
     
@@ -60,13 +66,19 @@ songs.delete('/:songId', async (c) => {
   try {
     const songId = c.req.param('songId')
     const supabase = c.get('supabase')
+    const user = c.get('jwtPayload')
     
-    console.log('Songs: Deleting song', songId)
+    if (!user?.sub) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    console.log('Songs: Deleting song', songId, 'for user', user.sub)
     
     const { error } = await supabase
       .from('songs')
       .delete()
       .eq('id', songId)
+      .eq('user_id', user.sub)
     
     if (error) {
       console.error('Songs: Database error deleting song:', error)

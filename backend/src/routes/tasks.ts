@@ -20,13 +20,19 @@ tasks.patch('/:taskId', zValidator('json', UpdateTaskSchema), async (c) => {
     const taskId = c.req.param('taskId')
     const { completed_at } = c.req.valid('json')
     const supabase = c.get('supabase')
+    const user = c.get('jwtPayload')
     
-    console.log('Tasks: Updating task', taskId, 'completed_at:', completed_at)
+    if (!user?.sub) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    console.log('Tasks: Updating task', taskId, 'for user', user.sub, 'completed_at:', completed_at)
     
     const { data, error } = await supabase
       .from('release_tasks')
       .update({ completed_at })
       .eq('id', taskId)
+      .eq('user_id', user.sub)
       .select()
       .single()
     

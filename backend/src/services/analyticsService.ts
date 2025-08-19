@@ -19,7 +19,7 @@ export class AnalyticsService {
     const { data, error } = await this.supabase
       .from('fan_analytics')
       .select('*')
-      .eq('artist_id', userId)
+      .eq('user_id', userId)
       .order('recorded_at', { ascending: false })
 
     if (error) {
@@ -33,7 +33,7 @@ export class AnalyticsService {
     const { data, error } = await this.supabase
       .from('fan_analytics')
       .insert({
-        artist_id: userId,
+        user_id: userId,
         ...analyticsData,
         recorded_at: new Date().toISOString()
       })
@@ -47,12 +47,12 @@ export class AnalyticsService {
     return data
   }
 
-  async getAnalyticsById(userId: string, analyticsId: string) {
+  async getAnalyticsById(analyticsId: string, userId: string) {
     const { data, error } = await this.supabase
       .from('fan_analytics')
       .select('*')
       .eq('id', analyticsId)
-      .eq('artist_id', userId)
+      .eq('user_id', userId)
       .single()
 
     if (error) {
@@ -62,12 +62,12 @@ export class AnalyticsService {
     return data
   }
 
-  async updateAnalytics(userId: string, analyticsId: string, analyticsData: any) {
+  async updateAnalytics(analyticsId: string, userId: string, analyticsData: any) {
     const { data, error } = await this.supabase
       .from('fan_analytics')
       .update(analyticsData)
       .eq('id', analyticsId)
-      .eq('artist_id', userId)
+      .eq('user_id', userId)
       .select()
       .single()
 
@@ -78,12 +78,12 @@ export class AnalyticsService {
     return data
   }
 
-  async deleteAnalytics(userId: string, analyticsId: string) {
+  async deleteAnalytics(analyticsId: string, userId: string) {
     const { error } = await this.supabase
       .from('fan_analytics')
       .delete()
       .eq('id', analyticsId)
-      .eq('artist_id', userId)
+      .eq('user_id', userId)
 
     if (error) {
       throw new Error(`Failed to delete analytics: ${error.message}`)

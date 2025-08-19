@@ -4,7 +4,7 @@ import { apiClient } from '../../lib/api'
 // Types for calendar data
 interface CalendarEvent {
   id: string
-  artist_id: string
+  user_id: string
   title: string
   description?: string
   event_date: string
@@ -18,7 +18,7 @@ interface CalendarEvent {
 }
 
 interface CreateCalendarEventData {
-  artist_id: string
+  user_id: string
   title: string
   description?: string
   event_date: string
@@ -29,11 +29,11 @@ interface CreateCalendarEventData {
 }
 
 // Query hook for fetching calendar events
-export const useCalendar = (artistId?: string) => {
+export const useCalendar = (userId?: string) => {
   return useQuery({
-    queryKey: artistId ? ['calendar', artistId] : ['calendar'],
+    queryKey: userId ? ['calendar', userId] : ['calendar'],
     queryFn: async () => {
-      const response = await apiClient.getCalendar(artistId)
+      const response = await apiClient.getCalendar(userId)
       if (response.status !== 200) {
         throw new Error(response.error || 'Failed to fetch calendar events')
       }
@@ -41,7 +41,7 @@ export const useCalendar = (artistId?: string) => {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
-    enabled: !!artistId, // Only run query if artistId is provided
+    enabled: !!userId, // Only run query if userId is provided
   })
 }
 
@@ -60,7 +60,7 @@ export const useCreateCalendarEvent = () => {
     onSuccess: (data) => {
       // Invalidate and refetch calendar lists
       queryClient.invalidateQueries({ queryKey: ['calendar'] })
-      queryClient.invalidateQueries({ queryKey: ['calendar', data.artist_id] })
+      queryClient.invalidateQueries({ queryKey: ['calendar', data.user_id] })
     },
   })
 }

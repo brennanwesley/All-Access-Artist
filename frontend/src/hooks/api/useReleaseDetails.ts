@@ -7,10 +7,13 @@ import { useAuth } from '@/contexts/AuthContext'
 export interface ReleaseTask {
   id: string
   release_id: string
-  artist_id: string
+  user_id: string
   task_description: string
-  task_order: number
-  completed_at: string | null
+  task_category: string
+  task_priority: string
+  task_status: string
+  due_date?: string
+  completed_at?: string
   created_at: string
   updated_at: string
 }
@@ -18,10 +21,12 @@ export interface ReleaseTask {
 export interface Song {
   id: string
   release_id: string
-  artist_id: string
-  song_title: string
-  duration_seconds?: number
-  track_number: number
+  user_id: string
+  title: string
+  duration?: number
+  track_number?: number
+  isrc?: string
+  lyrics?: string
   created_at: string
   updated_at: string
 }
@@ -37,11 +42,13 @@ export interface LyricSection {
 
 export interface LyricSheet {
   id: string
-  song_id: string
-  artist_id: string
-  written_by?: string
-  additional_notes?: string
-  total_sections?: number
+  release_id: string
+  user_id: string
+  title: string
+  lyrics: string
+  structure?: any
+  notes?: string
+  version: string
   created_at: string
   updated_at: string
   sections: LyricSection[]
@@ -50,17 +57,19 @@ export interface LyricSheet {
 export interface ReleaseDetails {
   id: string
   title: string
-  artist_id: string
-  release_type: 'single' | 'ep' | 'album' | 'mixtape'
+  user_id: string
   release_date: string
-  genre?: string
+  release_type: 'single' | 'ep' | 'album' | 'mixtape'
+  status: 'draft' | 'scheduled' | 'released'
   description?: string
-  artwork_url?: string
-  cover_art_url?: string // Legacy field support
-  spotify_url?: string
-  apple_music_url?: string
-  youtube_url?: string
-  bandcamp_url?: string
+  genre?: string
+  cover_art_url?: string
+  streaming_links?: Record<string, string>
+  created_at: string
+  updated_at: string
+  tasks?: ReleaseTask[]
+  songs?: Song[]
+  lyric_sheets?: LyricSheet[]
   soundcloud_url?: string
   is_explicit: boolean
   total_tracks?: number
@@ -76,11 +85,7 @@ export interface ReleaseDetails {
   mixing_engineer?: string
   project_budget?: number
   additional_data?: Record<string, any>
-  status: string
-  created_at: string
-  updated_at: string
   release_tasks: ReleaseTask[]
-  songs?: Song[] // Optional for backward compatibility
 }
 
 // Query hook for fetching release details with proper data extraction

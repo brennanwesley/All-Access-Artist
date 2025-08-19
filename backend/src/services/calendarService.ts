@@ -19,7 +19,7 @@ export class CalendarService {
     const { data, error } = await this.supabase
       .from('content_calendar')
       .select('*')
-      .eq('artist_id', userId)
+      .eq('user_id', userId)
       .order('scheduled_date', { ascending: true })
 
     if (error) {
@@ -33,7 +33,7 @@ export class CalendarService {
     const { data, error } = await this.supabase
       .from('content_calendar')
       .insert({
-        artist_id: userId,
+        user_id: userId,
         ...eventData,
         created_at: new Date().toISOString()
       })
@@ -52,7 +52,7 @@ export class CalendarService {
       .from('content_calendar')
       .select('*')
       .eq('id', eventId)
-      .eq('artist_id', userId)
+      .eq('user_id', userId)
       .single()
 
     if (error) {
@@ -67,7 +67,7 @@ export class CalendarService {
       .from('content_calendar')
       .update(eventData)
       .eq('id', eventId)
-      .eq('artist_id', userId)
+      .eq('user_id', userId)
       .select()
       .single()
 
@@ -83,7 +83,7 @@ export class CalendarService {
       .from('content_calendar')
       .delete()
       .eq('id', eventId)
-      .eq('artist_id', userId)
+      .eq('user_id', userId)
 
     if (error) {
       throw new Error(`Failed to delete calendar event: ${error.message}`)

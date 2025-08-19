@@ -10,7 +10,7 @@ export interface Database {
         Row: {
           id: string
           title: string
-          artist_id: string
+          user_id: string
           release_date: string
           type: 'single' | 'album' | 'ep'
           status: 'draft' | 'scheduled' | 'released'
@@ -24,7 +24,7 @@ export interface Database {
         Insert: {
           id?: string
           title: string
-          artist_id: string
+          user_id: string
           release_date: string
           type: 'single' | 'album' | 'ep'
           status?: 'draft' | 'scheduled' | 'released'
@@ -38,7 +38,7 @@ export interface Database {
         Update: {
           id?: string
           title?: string
-          artist_id?: string
+          user_id?: string
           release_date?: string
           type?: 'single' | 'album' | 'ep'
           status?: 'draft' | 'scheduled' | 'released'

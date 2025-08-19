@@ -62,7 +62,7 @@ export class ReleasesService {
     const { data, error } = await this.supabase
       .from('music_releases')
       .select('*')
-      .eq('artist_id', artistId)
+      .eq('user_id', artistId)
       .order('release_date', { ascending: false })
 
     if (error) {

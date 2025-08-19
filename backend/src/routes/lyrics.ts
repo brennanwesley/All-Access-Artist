@@ -33,14 +33,20 @@ lyrics.get('/:songId', async (c) => {
   try {
     const songId = c.req.param('songId')
     const supabase = c.get('supabase')
+    const user = c.get('jwtPayload')
     
-    console.log('Lyrics: Fetching lyric sheet for song ID:', songId)
+    if (!user?.sub) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
     
-    // Get lyric sheet with sections
+    console.log('Lyrics: Fetching lyric sheet for song ID:', songId, 'for user', user.sub)
+    
+    // Get lyric sheet with sections (filtered by user_id)
     const { data: lyricSheet, error: sheetError } = await supabase
       .from('lyric_sheets')
       .select('*')
       .eq('song_id', songId)
+      .eq('user_id', user.sub)
       .single()
     
     if (sheetError) {
@@ -55,11 +61,12 @@ lyrics.get('/:songId', async (c) => {
       throw new Error(`Database error: ${sheetError.message}`)
     }
     
-    // Get sections for this lyric sheet
+    // Get sections for this lyric sheet (filtered by user_id)
     const { data: sections, error: sectionsError } = await supabase
       .from('lyric_sheet_sections')
       .select('*')
       .eq('lyric_sheet_id', lyricSheet.id)
+      .eq('user_id', user.sub)
       .order('section_order', { ascending: true })
     
     if (sectionsError) {
@@ -106,11 +113,12 @@ lyrics.post('/:songId', zValidator('json', CreateLyricSheetSchema), async (c) =>
     
     console.log('Lyrics: Creating lyric sheet for song ID:', songId, 'data:', lyricSheetData)
     
-    // Get song details to get artist_id for RLS compliance
+    // Get song details to verify user ownership
     const { data: song, error: songError } = await supabase
       .from('songs')
-      .select('artist_id')
+      .select('user_id')
       .eq('id', songId)
+      .eq('user_id', user.sub)
       .single()
     
     if (songError) {
@@ -123,7 +131,7 @@ lyrics.post('/:songId', zValidator('json', CreateLyricSheetSchema), async (c) =>
       .insert({
         ...lyricSheetData,
         song_id: songId,
-        artist_id: song.artist_id // Include artist_id for RLS
+        user_id: user.sub // Include user_id for security
       })
       .select()
       .single()
@@ -153,14 +161,20 @@ lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), a
     const songId = c.req.param('songId')
     const sectionData = c.req.valid('json')
     const supabase = c.get('supabase')
+    const user = c.get('jwtPayload')
     
-    console.log('Lyrics: Adding section to song ID:', songId, 'data:', sectionData)
+    if (!user?.sub) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
     
-    // Get lyric sheet ID for this song
+    console.log('Lyrics: Adding section to song ID:', songId, 'for user', user.sub, 'data:', sectionData)
+    
+    // Get lyric sheet ID for this song (filtered by user_id)
     const { data: lyricSheet, error: sheetError } = await supabase
       .from('lyric_sheets')
-      .select('id, artist_id')
+      .select('id')
       .eq('song_id', songId)
+      .eq('user_id', user.sub)
       .single()
     
     if (sheetError) {
@@ -170,7 +184,7 @@ lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), a
     
     // Let LyricSheetService handle section_order calculation
     const lyricSheetService = new LyricSheetService(supabase)
-    const result = await lyricSheetService.addSectionToSheet(lyricSheet.id, sectionData)
+    const result = await lyricSheetService.addSectionToSheet(lyricSheet.id, user.sub, sectionData)
     
     // Map database response back to frontend format
     const mappedData = {
@@ -202,8 +216,13 @@ lyrics.patch('/sections/:sectionId', zValidator('json', UpdateLyricSectionSchema
     const sectionId = c.req.param('sectionId')
     const updateData = c.req.valid('json')
     const supabase = c.get('supabase')
+    const user = c.get('jwtPayload')
     
-    console.log('Lyrics: Updating section ID:', sectionId, 'data:', updateData)
+    if (!user?.sub) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    console.log('Lyrics: Updating section ID:', sectionId, 'for user', user.sub, 'data:', updateData)
     
     // Map frontend fields to database fields
     const dbUpdateData: any = {}
@@ -215,6 +234,7 @@ lyrics.patch('/sections/:sectionId', zValidator('json', UpdateLyricSectionSchema
       .from('lyric_sheet_sections')
       .update(dbUpdateData)
       .eq('id', sectionId)
+      .eq('user_id', user.sub)
       .select()
       .single()
     
@@ -252,13 +272,19 @@ lyrics.delete('/sections/:sectionId', async (c) => {
   try {
     const sectionId = c.req.param('sectionId')
     const supabase = c.get('supabase')
+    const user = c.get('jwtPayload')
     
-    console.log('Lyrics: Deleting section ID:', sectionId)
+    if (!user?.sub) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401)
+    }
+    
+    console.log('Lyrics: Deleting section ID:', sectionId, 'for user', user.sub)
     
     const { error } = await supabase
       .from('lyric_sheet_sections')
       .delete()
       .eq('id', sectionId)
+      .eq('user_id', user.sub)
     
     if (error) {
       console.error('Lyrics: Database error deleting section:', error)
