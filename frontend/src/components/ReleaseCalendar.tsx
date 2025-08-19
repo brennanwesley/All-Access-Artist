@@ -37,6 +37,8 @@ export const ReleaseCalendar = () => {
   
   // Debug modal state changes
   console.log('ReleaseCalendar render - isModalOpen:', isModalOpen);
+  console.log('ReleaseCalendar render - document exists:', typeof document !== 'undefined');
+  console.log('ReleaseCalendar render - document.body exists:', typeof document !== 'undefined' && !!document.body);
   
   // Fetch releases from API
   const { data: releases, isLoading, isError, error } = useReleases();
@@ -279,76 +281,47 @@ export const ReleaseCalendar = () => {
         onOpenChange={setIsModalOpen} 
       />
       
-      {/* Portal-based test modal to bypass parent containers */}
+      {/* Debug: Test if React is even rendering this section */}
       {isModalOpen && (
-        <>
-          {/* Create portal to document.body to bypass all parent containers */}
-          {typeof document !== 'undefined' && 
-            document.body && 
-            (() => {
-              const portalDiv = document.createElement('div');
-              portalDiv.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: rgba(0, 0, 0, 0.8);
-                z-index: 999999;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                pointer-events: auto;
-              `;
-              
-              const modalContent = document.createElement('div');
-              modalContent.style.cssText = `
-                background: white;
-                padding: 40px;
-                border-radius: 8px;
-                max-width: 500px;
-                width: 90%;
-                text-align: center;
-                color: black;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-              `;
-              
-              modalContent.innerHTML = `
-                <h2 style="margin-bottom: 20px; font-size: 24px; font-weight: bold;">🔍 PORTAL TEST MODAL</h2>
-                <p style="margin-bottom: 20px;">This modal uses document.body portal to bypass parent containers!</p>
-                <p style="margin-bottom: 30px; color: #666;">Modal State: ${String(isModalOpen)}</p>
-                <button id="closePortalModal" style="
-                  padding: 10px 20px;
-                  background-color: #007bff;
-                  color: white;
-                  border: none;
-                  border-radius: 4px;
-                  cursor: pointer;
-                  font-size: 16px;
-                ">Close Portal Modal</button>
-              `;
-              
-              portalDiv.appendChild(modalContent);
-              document.body.appendChild(portalDiv);
-              
-              // Add click handler
-              const closeBtn = modalContent.querySelector('#closePortalModal');
-              if (closeBtn) {
-                closeBtn.addEventListener('click', () => {
-                  document.body.removeChild(portalDiv);
-                  setIsModalOpen(false);
-                });
-              }
-              
-              // Cleanup on unmount
-              return () => {
-                if (document.body.contains(portalDiv)) {
-                  document.body.removeChild(portalDiv);
-                }
-              };
-            })()
-          }
-        </>
+        <div 
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            background: 'red',
+            color: 'white',
+            padding: '10px',
+            zIndex: 1000,
+            fontSize: '12px',
+            border: '2px solid yellow'
+          }}
+        >
+          🔴 REACT IS RENDERING: {String(isModalOpen)}
+        </div>
+      )}
+      
+      {/* Simple test modal with inline styles */}
+      {isModalOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(255, 0, 0, 0.9)',
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '24px',
+            fontWeight: 'bold'
+          }}
+          onClick={() => setIsModalOpen(false)}
+        >
+          🚨 SIMPLE TEST MODAL - CLICK TO CLOSE
+        </div>
       )}
     </div>
   );
