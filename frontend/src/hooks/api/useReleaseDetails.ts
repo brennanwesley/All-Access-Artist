@@ -22,11 +22,9 @@ export interface Song {
   id: string
   release_id: string
   user_id: string
-  title: string
-  duration?: number
-  track_number?: number
-  isrc?: string
-  lyrics?: string
+  song_title: string
+  duration_seconds?: number
+  track_number: number
   created_at: string
   updated_at: string
 }
