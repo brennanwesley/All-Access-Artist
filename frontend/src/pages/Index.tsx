@@ -26,6 +26,8 @@ const Index = () => {
     if (location.state?.activeSection && location.state.activeSection !== navigation.activeSection) {
       console.log('Index: Setting activeSection from route state to:', location.state.activeSection);
       navigation.setActiveSection(location.state.activeSection);
+      // Clear the location state after processing to prevent re-processing
+      window.history.replaceState({}, '', window.location.pathname);
     } else if (!navigation.activeSection) {
       // If no activeSection is set, default to dashboard
       console.log('Index: No activeSection set, defaulting to dashboard');
