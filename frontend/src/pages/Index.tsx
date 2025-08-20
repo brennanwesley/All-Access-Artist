@@ -20,28 +20,46 @@ const Index = () => {
 
   // Handle navigation state from route transitions
   useEffect(() => {
+    console.log('Index: useEffect triggered with location.state:', location.state);
+    console.log('Index: Current activeSection:', navigation.activeSection);
+    
     if (location.state?.activeSection) {
+      console.log('Index: Setting activeSection from route state to:', location.state.activeSection);
       navigation.setActiveSection(location.state.activeSection);
+    } else if (!navigation.activeSection) {
+      // If no activeSection is set, default to dashboard
+      console.log('Index: No activeSection set, defaulting to dashboard');
+      navigation.setActiveSection('dashboard');
     }
   }, [location.state, navigation]);
 
   const renderActiveSection = () => {
+    console.log('Index: renderActiveSection called with activeSection:', navigation.activeSection);
+    
     switch (navigation.activeSection) {
       case "dashboard":
+        console.log('Index: Rendering Dashboard');
         return <Dashboard />;
       case "releases":
+        console.log('Index: Rendering ReleaseCalendar');
         return <ReleaseCalendar />;
       case "content":
+        console.log('Index: Rendering ContentCalendar');
         return <ContentCalendar />;
       case "royalties":
+        console.log('Index: Rendering RoyaltyDashboard');
         return <RoyaltyDashboard />;
       case "fans":
+        console.log('Index: Rendering Fans');
         return <Fans />;
       case "community":
+        console.log('Index: Rendering Community');
         return <Community />;
       case "create":
+        console.log('Index: Rendering Create');
         return <Create />;
       case "pitch":
+        console.log('Index: Rendering DSP Pitch Tool');
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold mb-4">DSP Pitch Tool</h2>
@@ -63,8 +81,10 @@ const Index = () => {
           </div>
         );
       case "settings":
+        console.log('Index: Rendering Settings');
         return <Settings />;
       default:
+        console.log('Index: Default case - rendering Dashboard for activeSection:', navigation.activeSection);
         return <Dashboard />;
     }
   };
@@ -77,8 +97,8 @@ const Index = () => {
     }} />;
   }
 
-  // Landing page view
-  if (!navigation.activeSection) {
+  // Landing page view - only show if activeSection is explicitly null/undefined AND not coming from route state
+  if (!navigation.activeSection && !location.state?.activeSection) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4">
         <div className="max-w-4xl mx-auto text-center">

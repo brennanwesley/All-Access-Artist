@@ -23,7 +23,10 @@ export const Navigation = ({ activeSection: propActiveSection, onSectionChange: 
   
   // Use context values, fallback to props for backward compatibility
   const activeSection = propActiveSection || navigation.activeSection
-  const handleSectionChange = propOnSectionChange || navigation.navigateToSection
+  const handleSectionChange = propOnSectionChange || ((section: string) => {
+    console.log('Navigation: handleSectionChange called with section:', section);
+    navigation.navigateToSection(section);
+  })
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },

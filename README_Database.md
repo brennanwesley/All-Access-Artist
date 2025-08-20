@@ -1,29 +1,40 @@
 # All Access Artist - Database Documentation
 
+*Last Updated: August 19, 2025 - v2.8.0*
+
 ## Overview
 
-The All Access Artist platform uses **Supabase** (PostgreSQL 16.x) as its primary database with comprehensive Row Level Security (RLS) policies. The database is designed to support a complete music industry management platform with artist profiles, music releases, royalty tracking, content calendar management, and fan analytics.
+The All Access Artist platform uses **Supabase** (PostgreSQL 16.x) as its primary database with comprehensive Row Level Security (RLS) policies. Following the August 19, 2025 migration, the database now uses a simplified `user_id`-based authentication system with enhanced security and data isolation.
 
 **Database Status**: ✅ **Fully Configured & Operational**  
-**Current Data**: ❌ **Empty (0 records in all tables)**  
-**Security**: ✅ **RLS Enabled on All Tables**  
-**Extensions**: ✅ **Essential Extensions Installed**
+**Authentication**: ✅ **Migrated to user_id-only system**  
+**Security**: ✅ **Updated RLS policies for direct user authentication**  
+**Data Isolation**: ✅ **Strict user-scoped access enforced**
 
 ---
 
 ## Database Architecture
 
-### Core Tables (5)
-1. **`artist_profiles`** - Central artist information and social media links
-2. **`music_releases`** - Track and album management with streaming platform data
-3. **`royalty_data`** - Financial tracking and royalty management
-4. **`content_calendar`** - Social media content planning and scheduling
-5. **`fan_analytics`** - Audience insights and engagement metrics
+### Core Tables (9)
+**Primary Tables:**
+1. **`music_releases`** - Track and album management with user authentication
+2. **`release_tasks`** - Project checklist and task management
+3. **`songs`** - Individual track information and metadata
+4. **`lyric_sheets`** - Lyric management and organization
+5. **`lyric_sheet_sections`** - Structured lyric content by section
+6. **`task_templates`** - Predefined task templates for release types
+7. **`user_profiles`** - User profile information and settings
 
-### Relationships
-- All tables link to `artist_profiles` via `artist_id` foreign key
-- `artist_profiles` links to Supabase Auth via `user_id`
-- Cascading relationships ensure data integrity
+**Legacy Tables (Optional):**
+8. **`artist_profiles`** - Optional artist metadata (not required for core functionality)
+9. **`audit_log`** - Database change tracking and forensics
+
+### Authentication Architecture
+- **Direct user authentication**: Core tables use `user_id` columns that reference `auth.uid()` directly
+- **No foreign key dependencies**: Tables don't have formal FK constraints to `user_profiles`
+- **RLS enforcement**: Security handled via RLS policies using `user_id = auth.uid()`
+- **Simplified security**: No intermediate lookups through artist profiles
+- **User isolation**: Strict RLS policies ensure complete data separation
 
 ---
 
@@ -62,33 +73,26 @@ The All Access Artist platform uses **Supabase** (PostgreSQL 16.x) as its primar
 
 ---
 
-### 2. music_releases
-**Purpose**: Track and album management with streaming platform integration  
-**Records**: 0 | **RLS**: ✅ Enabled | **Size**: 48 kB
+### 1. music_releases
+**Purpose**: Track and album management with direct user authentication  
+**Records**: Active | **RLS**: ✅ Updated for user_id | **Authentication**: Direct user_id
 
 | Column | Type | Nullable | Default | Description |
 |--------|------|----------|---------|-------------|
 | `id` | uuid | ❌ | `gen_random_uuid()` | Primary key |
-| `artist_id` | uuid | ✅ | null | Foreign key to artist_profiles |
+| `user_id` | uuid | ❌ | null | Direct user authentication |
 | `title` | varchar | ❌ | null | Release title |
-| `release_type` | varchar | ❌ | null | single/album/EP |
+| `release_type` | varchar | ❌ | null | single/ep/album/mixtape |
 | `status` | varchar | ❌ | `'draft'` | draft/scheduled/released |
 | `release_date` | date | ✅ | null | Official release date |
 | `genre` | varchar | ✅ | null | Music genre |
-| `duration_seconds` | integer | ✅ | `0` | Total duration in seconds |
-| `track_count` | integer | ✅ | `1` | Number of tracks |
-| `cover_art_url` | varchar | ✅ | null | Album/single artwork URL |
-| `spotify_url` | varchar | ✅ | null | Spotify release URL |
-| `apple_music_url` | varchar | ✅ | null | Apple Music URL |
-| `youtube_url` | varchar | ✅ | null | YouTube URL |
 | `description` | text | ✅ | null | Release description |
-| `tags` | jsonb | ✅ | null | Searchable tags array |
 | `created_at` | timestamptz | ✅ | `now()` | Record creation timestamp |
 | `updated_at` | timestamptz | ✅ | `now()` | Last update timestamp |
 
 **RLS Policies**:
-- ✅ Artists can manage their own releases (via artist_id lookup)
-- ✅ Users can view released music (`status = 'released'`)
+- ✅ Users can manage their own releases (`user_id = auth.uid()`)
+- ✅ Simplified security with direct user authentication
 
 ---
 
@@ -182,41 +186,56 @@ The All Access Artist platform uses **Supabase** (PostgreSQL 16.x) as its primar
 
 ---
 
-## Database Relationships
+## Database Relationships (Updated Architecture)
 
 ```
 auth.users (Supabase Auth)
-    ↓ (user_id)
-artist_profiles
-    ↓ (artist_id)
+    ↓ (user_id - direct authentication)
     ├── music_releases
-    ├── royalty_data
-    ├── content_calendar
-    └── fan_analytics
+    ├── release_tasks
+    ├── songs
+    ├── lyric_sheets
+    └── lyric_sheet_sections
 ```
 
-### Foreign Key Constraints
-- `artist_profiles.user_id` → `auth.users.id`
-- `music_releases.artist_id` → `artist_profiles.id`
-- `royalty_data.artist_id` → `artist_profiles.id`
-- `content_calendar.artist_id` → `artist_profiles.id`
-- `fan_analytics.artist_id` → `artist_profiles.id`
+### Foreign Key Constraints (Current)
+- `music_releases.user_id` → `auth.users.id`
+- `release_tasks.user_id` → `auth.users.id`
+- `songs.user_id` → `auth.users.id`
+- `lyric_sheets.user_id` → `auth.users.id`
+- `lyric_sheet_sections.user_id` → `auth.users.id`
+- `release_tasks.release_id` → `music_releases.id`
+- `songs.release_id` → `music_releases.id`
+
+### Legacy Constraints (Optional)
+- `artist_profiles.user_id` → `auth.users.id` (ON DELETE RESTRICT)
+- `user_profiles.id` → `auth.users.id` (ON DELETE RESTRICT)
 
 ---
 
-## Security Implementation
+## Security Implementation (Updated v2.8.0)
 
-### Row Level Security (RLS)
-All tables have RLS enabled with comprehensive policies:
+### Row Level Security (RLS) - Direct User Authentication
+All core tables use simplified RLS policies with direct user authentication:
 
-**Artist-Owned Data**: Users can only access data linked to their artist profiles
-**Public Data**: Released music and public profiles are viewable by all users
-**Private Data**: Royalty data and analytics are strictly private to the artist
+**Current RLS Policies:**
+- `music_releases`: `user_id = auth.uid()`
+- `release_tasks`: `user_id = auth.uid()`
+- `songs`: `user_id = auth.uid()`
+- `lyric_sheets`: `user_id = auth.uid()`
+- `lyric_sheet_sections`: `user_id = auth.uid()`
+
+**Security Enhancements:**
+- **Direct Authentication**: No intermediate lookups through artist profiles
+- **Complete Data Isolation**: Users can only access their own data
+- **Simplified Policies**: Reduced complexity and improved performance
+- **Vulnerability Elimination**: Removed fragile artist_id dependencies
 
 ### Authentication Integration
-- Uses Supabase Auth JWT tokens
-- Backend validates JWT on all `/api/*` endpoints
+- Uses Supabase Auth JWT tokens with `auth.uid()` function
+- Backend validates JWT on all `/api/*` endpoints via Hono middleware
 - User-scoped Supabase client enforces RLS automatically
+- Nullable `artist_id` columns maintain backward compatibility
 
 ---
 
@@ -237,26 +256,29 @@ All tables have RLS enabled with comprehensive policies:
 
 ---
 
-## Current Status & Next Steps
+## Migration History (v2.8.0 - August 19, 2025)
 
-### ✅ Completed
-- Database schema fully designed and deployed
-- All tables created with proper constraints
-- RLS policies implemented and tested
-- Foreign key relationships established
-- Essential extensions installed
+### ✅ Completed Migrations
+1. **`make_artist_id_nullable_in_release_tasks`** - Made artist_id nullable in release_tasks
+2. **`add_unique_constraint_to_task_templates`** - Added unique constraint on release_type
+3. **`update_release_tasks_rls_policy_for_user_id`** - Updated RLS to use user_id directly
+4. **`make_artist_id_nullable_in_songs_table`** - Made artist_id nullable in songs
+5. **`update_songs_rls_policy_for_user_id`** - Updated songs RLS policy
+6. **`fix_lyric_sheets_schema_and_rls`** - Fixed lyric sheets schema and RLS policies
 
-### ❌ Pending
-- **Data Population**: All tables are currently empty (0 records)
-- **Sample Data**: No test/demo data available
-- **Data Migration**: No existing data to migrate
-- **Performance Optimization**: No indexes beyond primary keys
+### ✅ Current Status
+- **Authentication System**: Fully migrated to user_id-only system
+- **RLS Policies**: All updated for direct user authentication
+- **Data Isolation**: Complete user data separation enforced
+- **Platform Functionality**: All features operational (releases, tasks, songs, lyrics)
+- **Security**: Enhanced with simplified, vulnerability-free authentication
 
-### 🎯 Immediate Priorities
-1. **Create Sample Data**: Populate tables with realistic test data
-2. **Performance Tuning**: Add indexes for common query patterns
-3. **Data Validation**: Test all CRUD operations through API
-4. **Backup Strategy**: Implement automated backup procedures
+### 🎯 Database Architecture Benefits
+1. **Simplified Security**: Direct user authentication eliminates complex lookups
+2. **Enhanced Performance**: Reduced query complexity with direct user_id filtering
+3. **Improved Maintainability**: Cleaner codebase without artist_id dependencies
+4. **Vulnerability Elimination**: Removed potential security issues from intermediate lookups
+5. **Backward Compatibility**: Nullable artist_id columns preserve legacy data
 
 ---
 
@@ -276,6 +298,46 @@ All tables have RLS enabled with comprehensive policies:
 
 ---
 
-*Last Updated: August 8, 2025*  
+### Additional Tables
+
+#### release_tasks
+**Purpose**: Project checklist and task management  
+**Authentication**: `user_id = auth.uid()`
+
+| Key Columns | Type | Description |
+|-------------|------|-------------|
+| `id` | uuid | Primary key |
+| `release_id` | uuid | Links to music_releases |
+| `user_id` | uuid | Direct user authentication |
+| `artist_id` | uuid (nullable) | Legacy compatibility |
+| `task_description` | text | Task content |
+| `task_order` | integer | Display order |
+| `completed_at` | timestamptz | Completion timestamp |
+
+#### songs
+**Purpose**: Individual track management  
+**Authentication**: `user_id = auth.uid()`
+
+| Key Columns | Type | Description |
+|-------------|------|-------------|
+| `id` | uuid | Primary key |
+| `release_id` | uuid | Links to music_releases |
+| `user_id` | uuid | Direct user authentication |
+| `artist_id` | uuid (nullable) | Legacy compatibility |
+| `song_title` | text | Track title |
+| `track_number` | integer | Track position |
+| `duration_seconds` | integer | Track duration |
+
+#### lyric_sheets & lyric_sheet_sections
+**Purpose**: Lyric management system  
+**Authentication**: `user_id = auth.uid()`
+
+**lyric_sheets**: Main lyric sheet records  
+**lyric_sheet_sections**: Individual lyric sections (verse, chorus, etc.)
+
+---
+
+*Last Updated: August 19, 2025 - v2.8.0*  
 *Database Version: PostgreSQL 16.x via Supabase*  
-*Documentation Status: Complete*
+*Authentication: Migrated to user_id-only system*  
+*Documentation Status: Updated for v2.8.0 migration*

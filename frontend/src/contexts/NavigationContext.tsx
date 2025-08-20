@@ -41,15 +41,18 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
   // Unified navigation handler
   const navigateToSection = useCallback((section: string) => {
     console.log('NavigationContext: Navigating to section', section, 'from', location.pathname)
+    console.log('NavigationContext: Current activeSection before change:', activeSection)
     
     if (isOnDetailPage) {
       // From detail page: navigate to main app with section state
+      console.log('NavigationContext: Navigating from detail page to main app with section:', section)
       navigate('/', { state: { activeSection: section } })
     } else {
       // From main app: just change section
+      console.log('NavigationContext: Setting activeSection to:', section)
       setActiveSection(section)
     }
-  }, [navigate, location.pathname, isOnDetailPage])
+  }, [navigate, location.pathname, isOnDetailPage, activeSection])
 
   const contextValue: NavigationContextType = {
     activeSection,
