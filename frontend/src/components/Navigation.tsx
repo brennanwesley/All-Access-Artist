@@ -25,7 +25,10 @@ export const Navigation = ({ activeSection: propActiveSection, onSectionChange: 
   const activeSection = propActiveSection || navigation.activeSection
   const handleSectionChange = propOnSectionChange || ((section: string) => {
     console.log('Navigation: handleSectionChange called with section:', section);
-    navigation.navigateToSection(section);
+    // Prevent redundant navigation calls
+    if (section !== navigation.activeSection) {
+      navigation.navigateToSection(section);
+    }
   })
 
   const navItems = [

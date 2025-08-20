@@ -23,7 +23,7 @@ const Index = () => {
     console.log('Index: useEffect triggered with location.state:', location.state);
     console.log('Index: Current activeSection:', navigation.activeSection);
     
-    if (location.state?.activeSection) {
+    if (location.state?.activeSection && location.state.activeSection !== navigation.activeSection) {
       console.log('Index: Setting activeSection from route state to:', location.state.activeSection);
       navigation.setActiveSection(location.state.activeSection);
     } else if (!navigation.activeSection) {
@@ -31,7 +31,7 @@ const Index = () => {
       console.log('Index: No activeSection set, defaulting to dashboard');
       navigation.setActiveSection('dashboard');
     }
-  }, [location.state, navigation]);
+  }, [location.state?.activeSection, navigation.activeSection, navigation.setActiveSection]);
 
   const renderActiveSection = () => {
     console.log('Index: renderActiveSection called with activeSection:', navigation.activeSection);
