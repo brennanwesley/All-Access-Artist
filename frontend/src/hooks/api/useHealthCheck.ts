@@ -11,9 +11,10 @@ export const useHealthCheck = () => {
       }
       return response.data
     },
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 60000, // Refetch every minute
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes - longer cache
+    // Removed refetchInterval to stop constant polling
+    retry: 1, // Reduced retries
+    retryDelay: 2000, // Fixed 2 second delay
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
   })
 }

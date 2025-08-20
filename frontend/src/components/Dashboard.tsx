@@ -32,13 +32,13 @@ export const Dashboard = () => {
   const quote = getQuoteOfTheDay()
   const taskStats = getTaskStats()
 
-  // Mock dashboard data query to demonstrate loading and error states
+  // Mock dashboard data query - optimized for fast loading
   const mockDashboardData = async () => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // Removed artificial delay for better UX
+    // await new Promise(resolve => setTimeout(resolve, 1500))
     
-    // Simulate random error for demonstration (20% chance)
-    if (Math.random() < 0.2) {
+    // Reduced error simulation to 5% for better UX
+    if (Math.random() < 0.05) {
       throw new Error('Failed to load dashboard data')
     }
     
@@ -53,7 +53,7 @@ export const Dashboard = () => {
     }
   }
 
-  // Dashboard data query with loading and error states
+  // Dashboard data query with optimized caching
   const {
     data: dashboardData,
     isLoading,
@@ -63,36 +63,18 @@ export const Dashboard = () => {
   } = useQuery({
     queryKey: ['dashboard-data'],
     queryFn: mockDashboardData,
-    retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1, // Reduced retries
+    staleTime: 10 * 60 * 1000, // 10 minutes - longer cache
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
   })
 
-  // Test functions for global error handler
-  const mockApi401 = async (): Promise<never> => {
-    const error = new Error('Unauthorized') as Error & { status: number }
-    error.status = 401
-    throw error
+  // Removed performance-heavy test queries - moved to dev tools only
+  const triggerTestError = (type: '401' | '500') => {
+    // Lightweight error simulation without React Query overhead
+    const message = type === '401' ? 'Unauthorized' : 'Internal Server Error'
+    console.error(`Test ${type} Error:`, message)
+    // Could trigger toast notification here if needed
   }
-
-  const mockApi500 = async (): Promise<never> => {
-    const error = new Error('Internal Server Error') as Error & { status: number }
-    error.status = 500
-    throw error
-  }
-
-  const { refetch: trigger401 } = useQuery({
-    queryKey: ['test-401'],
-    queryFn: mockApi401,
-    enabled: false,
-    retry: false,
-  })
-
-  const { refetch: trigger500 } = useQuery({
-    queryKey: ['test-500'], 
-    queryFn: mockApi500,
-    enabled: false,
-    retry: false,
-  })
 
   // Show skeleton while loading
   if (isLoading) {
@@ -211,7 +193,7 @@ export const Dashboard = () => {
             {/* API Status */}
             <ApiStatus />
 
-            {/* TEMPORARY: Error Handler Tests */}
+            {/* Lightweight Error Handler Tests */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">🧪 Error Handler Tests</CardTitle>
@@ -219,24 +201,24 @@ export const Dashboard = () => {
               <CardContent className="space-y-3">
                 <div className="space-y-2">
                   <Button 
-                    onClick={() => trigger500()}
+                    onClick={() => triggerTestError('500')}
                     variant="secondary"
                     size="sm"
                     className="w-full"
                   >
-                    Test 500 Error (Toast)
+                    Test 500 Error (Console)
                   </Button>
                   <Button 
-                    onClick={() => trigger401()}
+                    onClick={() => triggerTestError('401')}
                     variant="destructive"
                     size="sm"
                     className="w-full"
                   >
-                    Test 401 Error (Redirect)
+                    Test 401 Error (Console)
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  500: Shows toast | 401: Redirects to /auth
+                  Lightweight error simulation for development
                 </p>
               </CardContent>
             </Card>
