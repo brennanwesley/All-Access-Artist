@@ -43,16 +43,19 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
     console.log('NavigationContext: Navigating to section', section, 'from', location.pathname)
     console.log('NavigationContext: Current activeSection before change:', activeSection)
     
-    // Always set the active section immediately for responsive UI
-    setActiveSection(section)
+    // Check if we're currently on a detail page at the time of this call
+    const currentlyOnDetailPage = location.pathname.includes('/releases/')
     
-    if (isOnDetailPage) {
+    if (currentlyOnDetailPage) {
       // From detail page: navigate to main app with section state
       console.log('NavigationContext: Navigating from detail page to main app with section:', section)
       navigate('/', { state: { activeSection: section }, replace: true })
+    } else {
+      // From main app: just change section
+      console.log('NavigationContext: Setting activeSection to:', section)
+      setActiveSection(section)
     }
-    // If already on main app, section change is sufficient
-  }, [navigate, location.pathname, isOnDetailPage, setActiveSection])
+  }, [navigate, location.pathname, setActiveSection])
 
   const contextValue: NavigationContextType = {
     activeSection,
