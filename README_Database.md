@@ -1,6 +1,6 @@
 # All Access Artist - Database Documentation
 
-*Last Updated: August 19, 2025 - v2.8.0*
+*Last Updated: August 21, 2025 - v3.0.0*
 
 ## Overview
 
@@ -15,19 +15,22 @@ The All Access Artist platform uses **Supabase** (PostgreSQL 16.x) as its primar
 
 ## Database Architecture
 
-### Core Tables (9)
+### Core Tables (12)
 **Primary Tables:**
-1. **`music_releases`** - Track and album management with user authentication
+1. **`music_releases`** - Track and album management with enhanced Label Copy metadata
 2. **`release_tasks`** - Project checklist and task management
-3. **`songs`** - Individual track information and metadata
+3. **`songs`** - Individual track information with comprehensive Label Copy fields
 4. **`lyric_sheets`** - Lyric management and organization
 5. **`lyric_sheet_sections`** - Structured lyric content by section
-6. **`task_templates`** - Predefined task templates for release types
-7. **`user_profiles`** - User profile information and settings
+6. **`split_sheets`** - Professional split sheet management (song-level)
+7. **`split_sheet_writers`** - Comprehensive contributor and writer information
+8. **`split_sheet_publishers`** - Publisher entity management and contact details
+9. **`task_templates`** - Predefined task templates for release types
+10. **`user_profiles`** - User profile information and settings
 
 **Legacy Tables (Optional):**
-8. **`artist_profiles`** - Optional artist metadata (not required for core functionality)
-9. **`audit_log`** - Database change tracking and forensics
+11. **`artist_profiles`** - Optional artist metadata (not required for core functionality)
+12. **`audit_log`** - Database change tracking and forensics
 
 ### Authentication Architecture
 - **Direct user authentication**: Core tables use `user_id` columns that reference `auth.uid()` directly
@@ -74,7 +77,7 @@ The All Access Artist platform uses **Supabase** (PostgreSQL 16.x) as its primar
 ---
 
 ### 1. music_releases
-**Purpose**: Track and album management with direct user authentication  
+**Purpose**: Track and album management with comprehensive Label Copy metadata  
 **Records**: Active | **RLS**: ✅ Updated for user_id | **Authentication**: Direct user_id
 
 | Column | Type | Nullable | Default | Description |
@@ -85,8 +88,20 @@ The All Access Artist platform uses **Supabase** (PostgreSQL 16.x) as its primar
 | `release_type` | varchar | ❌ | null | single/ep/album/mixtape |
 | `status` | varchar | ❌ | `'draft'` | draft/scheduled/released |
 | `release_date` | date | ✅ | null | Official release date |
-| `genre` | varchar | ✅ | null | Music genre |
+| `genre` | varchar | ✅ | null | Primary music genre |
 | `description` | text | ✅ | null | Release description |
+| **Label Copy Fields** | | | | **Professional metadata** |
+| `version_subtitle` | text | ✅ | null | Version info (Deluxe, Remixes, etc.) |
+| `phonogram_copyright` | text | ✅ | null | ℗ Line copyright holder |
+| `composition_copyright` | text | ✅ | null | © Line copyright holder |
+| `sub_genre` | text | ✅ | null | Specific genre classification |
+| `territories` | text[] | ✅ | null | Distribution regions array |
+| `explicit_content` | boolean | ✅ | `false` | Content rating flag |
+| `language_lyrics` | text | ✅ | `'en'` | Primary language code |
+| `songwriters` | text | ✅ | null | Songwriter credits |
+| `producers` | text | ✅ | null | Producer credits |
+| `copyright_year` | integer | ✅ | null | Copyright year |
+| `track_description` | text | ✅ | null | Release description |
 | `created_at` | timestamptz | ✅ | `now()` | Record creation timestamp |
 | `updated_at` | timestamptz | ✅ | `now()` | Last update timestamp |
 
@@ -256,9 +271,22 @@ All core tables use simplified RLS policies with direct user authentication:
 
 ---
 
-## Migration History (v2.8.0 - August 19, 2025)
+## Migration History
 
-### ✅ Completed Migrations
+### ✅ v3.0.0 - August 21, 2025 (Label Copy & Split Sheet Implementation)
+1. **`extend_music_releases_for_label_copy`** - Added 7 Label Copy fields to music_releases
+2. **`extend_songs_table_for_label_copy`** - Added 7 Label Copy fields to songs table
+3. **`modify_split_sheets_to_song_level`** - Migrated split_sheets from release-level to song-level
+4. **`enhance_split_sheet_writers_comprehensive`** - Added 12 comprehensive contributor fields
+5. **`create_split_sheet_publishers_table`** - Created publisher entity management table
+6. **`update_split_sheet_rls_policies`** - Updated RLS for song-level access control
+7. **`fix_split_sheets_song_id_not_null`** - Made song_id NOT NULL in split_sheets
+8. **`add_percentage_validation_constraints`** - Added CHECK constraints for percentage fields
+9. **`add_track_level_isrc_language_fields`** - Added ISRC and language fields to songs
+10. **`rename_date_created_to_sheet_created_at`** - Renamed for clarity
+11. **`add_performance_indexes_foreign_keys`** - Added 8 performance indexes
+
+### ✅ v2.8.0 - August 19, 2025 (Authentication Migration)
 1. **`make_artist_id_nullable_in_release_tasks`** - Made artist_id nullable in release_tasks
 2. **`add_unique_constraint_to_task_templates`** - Added unique constraint on release_type
 3. **`update_release_tasks_rls_policy_for_user_id`** - Updated RLS to use user_id directly
@@ -266,19 +294,25 @@ All core tables use simplified RLS policies with direct user authentication:
 5. **`update_songs_rls_policy_for_user_id`** - Updated songs RLS policy
 6. **`fix_lyric_sheets_schema_and_rls`** - Fixed lyric sheets schema and RLS policies
 
-### ✅ Current Status
+### ✅ Current Status (v3.0.0)
 - **Authentication System**: Fully migrated to user_id-only system
-- **RLS Policies**: All updated for direct user authentication
+- **RLS Policies**: All updated for direct user authentication + song-level split sheet access
 - **Data Isolation**: Complete user data separation enforced
-- **Platform Functionality**: All features operational (releases, tasks, songs, lyrics)
+- **Platform Functionality**: All features operational (releases, tasks, songs, lyrics, split sheets)
 - **Security**: Enhanced with simplified, vulnerability-free authentication
+- **Professional Features**: Label Copy and Split Sheet systems fully implemented
+- **Data Integrity**: Percentage validation constraints and foreign key integrity enforced
+- **Performance**: Optimized with comprehensive indexing on foreign keys
 
 ### 🎯 Database Architecture Benefits
-1. **Simplified Security**: Direct user authentication eliminates complex lookups
-2. **Enhanced Performance**: Reduced query complexity with direct user_id filtering
-3. **Improved Maintainability**: Cleaner codebase without artist_id dependencies
-4. **Vulnerability Elimination**: Removed potential security issues from intermediate lookups
-5. **Backward Compatibility**: Nullable artist_id columns preserve legacy data
+1. **Professional Music Industry Support**: Complete Label Copy and Split Sheet workflows
+2. **Song-Level Granularity**: Split sheets linked to individual tracks for precise management
+3. **Comprehensive Contributor Tracking**: Full contact info, PRO affiliations, and signature tracking
+4. **Data Integrity**: CHECK constraints prevent invalid percentage values
+5. **Enhanced Performance**: Strategic indexing on all foreign key relationships
+6. **Simplified Security**: Direct user authentication eliminates complex lookups
+7. **Vulnerability Elimination**: Removed potential security issues from intermediate lookups
+8. **Backward Compatibility**: Nullable artist_id columns preserve legacy data
 
 ---
 
@@ -315,7 +349,7 @@ All core tables use simplified RLS policies with direct user authentication:
 | `completed_at` | timestamptz | Completion timestamp |
 
 #### songs
-**Purpose**: Individual track management  
+**Purpose**: Individual track management with comprehensive Label Copy fields  
 **Authentication**: `user_id = auth.uid()`
 
 | Key Columns | Type | Description |
@@ -327,6 +361,75 @@ All core tables use simplified RLS policies with direct user authentication:
 | `song_title` | text | Track title |
 | `track_number` | integer | Track position |
 | `duration_seconds` | integer | Track duration |
+| **Label Copy Fields** | | **Track-level metadata** |
+| `version_subtitle` | text | Track version info |
+| `featured_artists` | text | Guest performers |
+| `explicit_content` | boolean | Track content flag |
+| `preview_start_time` | integer | 30-second preview timestamp |
+| `mix_engineer` | text | Mixing credit |
+| `mastering_engineer` | text | Mastering credit |
+| `remixer` | text | Remix credit |
+| `isrc` | text | International Standard Recording Code |
+| `language_lyrics` | text | Track-specific language code |
+
+#### split_sheets
+**Purpose**: Professional split sheet management (song-level)  
+**Authentication**: `user_id = auth.uid()` with song ownership validation
+
+| Key Columns | Type | Description |
+|-------------|------|-------------|
+| `id` | uuid | Primary key |
+| `song_id` | uuid (NOT NULL) | Links to songs table |
+| `user_id` | uuid | Direct user authentication |
+| `song_title` | text | Denormalized song title |
+| `release_title` | text | Denormalized release title |
+| `aka_titles` | text[] | Alternate song titles array |
+| `creation_location` | text | Studio/location of creation |
+| `sample_use_clause` | text | Sample clearance agreements |
+| `agreement_date` | date | Split sheet agreement date |
+| `is_signed` | boolean | Digital signature status |
+| `sheet_created_at` | date | Sheet creation date |
+
+#### split_sheet_writers
+**Purpose**: Comprehensive contributor and writer information  
+**Authentication**: `user_id = auth.uid()`
+
+| Key Columns | Type | Description |
+|-------------|------|-------------|
+| `id` | uuid | Primary key |
+| `split_sheet_id` | uuid | Links to split_sheets |
+| `user_id` | uuid | Direct user authentication |
+| `legal_name` | text (NOT NULL) | Full legal name |
+| `stage_name` | text | Professional/performance name |
+| `mailing_address` | text | Full contact address |
+| `phone_number` | text | Contact phone |
+| `email_address` | text | Contact email |
+| `pro_affiliation` | text | ASCAP, BMI, SESAC, etc. |
+| `ipi_cae_number` | text | International songwriter ID |
+| `contribution_description` | text | What they contributed |
+| `writers_share_percentage` | numeric | Writer's royalty share (0-100%) |
+| `publishers_share_percentage` | numeric | Publisher's royalty share (0-100%) |
+| `split_percentage` | numeric | Total ownership percentage (0-100%) |
+| `signature_date` | timestamptz | Digital signature timestamp |
+| `signature_ip_address` | inet | IP address for signature tracking |
+
+**Constraints**: CHECK constraints ensure all percentage fields are between 0-100%
+
+#### split_sheet_publishers
+**Purpose**: Publisher entity management and contact details  
+**Authentication**: `user_id = auth.uid()`
+
+| Key Columns | Type | Description |
+|-------------|------|-------------|
+| `id` | uuid | Primary key |
+| `writer_id` | uuid | Links to split_sheet_writers |
+| `user_id` | uuid | Direct user authentication |
+| `company_name` | text (NOT NULL) | Legal publishing company name |
+| `pro_affiliation` | text | Publisher's PRO registration |
+| `ipi_cae_number` | text | Publisher's international ID |
+| `contact_address` | text | Business address |
+| `contact_phone` | text | Business phone |
+| `contact_email` | text | Business email |
 
 #### lyric_sheets & lyric_sheet_sections
 **Purpose**: Lyric management system  
@@ -337,7 +440,8 @@ All core tables use simplified RLS policies with direct user authentication:
 
 ---
 
-*Last Updated: August 19, 2025 - v2.8.0*  
+*Last Updated: August 21, 2025 - v3.0.0*  
 *Database Version: PostgreSQL 16.x via Supabase*  
 *Authentication: Migrated to user_id-only system*  
-*Documentation Status: Updated for v2.8.0 migration*
+*Professional Features: Label Copy & Split Sheet systems implemented*  
+*Documentation Status: Updated for v3.0.0 Label Copy & Split Sheet implementation*

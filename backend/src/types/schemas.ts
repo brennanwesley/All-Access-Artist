@@ -16,7 +16,20 @@ export const CreateReleaseSchema = z.object({
   description: z.string().max(1000, 'Description too long').optional(),
   genre: z.string().max(100, 'Genre too long').optional(),
   cover_art_url: z.string().url('Invalid cover art URL').optional(),
-  streaming_links: z.record(z.string().url('Invalid streaming link')).optional()
+  streaming_links: z.record(z.string().url('Invalid streaming link')).optional(),
+  // New Label Copy fields
+  version_subtitle: z.string().max(200, 'Version subtitle too long').optional(),
+  phonogram_copyright: z.string().max(200, 'Phonogram copyright too long').optional(),
+  composition_copyright: z.string().max(200, 'Composition copyright too long').optional(),
+  sub_genre: z.string().max(100, 'Sub-genre too long').optional(),
+  territories: z.array(z.string().max(50, 'Territory name too long')).optional(),
+  explicit_content: z.boolean().default(false),
+  language_lyrics: z.string().max(10, 'Language code too long').default('en'),
+  // Existing Label Copy fields that were already added
+  songwriters: z.string().max(500, 'Songwriters list too long').optional(),
+  producers: z.string().max(500, 'Producers list too long').optional(),
+  copyright_year: z.number().int().min(1900).max(2100).optional(),
+  track_description: z.string().max(1000, 'Track description too long').optional()
 })
 
 export const UpdateReleaseSchema = CreateReleaseSchema.partial()
@@ -58,6 +71,27 @@ export const CreateTaskSchema = z.object({
 
 export const UpdateTaskSchema = CreateTaskSchema.partial().omit({ release_id: true })
 
+// Song Schemas
+export const CreateSongSchema = z.object({
+  release_id: z.string().uuid('Invalid release ID'),
+  song_title: z.string().min(1, 'Song title is required').max(200, 'Song title too long'),
+  track_number: z.number().int().min(1, 'Track number must be positive'),
+  duration_seconds: z.number().int().min(1, 'Duration must be positive').optional(),
+  // New Label Copy fields for songs
+  version_subtitle: z.string().max(200, 'Version subtitle too long').optional(),
+  featured_artists: z.string().max(300, 'Featured artists too long').optional(),
+  explicit_content: z.boolean().default(false),
+  preview_start_time: z.number().int().min(0, 'Preview start time must be non-negative').optional(),
+  mix_engineer: z.string().max(200, 'Mix engineer name too long').optional(),
+  mastering_engineer: z.string().max(200, 'Mastering engineer name too long').optional(),
+  remixer: z.string().max(200, 'Remixer name too long').optional(),
+  // Track-level ISRC and language fields
+  isrc: z.string().max(12, 'ISRC code too long').optional(),
+  language_lyrics: z.string().max(10, 'Language code too long').default('en')
+})
+
+export const UpdateSongSchema = CreateSongSchema.partial().omit({ release_id: true })
+
 // Lyric Sheet Schemas
 export const CreateLyricSheetSchema = z.object({
   song_id: z.string().uuid('Invalid song ID'),
@@ -92,6 +126,60 @@ export const CreateCalendarSchema = z.object({
   date: z.string().datetime(),
   type: z.string()
 })
+
+// Split Sheet Schemas
+export const CreateSplitSheetSchema = z.object({
+  song_id: z.string().uuid('Invalid song ID'),
+  user_id: z.string().uuid('Invalid user ID'),
+  song_title: z.string().min(1, 'Song title is required').max(200, 'Song title too long'),
+  release_title: z.string().min(1, 'Release title is required').max(200, 'Release title too long'),
+  aka_titles: z.array(z.string().max(200, 'AKA title too long')).optional(),
+  creation_location: z.string().max(200, 'Creation location too long').optional(),
+  sample_use_clause: z.string().max(2000, 'Sample use clause too long').optional(),
+  agreement_date: z.string().date('Invalid agreement date').optional(),
+  is_signed: z.boolean().default(false),
+  sheet_created_at: z.string().date('Invalid sheet creation date').optional()
+})
+
+export const UpdateSplitSheetSchema = CreateSplitSheetSchema.partial().omit({ song_id: true, user_id: true })
+
+// Split Sheet Writer Schemas
+export const CreateSplitSheetWriterSchema = z.object({
+  split_sheet_id: z.string().uuid('Invalid split sheet ID'),
+  user_id: z.string().uuid('Invalid user ID'),
+  legal_name: z.string().min(1, 'Legal name is required').max(200, 'Legal name too long'),
+  stage_name: z.string().max(200, 'Stage name too long').optional(),
+  mailing_address: z.string().max(500, 'Mailing address too long').optional(),
+  phone_number: z.string().max(20, 'Phone number too long').optional(),
+  email_address: z.string().email('Invalid email address').optional(),
+  pro_affiliation: z.enum(['ASCAP', 'BMI', 'SESAC', 'SOCAN', 'PRS', 'GEMA', 'Other']).optional(),
+  ipi_cae_number: z.string().max(50, 'IPI/CAE number too long').optional(),
+  role: z.string().max(100, 'Role too long').optional(),
+  contribution_description: z.string().max(500, 'Contribution description too long').optional(),
+  writers_share_percentage: z.number().min(0, 'Writers share must be non-negative').max(100, 'Writers share cannot exceed 100%').optional(),
+  publishers_share_percentage: z.number().min(0, 'Publishers share must be non-negative').max(100, 'Publishers share cannot exceed 100%').optional(),
+  split_percentage: z.number().min(0, 'Split percentage must be non-negative').max(100, 'Split percentage cannot exceed 100%').optional(),
+  publishing_info: z.string().max(500, 'Publishing info too long').optional(),
+  writer_order: z.number().int().min(1, 'Writer order must be positive').default(1),
+  signature_date: z.string().datetime('Invalid signature date').optional(),
+  signature_ip_address: z.string().ip('Invalid IP address').optional()
+})
+
+export const UpdateSplitSheetWriterSchema = CreateSplitSheetWriterSchema.partial().omit({ split_sheet_id: true, user_id: true })
+
+// Split Sheet Publisher Schemas
+export const CreateSplitSheetPublisherSchema = z.object({
+  writer_id: z.string().uuid('Invalid writer ID'),
+  user_id: z.string().uuid('Invalid user ID'),
+  company_name: z.string().min(1, 'Company name is required').max(200, 'Company name too long'),
+  pro_affiliation: z.enum(['ASCAP', 'BMI', 'SESAC', 'SOCAN', 'PRS', 'GEMA', 'Other']).optional(),
+  ipi_cae_number: z.string().max(50, 'IPI/CAE number too long').optional(),
+  contact_address: z.string().max(500, 'Contact address too long').optional(),
+  contact_phone: z.string().max(20, 'Contact phone too long').optional(),
+  contact_email: z.string().email('Invalid contact email').optional()
+})
+
+export const UpdateSplitSheetPublisherSchema = CreateSplitSheetPublisherSchema.partial().omit({ writer_id: true, user_id: true })
 
 // Response Schemas
 export const ApiResponseSchema = z.object({
@@ -135,6 +223,14 @@ export type CreateLyricSectionData = z.infer<typeof CreateLyricSectionSchema>
 export type UpdateLyricSectionData = z.infer<typeof UpdateLyricSectionSchema>
 export type CreateAnalyticsData = z.infer<typeof CreateAnalyticsSchema>
 export type CreateCalendarData = z.infer<typeof CreateCalendarSchema>
+export type CreateSongData = z.infer<typeof CreateSongSchema>
+export type UpdateSongData = z.infer<typeof UpdateSongSchema>
+export type CreateSplitSheetData = z.infer<typeof CreateSplitSheetSchema>
+export type UpdateSplitSheetData = z.infer<typeof UpdateSplitSheetSchema>
+export type CreateSplitSheetWriterData = z.infer<typeof CreateSplitSheetWriterSchema>
+export type UpdateSplitSheetWriterData = z.infer<typeof UpdateSplitSheetWriterSchema>
+export type CreateSplitSheetPublisherData = z.infer<typeof CreateSplitSheetPublisherSchema>
+export type UpdateSplitSheetPublisherData = z.infer<typeof UpdateSplitSheetPublisherSchema>
 export type CreateUserProfileData = z.infer<typeof CreateUserProfileSchema>
 export type UpdateUserProfileData = z.infer<typeof UpdateUserProfileSchema>
 export type ReferralValidationData = z.infer<typeof ReferralValidationSchema>

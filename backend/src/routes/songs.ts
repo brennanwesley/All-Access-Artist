@@ -4,24 +4,10 @@
  */
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
-import { z } from 'zod'
+import { CreateSongSchema, UpdateSongSchema } from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
 
 const songs = new Hono<{ Bindings: Bindings; Variables: Variables }>()
-
-// Schema for creating a new song
-const CreateSongSchema = z.object({
-  song_title: z.string().min(1, 'Song title is required'),
-  track_number: z.number().int().positive(),
-  duration_seconds: z.number().int().positive().optional()
-})
-
-// Schema for updating a song
-const UpdateSongSchema = z.object({
-  song_title: z.string().min(1, 'Song title is required').optional(),
-  track_number: z.number().int().positive().optional(),
-  duration_seconds: z.number().int().positive().optional()
-})
 
 // PATCH /api/songs/:songId - Update song
 songs.patch('/:songId', zValidator('json', UpdateSongSchema), async (c) => {
@@ -29,19 +15,19 @@ songs.patch('/:songId', zValidator('json', UpdateSongSchema), async (c) => {
     const songId = c.req.param('songId')
     const songData = c.req.valid('json')
     const supabase = c.get('supabase')
-    const user = c.get('jwtPayload')
+    const user = c.get('user')
     
-    if (!user?.sub) {
+    if (!user?.id) {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('Songs: Updating song', songId, 'for user', user.sub, 'data:', songData)
+    console.log('Songs: Updating song', songId, 'for user', user.id, 'data:', songData)
     
     const { data, error } = await supabase
       .from('songs')
       .update(songData)
       .eq('id', songId)
-      .eq('user_id', user.sub)
+      .eq('user_id', user.id)
       .select()
       .single()
     
@@ -66,19 +52,19 @@ songs.delete('/:songId', async (c) => {
   try {
     const songId = c.req.param('songId')
     const supabase = c.get('supabase')
-    const user = c.get('jwtPayload')
+    const user = c.get('user')
     
-    if (!user?.sub) {
+    if (!user?.id) {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('Songs: Deleting song', songId, 'for user', user.sub)
+    console.log('Songs: Deleting song', songId, 'for user', user.id)
     
     const { error } = await supabase
       .from('songs')
       .delete()
       .eq('id', songId)
-      .eq('user_id', user.sub)
+      .eq('user_id', user.id)
     
     if (error) {
       console.error('Songs: Database error deleting song:', error)
@@ -96,5 +82,4 @@ songs.delete('/:songId', async (c) => {
   }
 })
 
-export { CreateSongSchema }
 export default songs

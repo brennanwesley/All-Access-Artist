@@ -5,8 +5,7 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { ReleasesService } from '../services/releasesService.js'
-import { CreateReleaseSchema } from '../types/schemas.js'
-import { CreateSongSchema } from './songs.js'
+import { CreateReleaseSchema, CreateSongSchema } from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
 
 const releases = new Hono<{ Bindings: Bindings; Variables: Variables }>()
