@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Plus, Clock, Music, AlertCircle } from "lucide-react";
@@ -43,15 +42,6 @@ export const ReleaseCalendar = () => {
   // Fetch releases from API
   const { data: releases, isLoading, isError, error } = useReleases();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "released": return "default";
-      case "scheduled": return "secondary";
-      case "draft": return "outline";
-      default: return "secondary";
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -59,15 +49,6 @@ export const ReleaseCalendar = () => {
       day: 'numeric', 
       year: 'numeric' 
     });
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "released": return "Released";
-      case "scheduled": return "Scheduled";
-      case "draft": return "Draft";
-      default: return "Unknown";
-    }
   };
 
   const getReleaseTypeLabel = (release_type: string) => {
@@ -229,22 +210,17 @@ export const ReleaseCalendar = () => {
           <Link key={release.id} to={`/releases/${release.id}`}>
             <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-elegant transition-all duration-300 cursor-pointer">
               <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="flex items-center gap-3">
-                      <Music className="h-5 w-5 text-primary" />
-                      {release.title}
-                    </CardTitle>
-                    <CardDescription className="flex items-center gap-2 mt-2">
-                      <Calendar className="h-4 w-4" />
-                      Release Date: {formatDate(release.release_date)}
-                      <span className="text-muted-foreground">•</span>
-                      {getReleaseTypeLabel(release.release_type)}
-                    </CardDescription>
-                  </div>
-                  <Badge variant={getStatusColor(release.status)}>
-                    {getStatusLabel(release.status)}
-                  </Badge>
+                <div>
+                  <CardTitle className="flex items-center gap-3">
+                    <Music className="h-5 w-5 text-primary" />
+                    {release.title}
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-2 mt-2">
+                    <Calendar className="h-4 w-4" />
+                    Release Date: {formatDate(release.release_date)}
+                    <span className="text-muted-foreground">•</span>
+                    {getReleaseTypeLabel(release.release_type)}
+                  </CardDescription>
                 </div>
               </CardHeader>
               <CardContent>
