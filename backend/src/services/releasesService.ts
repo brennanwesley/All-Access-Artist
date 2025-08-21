@@ -364,6 +364,9 @@ export class ReleasesService {
   }
 
   async deleteRelease(id: string, userId: string) {
+    // Capture complete release snapshot before deletion
+    const snapshot = await this.captureReleaseSnapshot(id, userId)
+    
     // Delete release only if it belongs to this user
     const { error } = await this.supabase
       .from('music_releases')
@@ -375,6 +378,68 @@ export class ReleasesService {
       throw new Error(`Failed to delete release: ${error.message}`)
     }
 
+    // Log deletion asynchronously (no user wait)
+    this.logDeletionAsync(snapshot, userId)
+
     return { success: true }
+  }
+
+  private async captureReleaseSnapshot(releaseId: string, userId: string) {
+    try {
+      // Single optimized query with all related data
+      const { data: releaseData } = await this.supabase
+        .from('music_releases')
+        .select(`
+          *,
+          songs(*),
+          release_tasks(*),
+          lyric_sheets(*),
+          split_sheets(
+            *,
+            split_sheet_writers(*)
+          )
+        `)
+        .eq('id', releaseId)
+        .eq('user_id', userId)
+        .single()
+
+      return {
+        release: releaseData,
+        deleted_at: new Date().toISOString(),
+        deletion_reason: 'user_initiated',
+        user_id: userId
+      }
+    } catch (error) {
+      console.error('Failed to capture release snapshot:', error)
+      return {
+        release: { id: releaseId, title: 'Unknown Release' },
+        deleted_at: new Date().toISOString(),
+        deletion_reason: 'user_initiated',
+        user_id: userId,
+        snapshot_error: error instanceof Error ? error.message : 'Unknown error'
+      }
+    }
+  }
+
+  private logDeletionAsync(snapshot: any, userId: string) {
+    // Fire-and-forget async logging (doesn't block user response)
+    setTimeout(async () => {
+      try {
+        await this.supabase
+          .from('audit_log')
+          .insert({
+            table_name: 'music_releases',
+            operation: 'DELETE',
+            record_id: snapshot.release?.id || null,
+            old_data: snapshot,
+            user_id: userId,
+            timestamp: new Date().toISOString()
+          })
+        
+        console.log(`Audit log created for deleted release: ${snapshot.release?.title || 'Unknown'}`)
+      } catch (error) {
+        console.error('Failed to create audit log:', error)
+      }
+    }, 0)
   }
 }
