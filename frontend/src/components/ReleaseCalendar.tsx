@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Plus, Clock, Music, AlertCircle } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { NewReleaseModal } from "./NewReleaseModal";
 import { useReleases } from "@/hooks/api/useReleases";
 
@@ -27,7 +27,6 @@ interface Release {
 
 export const ReleaseCalendar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const navigate = useNavigate();
   
   // Add debug logging for button clicks
   const handleNewReleaseClick = () => {
@@ -261,17 +260,8 @@ export const ReleaseCalendar = () => {
                         {Math.ceil((new Date(release.release_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days remaining
                       </span>
                     </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/releases/${release.id}`);
-                        }}
-                      >
-                        Manage Tasks
-                      </Button>
+                    <div className="text-sm text-muted-foreground">
+                      Click to manage release
                     </div>
                   </div>
                 </div>
