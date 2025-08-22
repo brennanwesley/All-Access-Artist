@@ -6,12 +6,12 @@ import { z } from 'zod'
 
 // Release Schemas
 export const CreateReleaseSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  user_id: z.string().uuid('Invalid user ID'),
-  release_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Release date must be in YYYY-MM-DD format'),
+  title: z.string().max(200, 'Title too long').optional(),
+  user_id: z.string().uuid('Invalid user ID').optional(),
+  release_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Release date must be in YYYY-MM-DD format').optional(),
   release_type: z.enum(['single', 'album', 'ep', 'mixtape'], {
     errorMap: () => ({ message: 'Release type must be single, album, ep, or mixtape' })
-  }),
+  }).optional(),
   status: z.enum(['draft', 'scheduled', 'released']).default('draft'),
   description: z.string().max(1000, 'Description too long').optional(),
   genre: z.string().max(100, 'Genre too long').optional(),

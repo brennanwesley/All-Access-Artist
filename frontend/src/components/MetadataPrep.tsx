@@ -345,33 +345,10 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
     setSaveStatus('saving');
     
     try {
-      // Validate required fields
-      if (!releaseData.releaseTitle || !releaseData.artist || !releaseData.releaseType || !releaseData.releaseDate) {
-        toast({
-          title: "Validation Error",
-          description: "Please fill in all required fields (marked with *)",
-          variant: "destructive"
-        });
-        setSaveStatus('error');
-        setTimeout(() => setSaveStatus('idle'), 5000);
-        return;
-      }
+      // No validation - allow saving with any data
 
-      // Validate tracks - only validate tracks that have content (not empty placeholder tracks)
+      // Get all tracks for saving (no validation)
       const tracksWithContent = tracks.filter(track => track.songTitle?.trim() || track.duration?.trim() || track.songwriters?.trim());
-      
-      for (const track of tracksWithContent) {
-        if (!track.songTitle || !track.duration || !track.songwriters) {
-          toast({
-            title: "Validation Error", 
-            description: "Please fill in required track fields (Song Title, Duration, Songwriters) for all tracks with content",
-            variant: "destructive"
-          });
-          setSaveStatus('error');
-          setTimeout(() => setSaveStatus('idle'), 5000);
-          return;
-        }
-      }
 
       // Determine if this is an update or create operation
       const isUpdate = releaseId && existingRelease;
