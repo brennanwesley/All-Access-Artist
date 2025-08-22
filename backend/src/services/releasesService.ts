@@ -99,7 +99,7 @@ export class ReleasesService {
     try {
       console.log('9. Starting task generation...')
       // Try to generate to-do list tasks for the new release
-      await this.generateReleaseTasks(newRelease.id, newRelease.user_id, releaseData.release_type)
+      await this.generateReleaseTasks(newRelease.id, newRelease.user_id, releaseData.release_type || 'single')
       console.log('10. Task generation completed successfully')
     } catch (taskError) {
       // Log the error but don't fail the release creation
