@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, FileText, Music, Save, Users, Percent, Globe, Clock, Plus, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ReleaseDetails, Song } from "@/hooks/api/useReleaseDetails";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ActiveTemplate = "main" | "labelCopy" | "lyricSheet" | "splitSheet" | null;
 
@@ -54,6 +55,7 @@ interface ReleaseData {
 }
 
 export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: MetadataPrepProps = {}) => {
+  const { getAccessToken } = useAuth();
   const [activeTemplate, setActiveTemplate] = useState<ActiveTemplate>("main");
   const [releaseData, setReleaseData] = useState<ReleaseData>({
     releaseTitle: "",
@@ -410,7 +412,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env['VITE_SUPABASE_ANON_KEY']}`
+            'Authorization': `Bearer ${await getAccessToken()}`
           },
           body: JSON.stringify(releasePayload)
         });
@@ -434,7 +436,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env['VITE_SUPABASE_ANON_KEY']}`
+            'Authorization': `Bearer ${await getAccessToken()}`
           },
           body: JSON.stringify(releasePayload)
         });
@@ -714,36 +716,36 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="releaseDate">Release Date *</Label>
-                <Input 
-                  id="releaseDate" 
-                  type="date" 
+                <Input
+                  type="date"
                   value={releaseData.releaseDate}
-                  onChange={(e) => updateReleaseData('releaseDate', e.target.value)}
-                  className="w-full" 
+                  onChange={(e) => setReleaseData({ ...releaseData, releaseDate: e.target.value })}
                   disabled={isReadOnly}
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="copyright">Copyright Year *</Label>
-                <Input 
-                  id="copyright" 
-                  type="number" 
+                <Input
                   value={releaseData.copyright}
-                  onChange={(e) => updateReleaseData('copyright', e.target.value)}
-                  placeholder="2025" 
-                  className="w-full" 
+                  onChange={(e) => setReleaseData({ ...releaseData, copyright: e.target.value })}
                   disabled={isReadOnly}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="upc">UPC Code</Label>
-                <Input 
-                  id="upc" 
+                <Input
                   value={releaseData.upc}
-                  onChange={(e) => updateReleaseData('upc', e.target.value)}
-                  placeholder="123456789012" 
-                  className="w-full" 
+                  onChange={(e) => setReleaseData({ ...releaseData, upc: e.target.value })}
                   disabled={isReadOnly}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                 />
               </div>
             </div>
