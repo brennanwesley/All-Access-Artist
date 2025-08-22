@@ -89,7 +89,10 @@ export const CreateSongSchema = z.object({
   remixer: z.string().max(200, 'Remixer name too long').optional(),
   // Track-level ISRC and language fields
   isrc: z.string().max(12, 'ISRC code too long').optional(),
-  language_lyrics: z.string().max(10, 'Language code too long').default('en')
+  language_lyrics: z.string().max(10, 'Language code too long').default('en'),
+  // Song-level songwriter and producer fields
+  songwriters: z.string().max(500, 'Songwriters list too long').optional(),
+  producers: z.string().max(500, 'Producers list too long').optional()
 })
 
 export const UpdateSongSchema = CreateSongSchema.partial()

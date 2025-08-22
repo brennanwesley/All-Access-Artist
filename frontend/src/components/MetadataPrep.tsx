@@ -449,8 +449,9 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
           mix_engineer: track.mixEngineer,
           mastering_engineer: track.masteringEngineer,
           remixer: track.remixer,
-          language_lyrics: track.languageLyrics
-          // Note: songwriters and producers not in backend schema yet
+          language_lyrics: track.languageLyrics,
+          songwriters: track.songwriters,
+          producers: track.producers
           // Note: song_title is managed in Release Details → Songs tab only
         };
 
