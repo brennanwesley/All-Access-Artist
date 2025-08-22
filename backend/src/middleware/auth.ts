@@ -48,35 +48,7 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('ERROR: Missing or invalid authorization header')
-      
-      // TEMPORARY DEV BYPASS - Remove after testing
-      console.log('DEVELOPMENT MODE: Bypassing authentication for testing')
-      const supabaseUrl = process.env.SUPABASE_URL!
-      const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!
-      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
-      
-      // Create admin client for dev testing
-      const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-      const supabase = createClient(supabaseUrl, supabaseAnonKey)
-      
-      // Create mock user for dev testing (using existing release user_id)
-      const mockUser = {
-        id: 'e85e1294-632b-42c1-85ba-8c6648fc0467',
-        sub: 'e85e1294-632b-42c1-85ba-8c6648fc0467',
-        email: 'dev@test.com',
-        user_metadata: {},
-        app_metadata: {}
-      }
-      
-      c.set('user', mockUser)
-      c.set('supabase', supabaseAdmin) // Use admin client to bypass RLS
-      c.set('supabaseAdmin', supabaseAdmin)
-      c.set('jwtPayload', mockUser)
-      
-      console.log('DEV MODE: Authentication bypassed with mock user')
-      await next()
-      return
-      // END TEMPORARY DEV BYPASS
+      return c.json({ error: 'Missing or invalid authorization header' }, 401)
     }
 
     const token = authHeader.substring(7)
