@@ -346,17 +346,23 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
           description: "Please fill in all required fields (marked with *)",
           variant: "destructive"
         });
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus('idle'), 5000);
         return;
       }
 
-      // Validate tracks
-      for (const track of tracks) {
+      // Validate tracks - only validate tracks that have content (not empty placeholder tracks)
+      const tracksWithContent = tracks.filter(track => track.songTitle?.trim() || track.duration?.trim() || track.songwriters?.trim());
+      
+      for (const track of tracksWithContent) {
         if (!track.songTitle || !track.duration || !track.songwriters) {
           toast({
             title: "Validation Error", 
-            description: "Please fill in required track fields (Song Title, Duration, Songwriters)",
+            description: "Please fill in required track fields (Song Title, Duration, Songwriters) for all tracks with content",
             variant: "destructive"
           });
+          setSaveStatus('error');
+          setTimeout(() => setSaveStatus('idle'), 5000);
           return;
         }
       }
@@ -421,8 +427,8 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         currentReleaseId = release.data?.id || release.id;
       }
 
-      // Handle tracks - update existing or create new
-      for (const track of tracks) {
+      // Handle tracks - only process tracks with content
+      for (const track of tracksWithContent) {
         const trackPayload = {
           track_number: track.trackNumber,
           duration_seconds: parseDuration(track.duration),
