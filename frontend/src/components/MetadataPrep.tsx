@@ -376,7 +376,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         release_type: releaseData.releaseType,
         release_date: releaseData.releaseDate,
         copyright_year: parseInt(releaseData.copyright) || new Date().getFullYear(),
-        upc_code: releaseData.upc,
+        upc: releaseData.upc,
         genre: releaseData.genre,
         language_lyrics: releaseData.languageLyrics,
         phonogram_copyright: releaseData.phonogramCopyright,

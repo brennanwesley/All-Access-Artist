@@ -30,7 +30,7 @@ export const CreateReleaseSchema = z.object({
   copyright_year: z.number().int().min(1900).max(2100).optional(),
   track_description: z.string().max(1000, 'Track description too long').optional(),
   // Additional Label Copy fields
-  upc_code: z.string().max(20, 'UPC code too long').optional(),
+  upc: z.string().max(20, 'UPC code too long').optional(),
   label: z.string().max(200, 'Label name too long').optional()
 })
 
