@@ -143,7 +143,11 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
             <p className="text-muted-foreground">{release.title}</p>
           </div>
         </div>
-        <MetadataPrep />
+        <MetadataPrep 
+          releaseId={release.id}
+          existingRelease={release}
+          existingSongs={release.songs || []}
+        />
       </div>
     );
   }

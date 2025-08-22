@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, FileText, Music, Save, Users, Percent, Globe, Clock, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { ReleaseDetails, Song } from "@/hooks/api/useReleaseDetails";
 
-type ActiveTemplate = "main" | "labelCopy" | "lyricSheet" | "splitSheet";
+type ActiveTemplate = "main" | "labelCopy" | "lyricSheet" | "splitSheet" | null;
+
+interface MetadataPrepProps {
+  releaseId?: string;
+  existingRelease?: ReleaseDetails;
+  existingSongs?: Song[];
+}
 
 interface Track {
   id: string;
@@ -46,7 +53,7 @@ interface ReleaseData {
   description: string;
 }
 
-export const MetadataPrep = () => {
+export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: MetadataPrepProps = {}) => {
   const [activeTemplate, setActiveTemplate] = useState<ActiveTemplate>("main");
   const [releaseData, setReleaseData] = useState<ReleaseData>({
     releaseTitle: "",
@@ -86,6 +93,61 @@ export const MetadataPrep = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Helper function to convert seconds to MM:SS format
+  const formatDuration = (seconds?: number): string => {
+    if (!seconds) return "";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Helper function to convert Song[] to Track[]
+  const convertSongsToTracks = (songs: Song[]): Track[] => {
+    return songs.map((song) => ({
+      id: song.id,
+      songTitle: song.song_title,
+      trackNumber: song.track_number,
+      duration: formatDuration(song.duration_seconds),
+      isrc: "",
+      versionSubtitle: "",
+      featuredArtists: "",
+      explicitContent: false,
+      previewStartTime: 30,
+      mixEngineer: "",
+      masteringEngineer: "",
+      remixer: "",
+      songwriters: "",
+      producers: "",
+      subGenre: "",
+      languageLyrics: "en"
+    }));
+  };
+
+  // Pre-populate form data when props are provided
+  useEffect(() => {
+    if (existingRelease) {
+      setReleaseData({
+        releaseTitle: existingRelease.title || "",
+        artist: "", // Will need to get from artist_profiles table
+        releaseType: existingRelease.release_type || "",
+        releaseDate: existingRelease.release_date || "",
+        copyright: existingRelease.copyright_info || "",
+        upc: existingRelease.upc_code || "",
+        genre: existingRelease.genre || "",
+        languageLyrics: "en", // Default
+        phonogramCopyright: "",
+        compositionCopyright: "",
+        label: existingRelease.label || "",
+        territories: "",
+        description: existingRelease.description || ""
+      });
+    }
+
+    if (existingSongs && existingSongs.length > 0) {
+      setTracks(convertSongsToTracks(existingSongs));
+    }
+  }, [existingRelease, existingSongs]);
+
   const addTrack = () => {
     const newTrack: Track = {
       id: Date.now().toString(),
@@ -124,6 +186,17 @@ export const MetadataPrep = () => {
     setReleaseData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Helper function to convert MM:SS duration to seconds
+  const parseDuration = (duration: string): number | undefined => {
+    if (!duration) return undefined;
+    const parts = duration.split(':');
+    if (parts.length !== 2 || !parts[0] || !parts[1]) return undefined;
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseInt(parts[1], 10);
+    if (isNaN(minutes) || isNaN(seconds)) return undefined;
+    return minutes * 60 + seconds;
+  };
+
   const handleSave = async () => {
     setIsLoading(true);
     
@@ -150,11 +223,13 @@ export const MetadataPrep = () => {
         }
       }
 
+      // Determine if this is an update or create operation
+      const isUpdate = releaseId && existingRelease;
+      
       // Create release payload
       const releasePayload = {
         title: releaseData.releaseTitle,
-        artist: releaseData.artist,
-        type: releaseData.releaseType,
+        release_type: releaseData.releaseType,
         release_date: releaseData.releaseDate,
         copyright_year: parseInt(releaseData.copyright) || new Date().getFullYear(),
         upc_code: releaseData.upc,
@@ -162,39 +237,58 @@ export const MetadataPrep = () => {
         language_lyrics: releaseData.languageLyrics,
         phonogram_copyright: releaseData.phonogramCopyright,
         composition_copyright: releaseData.compositionCopyright,
-        record_label: releaseData.label,
+        label: releaseData.label,
         territories: releaseData.territories,
-        description: releaseData.description
+        description: releaseData.description,
+        ...(isUpdate ? {} : { user_id: 'temp-user-id' }) // Only add user_id for new releases
       };
 
       // Get API URL from environment
       const API_URL = import.meta.env['VITE_API_URL'] || 'https://all-access-artist.onrender.com';
       
-      // Create release
-      const releaseResponse = await fetch(`${API_URL}/api/releases`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // TODO: Add authentication header when auth is implemented
-          // 'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(releasePayload)
-      });
+      let currentReleaseId = releaseId;
+      
+      if (isUpdate) {
+        // Update existing release
+        const releaseResponse = await fetch(`${API_URL}/api/releases/${releaseId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            // TODO: Add authentication header when auth is implemented
+            // 'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(releasePayload)
+        });
 
-      if (!releaseResponse.ok) {
-        throw new Error('Failed to create release');
+        if (!releaseResponse.ok) {
+          throw new Error('Failed to update release');
+        }
+      } else {
+        // Create new release
+        const releaseResponse = await fetch(`${API_URL}/api/releases`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // TODO: Add authentication header when auth is implemented
+            // 'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(releasePayload)
+        });
+
+        if (!releaseResponse.ok) {
+          throw new Error('Failed to create release');
+        }
+
+        const release = await releaseResponse.json();
+        currentReleaseId = release.data?.id || release.id;
       }
 
-      const release = await releaseResponse.json();
-
-      // Create tracks
+      // Handle tracks - update existing or create new
       for (const track of tracks) {
         const trackPayload = {
-          release_id: release.id,
-          title: track.songTitle,
           track_number: track.trackNumber,
-          duration: track.duration,
-          isrc_code: track.isrc,
+          duration_seconds: parseDuration(track.duration),
+          isrc: track.isrc,
           version_subtitle: track.versionSubtitle,
           featured_artists: track.featuredArtists,
           explicit_content: track.explicitContent,
@@ -202,66 +296,90 @@ export const MetadataPrep = () => {
           mix_engineer: track.mixEngineer,
           mastering_engineer: track.masteringEngineer,
           remixer: track.remixer,
-          songwriters: track.songwriters,
-          producers: track.producers,
-          sub_genre: track.subGenre,
           language_lyrics: track.languageLyrics
+          // Note: songwriters and producers not in backend schema yet
+          // Note: song_title is managed in Release Details → Songs tab only
         };
 
-        const trackResponse = await fetch(`${API_URL}/api/songs`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            // TODO: Add authentication header when auth is implemented
-          },
-          body: JSON.stringify(trackPayload)
-        });
+        // Check if this track already exists (has a UUID-like ID)
+        const isExistingTrack = track.id && track.id.length > 10; // UUID is longer than generated IDs
+        
+        if (isUpdate && isExistingTrack) {
+          // Update existing track
+          const trackResponse = await fetch(`${API_URL}/api/songs/${track.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              // TODO: Add authentication header when auth is implemented
+            },
+            body: JSON.stringify(trackPayload)
+          });
 
-        if (!trackResponse.ok) {
-          throw new Error(`Failed to create track: ${track.songTitle}`);
+          if (!trackResponse.ok) {
+            throw new Error(`Failed to update track: ${track.songTitle}`);
+          }
+        } else {
+          // Create new track
+          const trackResponse = await fetch(`${API_URL}/api/releases/${currentReleaseId}/songs`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // TODO: Add authentication header when auth is implemented
+            },
+            body: JSON.stringify({
+              ...trackPayload,
+              release_id: currentReleaseId
+            })
+          });
+
+          if (!trackResponse.ok) {
+            throw new Error(`Failed to create track: ${track.songTitle}`);
+          }
         }
       }
 
       toast({
-        title: "Label Copy Saved Successfully",
-        description: `Release "${releaseData.releaseTitle}" with ${tracks.length} track${tracks.length !== 1 ? 's' : ''} has been saved.`,
+        title: isUpdate ? "Label Copy Updated Successfully" : "Label Copy Saved Successfully",
+        description: `Release "${releaseData.releaseTitle}" with ${tracks.length} track${tracks.length !== 1 ? 's' : ''} has been ${isUpdate ? 'updated' : 'saved'}.`,
       });
 
-      // Reset form after successful save
-      setReleaseData({
-        releaseTitle: "",
-        artist: "",
-        releaseType: "",
-        releaseDate: "",
-        copyright: "",
-        upc: "",
-        genre: "",
-        languageLyrics: "en",
-        phonogramCopyright: "",
-        compositionCopyright: "",
-        label: "",
-        territories: "",
-        description: ""
-      });
-      
-      setTracks([{
-        id: "1",
-        songTitle: "",
-        trackNumber: 1,
-        duration: "",
-        isrc: "",
-        versionSubtitle: "",
-        featuredArtists: "",
-        explicitContent: false,
-        previewStartTime: 30,
-        mixEngineer: "",
-        masteringEngineer: "",
-        remixer: "",
-        songwriters: "",
-        producers: "",
-        subGenre: "",
-        languageLyrics: "en"
-      }]);
+      // Only reset form if creating new (not updating)
+      if (!isUpdate) {
+        setReleaseData({
+          releaseTitle: "",
+          artist: "",
+          releaseType: "",
+          releaseDate: "",
+          copyright: "",
+          upc: "",
+          genre: "",
+          languageLyrics: "en",
+          phonogramCopyright: "",
+          compositionCopyright: "",
+          label: "",
+          territories: "",
+          description: ""
+        });
+        
+        setTracks([{
+          id: "1",
+          songTitle: "",
+          trackNumber: 1,
+          duration: "",
+          isrc: "",
+          versionSubtitle: "",
+          featuredArtists: "",
+          explicitContent: false,
+          previewStartTime: 30,
+          mixEngineer: "",
+          masteringEngineer: "",
+          remixer: "",
+          songwriters: "",
+          producers: "",
+          subGenre: "",
+          languageLyrics: "en"
+        }]);
+      }
 
     } catch (error) {
       console.error('Error saving Label Copy:', error);
@@ -280,14 +398,35 @@ export const MetadataPrep = () => {
       <div className="space-y-6">
         <div className="flex items-center gap-4 mb-6">
           <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setActiveTemplate("main")}
+            variant="ghost" 
+            onClick={() => setActiveTemplate(null)}
+            className="flex items-center gap-2"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            <ArrowLeft className="h-4 w-4" />
+            Back to Templates
           </Button>
-          <h2 className="text-3xl font-bold">Label Copy Template</h2>
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold">Label Copy Template</h2>
+              {releaseId && existingRelease ? (
+                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-blue-700">Editing Mode</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-full">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-green-700">Create Mode</span>
+                </div>
+              )}
+            </div>
+            <p className="text-muted-foreground">
+              {releaseId && existingRelease 
+                ? `Updating metadata for "${existingRelease.title}"`
+                : "Complete metadata for distribution"
+              }
+            </p>
+          </div>
         </div>
 
         {/* Release Information Card */}
@@ -487,7 +626,7 @@ export const MetadataPrep = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {tracks.map((track, index) => (
+            {tracks.map((track) => (
               <div key={track.id} className="border rounded-lg p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-md font-semibold">Track {track.trackNumber}</h4>
@@ -506,13 +645,15 @@ export const MetadataPrep = () => {
                 {/* Basic Track Info */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>Song Title *</Label>
-                    <Input 
-                      value={track.songTitle}
-                      onChange={(e) => updateTrack(track.id, 'songTitle', e.target.value)}
-                      placeholder="Enter song title" 
-                      className="w-full" 
-                    />
+                    <Label>Song Title</Label>
+                    <div className="flex items-center gap-2">
+                      <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 w-full">
+                        {track.songTitle || "Untitled Track"}
+                      </div>
+                      <div className="text-xs text-gray-500 whitespace-nowrap">
+                        Edit in Songs tab
+                      </div>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Duration *</Label>
