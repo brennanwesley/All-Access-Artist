@@ -6,14 +6,87 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, FileText, Music, Save, Users, Percent, Globe, Clock } from "lucide-react";
+import { ArrowLeft, FileText, Music, Save, Users, Percent, Globe, Clock, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 type ActiveTemplate = "main" | "labelCopy" | "lyricSheet" | "splitSheet";
 
+interface Track {
+  id: string;
+  songTitle: string;
+  trackNumber: number;
+  duration: string;
+  isrc: string;
+  versionSubtitle: string;
+  featuredArtists: string;
+  explicitContent: boolean;
+  previewStartTime: number;
+  mixEngineer: string;
+  masteringEngineer: string;
+  remixer: string;
+  songwriters: string;
+  producers: string;
+  subGenre: string;
+  languageLyrics: string;
+}
+
 export const MetadataPrep = () => {
   const [activeTemplate, setActiveTemplate] = useState<ActiveTemplate>("main");
+  const [tracks, setTracks] = useState<Track[]>([
+    {
+      id: "1",
+      songTitle: "",
+      trackNumber: 1,
+      duration: "",
+      isrc: "",
+      versionSubtitle: "",
+      featuredArtists: "",
+      explicitContent: false,
+      previewStartTime: 30,
+      mixEngineer: "",
+      masteringEngineer: "",
+      remixer: "",
+      songwriters: "",
+      producers: "",
+      subGenre: "",
+      languageLyrics: "en"
+    }
+  ]);
   const { toast } = useToast();
+
+  const addTrack = () => {
+    const newTrack: Track = {
+      id: Date.now().toString(),
+      songTitle: "",
+      trackNumber: tracks.length + 1,
+      duration: "",
+      isrc: "",
+      versionSubtitle: "",
+      featuredArtists: "",
+      explicitContent: false,
+      previewStartTime: 30,
+      mixEngineer: "",
+      masteringEngineer: "",
+      remixer: "",
+      songwriters: "",
+      producers: "",
+      subGenre: "",
+      languageLyrics: "en"
+    };
+    setTracks([...tracks, newTrack]);
+  };
+
+  const removeTrack = (trackId: string) => {
+    if (tracks.length > 1) {
+      setTracks(tracks.filter(track => track.id !== trackId));
+    }
+  };
+
+  const updateTrack = (trackId: string, field: keyof Track, value: any) => {
+    setTracks(tracks.map(track => 
+      track.id === trackId ? { ...track, [field]: value } : track
+    ));
+  };
 
   const handleSave = () => {
     toast({
@@ -37,215 +110,324 @@ export const MetadataPrep = () => {
           <h2 className="text-3xl font-bold">Label Copy Template</h2>
         </div>
 
+        {/* Release Information Card */}
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Track Information
+              Release Information
             </CardTitle>
             <CardDescription>
-              Fill out all required information for your label copy sheet
+              Master information for this Label Copy document
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-8">
-            {/* Basic Track Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Basic Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="trackTitle">Track Title *</Label>
-                  <Input id="trackTitle" placeholder="Enter track title" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="artist">Artist Name *</Label>
-                  <Input id="artist" placeholder="Enter artist name" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="album">Album/EP Title</Label>
-                  <Input id="album" placeholder="Enter album/EP title" className="w-full" />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="trackNumber">Track #</Label>
-                  <Input id="trackNumber" type="number" placeholder="1" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="duration">Duration *</Label>
-                  <Input id="duration" placeholder="3:45" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="copyright">Copyright Year *</Label>
-                  <Input id="copyright" type="number" placeholder="2025" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="isrc">ISRC Code</Label>
-                  <Input id="isrc" placeholder="US-XXX-XX-XXXXX" className="w-full" />
-                </div>
-              </div>
-            </div>
-
-            {/* Version & Featured Artists */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Version & Features</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="versionSubtitle">Version Subtitle</Label>
-                  <Input id="versionSubtitle" placeholder="Radio Edit, Extended Mix, Acoustic" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="featuredArtists">Featured Artists</Label>
-                  <Input id="featuredArtists" placeholder="Artist Name, Another Artist" className="w-full" />
-                </div>
-              </div>
-            </div>
-
-            {/* Genre & Content */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Genre & Content</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="genre">Primary Genre *</Label>
-                  <Select>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select genre" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pop">Pop</SelectItem>
-                      <SelectItem value="rock">Rock</SelectItem>
-                      <SelectItem value="hip-hop">Hip-Hop</SelectItem>
-                      <SelectItem value="electronic">Electronic</SelectItem>
-                      <SelectItem value="indie">Indie</SelectItem>
-                      <SelectItem value="country">Country</SelectItem>
-                      <SelectItem value="r&b">R&B</SelectItem>
-                      <SelectItem value="folk">Folk</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subGenre">Sub-Genre</Label>
-                  <Input id="subGenre" placeholder="Dance Pop, Alternative Rock" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="languageLyrics">Language</Label>
-                  <Select defaultValue="en">
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="de">German</SelectItem>
-                      <SelectItem value="it">Italian</SelectItem>
-                      <SelectItem value="pt">Portuguese</SelectItem>
-                      <SelectItem value="ja">Japanese</SelectItem>
-                      <SelectItem value="ko">Korean</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="explicitContent" />
-                  <Label htmlFor="explicitContent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Explicit Content
-                  </Label>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="previewStartTime" className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Preview Start Time (seconds)
-                  </Label>
-                  <Input id="previewStartTime" type="number" placeholder="30" className="w-full" />
-                </div>
-              </div>
-            </div>
-
-            {/* Credits */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Credits</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="writers">Songwriters/Composers *</Label>
-                  <Input id="writers" placeholder="John Doe, Jane Smith" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="producers">Producers</Label>
-                  <Input id="producers" placeholder="Producer names" className="w-full" />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="mixEngineer">Mix Engineer</Label>
-                  <Input id="mixEngineer" placeholder="Engineer name" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="masteringEngineer">Mastering Engineer</Label>
-                  <Input id="masteringEngineer" placeholder="Engineer name" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="remixer">Remixer</Label>
-                  <Input id="remixer" placeholder="Remixer name" className="w-full" />
-                </div>
-              </div>
-            </div>
-
-            {/* Legal & Distribution */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Legal & Distribution</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phonogramCopyright">Phonogram Copyright (℗)</Label>
-                  <Input id="phonogramCopyright" placeholder="℗ 2025 Record Label Name" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="compositionCopyright">Composition Copyright (©)</Label>
-                  <Input id="compositionCopyright" placeholder="© 2025 Publishing Company" className="w-full" />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="label">Record Label</Label>
-                  <Input id="label" placeholder="Independent / Label name" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="territories" className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
-                    Territories (comma-separated)
-                  </Label>
-                  <Input id="territories" placeholder="US, CA, UK, AU, DE" className="w-full" />
-                </div>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Description</h3>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="description">Track Description</Label>
-                <Textarea 
-                  id="description" 
-                  placeholder="Brief description of the track for promotional use..."
-                  rows={4}
-                  className="w-full"
-                />
+                <Label htmlFor="releaseTitle">Release Title *</Label>
+                <Input id="releaseTitle" placeholder="Album/EP/Single title" className="w-full" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="artist">Artist Name *</Label>
+                <Input id="artist" placeholder="Enter artist name" className="w-full" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="releaseType">Release Type *</Label>
+                <Select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">Single</SelectItem>
+                    <SelectItem value="ep">EP</SelectItem>
+                    <SelectItem value="album">Album</SelectItem>
+                    <SelectItem value="mixtape">Mixtape</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <Button onClick={handleSave} className="flex items-center gap-2">
-                <Save className="h-4 w-4" />
-                Save Label Copy
-              </Button>
-              <Button variant="outline">Export to PDF</Button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="releaseDate">Release Date *</Label>
+                <Input id="releaseDate" type="date" className="w-full" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="copyright">Copyright Year *</Label>
+                <Input id="copyright" type="number" placeholder="2025" className="w-full" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="upc">UPC Code</Label>
+                <Input id="upc" placeholder="123456789012" className="w-full" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="genre">Primary Genre *</Label>
+                <Select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select genre" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pop">Pop</SelectItem>
+                    <SelectItem value="rock">Rock</SelectItem>
+                    <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                    <SelectItem value="electronic">Electronic</SelectItem>
+                    <SelectItem value="indie">Indie</SelectItem>
+                    <SelectItem value="country">Country</SelectItem>
+                    <SelectItem value="r&b">R&B</SelectItem>
+                    <SelectItem value="folk">Folk</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="languageLyrics">Primary Language</Label>
+                <Select defaultValue="en">
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                    <SelectItem value="fr">French</SelectItem>
+                    <SelectItem value="de">German</SelectItem>
+                    <SelectItem value="it">Italian</SelectItem>
+                    <SelectItem value="pt">Portuguese</SelectItem>
+                    <SelectItem value="ja">Japanese</SelectItem>
+                    <SelectItem value="ko">Korean</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phonogramCopyright">Phonogram Copyright (℗)</Label>
+                <Input id="phonogramCopyright" placeholder="℗ 2025 Record Label Name" className="w-full" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="compositionCopyright">Composition Copyright (©)</Label>
+                <Input id="compositionCopyright" placeholder="© 2025 Publishing Company" className="w-full" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="label">Record Label</Label>
+                <Input id="label" placeholder="Independent / Label name" className="w-full" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="territories" className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  Territories (comma-separated)
+                </Label>
+                <Input id="territories" placeholder="US, CA, UK, AU, DE" className="w-full" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Release Description</Label>
+              <Textarea 
+                id="description" 
+                placeholder="Brief description of the release for promotional use..."
+                rows={3}
+                className="w-full"
+              />
             </div>
           </CardContent>
         </Card>
+
+        {/* Tracks Information Card */}
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Music className="h-5 w-5" />
+              Track Listing
+            </CardTitle>
+            <CardDescription>
+              Individual track information for this release
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {tracks.map((track, index) => (
+              <div key={track.id} className="border rounded-lg p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-md font-semibold">Track {track.trackNumber}</h4>
+                  {tracks.length > 1 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => removeTrack(track.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Basic Track Info */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Song Title *</Label>
+                    <Input 
+                      value={track.songTitle}
+                      onChange={(e) => updateTrack(track.id, 'songTitle', e.target.value)}
+                      placeholder="Enter song title" 
+                      className="w-full" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Duration *</Label>
+                    <Input 
+                      value={track.duration}
+                      onChange={(e) => updateTrack(track.id, 'duration', e.target.value)}
+                      placeholder="3:45" 
+                      className="w-full" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ISRC Code</Label>
+                    <Input 
+                      value={track.isrc}
+                      onChange={(e) => updateTrack(track.id, 'isrc', e.target.value)}
+                      placeholder="US-XXX-XX-XXXXX" 
+                      className="w-full" 
+                    />
+                  </div>
+                </div>
+
+                {/* Version & Features */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Version Subtitle</Label>
+                    <Input 
+                      value={track.versionSubtitle}
+                      onChange={(e) => updateTrack(track.id, 'versionSubtitle', e.target.value)}
+                      placeholder="Radio Edit, Extended Mix, Acoustic" 
+                      className="w-full" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Featured Artists</Label>
+                    <Input 
+                      value={track.featuredArtists}
+                      onChange={(e) => updateTrack(track.id, 'featuredArtists', e.target.value)}
+                      placeholder="Artist Name, Another Artist" 
+                      className="w-full" 
+                    />
+                  </div>
+                </div>
+
+                {/* Credits */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Songwriters *</Label>
+                    <Input 
+                      value={track.songwriters}
+                      onChange={(e) => updateTrack(track.id, 'songwriters', e.target.value)}
+                      placeholder="John Doe, Jane Smith" 
+                      className="w-full" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Producers</Label>
+                    <Input 
+                      value={track.producers}
+                      onChange={(e) => updateTrack(track.id, 'producers', e.target.value)}
+                      placeholder="Producer names" 
+                      className="w-full" 
+                    />
+                  </div>
+                </div>
+
+                {/* Engineers */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Mix Engineer</Label>
+                    <Input 
+                      value={track.mixEngineer}
+                      onChange={(e) => updateTrack(track.id, 'mixEngineer', e.target.value)}
+                      placeholder="Engineer name" 
+                      className="w-full" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mastering Engineer</Label>
+                    <Input 
+                      value={track.masteringEngineer}
+                      onChange={(e) => updateTrack(track.id, 'masteringEngineer', e.target.value)}
+                      placeholder="Engineer name" 
+                      className="w-full" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Remixer</Label>
+                    <Input 
+                      value={track.remixer}
+                      onChange={(e) => updateTrack(track.id, 'remixer', e.target.value)}
+                      placeholder="Remixer name" 
+                      className="w-full" 
+                    />
+                  </div>
+                </div>
+
+                {/* Additional Info */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Sub-Genre</Label>
+                    <Input 
+                      value={track.subGenre}
+                      onChange={(e) => updateTrack(track.id, 'subGenre', e.target.value)}
+                      placeholder="Dance Pop, Alternative Rock" 
+                      className="w-full" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Preview Start Time (seconds)
+                    </Label>
+                    <Input 
+                      type="number"
+                      value={track.previewStartTime}
+                      onChange={(e) => updateTrack(track.id, 'previewStartTime', parseInt(e.target.value) || 0)}
+                      placeholder="30" 
+                      className="w-full" 
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2 pt-6">
+                    <Checkbox 
+                      id={`explicit-${track.id}`}
+                      checked={track.explicitContent}
+                      onCheckedChange={(checked) => updateTrack(track.id, 'explicitContent', checked)}
+                    />
+                    <Label htmlFor={`explicit-${track.id}`} className="text-sm font-medium">
+                      Explicit Content
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <Button 
+              onClick={addTrack}
+              variant="outline" 
+              className="w-full"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Track
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="flex gap-4 pt-4">
+          <Button onClick={handleSave} className="flex items-center gap-2">
+            <Save className="h-4 w-4" />
+            Save Label Copy
+          </Button>
+          <Button variant="outline">Export to PDF</Button>
+        </div>
       </div>
     );
   }
