@@ -17,7 +17,7 @@ export const CreateReleaseSchema = z.object({
   genre: z.string().max(100, 'Genre too long').optional(),
   cover_art_url: z.string().url('Invalid cover art URL').optional(),
   streaming_links: z.record(z.string().url('Invalid streaming link')).optional(),
-  // New Label Copy fields
+  // Label Copy fields
   version_subtitle: z.string().max(200, 'Version subtitle too long').optional(),
   phonogram_copyright: z.string().max(200, 'Phonogram copyright too long').optional(),
   composition_copyright: z.string().max(200, 'Composition copyright too long').optional(),
@@ -25,11 +25,13 @@ export const CreateReleaseSchema = z.object({
   territories: z.array(z.string().max(50, 'Territory name too long')).optional(),
   explicit_content: z.boolean().default(false),
   language_lyrics: z.string().max(10, 'Language code too long').default('en'),
-  // Existing Label Copy fields that were already added
   songwriters: z.string().max(500, 'Songwriters list too long').optional(),
   producers: z.string().max(500, 'Producers list too long').optional(),
   copyright_year: z.number().int().min(1900).max(2100).optional(),
-  track_description: z.string().max(1000, 'Track description too long').optional()
+  track_description: z.string().max(1000, 'Track description too long').optional(),
+  // Additional Label Copy fields
+  upc_code: z.string().max(20, 'UPC code too long').optional(),
+  label: z.string().max(200, 'Label name too long').optional()
 })
 
 export const UpdateReleaseSchema = CreateReleaseSchema.partial()

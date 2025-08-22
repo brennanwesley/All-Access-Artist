@@ -94,6 +94,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<{releaseData: ReleaseData; tracks: Track[]} | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
@@ -335,6 +336,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
 
   const handleSave = async () => {
     setIsLoading(true);
+    setSaveStatus('saving');
     
     try {
       // Validate required fields
@@ -362,7 +364,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
       // Determine if this is an update or create operation
       const isUpdate = releaseId && existingRelease;
       
-      // Create release payload
+      // Create release payload with correct database field names
       const releasePayload = {
         title: releaseData.releaseTitle,
         release_type: releaseData.releaseType,
@@ -374,7 +376,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         phonogram_copyright: releaseData.phonogramCopyright,
         composition_copyright: releaseData.compositionCopyright,
         label: releaseData.label,
-        territories: releaseData.territories,
+        territories: releaseData.territories ? releaseData.territories.split(',').map(t => t.trim()) : [],
         description: releaseData.description,
         ...(isUpdate ? {} : { user_id: 'temp-user-id' }) // Only add user_id for new releases
       };
@@ -485,10 +487,16 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
       setIsReadOnly(true);
       stopAutoSave();
       
+      // Set success status for immediate feedback
+      setSaveStatus('success');
+      
       toast({
         title: "Label Copy Saved Successfully",
         description: `Label Copy saved successfully to database. Release "${releaseData.releaseTitle}" with ${tracks.length} track${tracks.length !== 1 ? 's' : ''} has been ${isUpdate ? 'updated' : 'saved'}.`,
       });
+      
+      // Clear success status after 3 seconds
+      setTimeout(() => setSaveStatus('idle'), 3000);
 
       // Only reset form if creating new (not updating)
       if (!isUpdate) {
@@ -530,11 +538,16 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
 
     } catch (error) {
       console.error('Error saving Label Copy:', error);
+      setSaveStatus('error');
+      
       toast({
         title: "Save Failed",
         description: "Label Copy not saved, please try again or contact customer support at +1(432)640-7688.",
         variant: "destructive"
       });
+      
+      // Clear error status after 5 seconds
+      setTimeout(() => setSaveStatus('idle'), 5000);
     } finally {
       setIsLoading(false);
     }
@@ -992,16 +1005,36 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
           </CardContent>
         </Card>
 
-        <div className="flex gap-4 pt-4">
-          <Button 
-            onClick={handleSave} 
-            disabled={isLoading || isReadOnly}
-            className="flex items-center gap-2"
-          >
-            <Save className="h-4 w-4" />
-            {isLoading ? 'Saving...' : 'Save Label Copy'}
-          </Button>
-          <Button variant="outline">Export to PDF</Button>
+        <div className="space-y-3 pt-4">
+          <div className="flex gap-4">
+            <Button 
+              onClick={handleSave} 
+              disabled={isLoading || isReadOnly}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {isLoading ? 'Saving...' : 'Save Label Copy'}
+            </Button>
+            <Button variant="outline">Export to PDF</Button>
+          </div>
+          
+          {/* Save Status Feedback */}
+          {saveStatus !== 'idle' && (
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium ${
+              saveStatus === 'saving' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+              saveStatus === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
+              saveStatus === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : ''
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${
+                saveStatus === 'saving' ? 'bg-blue-500 animate-pulse' :
+                saveStatus === 'success' ? 'bg-green-500' :
+                saveStatus === 'error' ? 'bg-red-500' : ''
+              }`}></div>
+              {saveStatus === 'saving' && 'Saving Label Copy to database...'}
+              {saveStatus === 'success' && 'Label Copy saved successfully to database!'}
+              {saveStatus === 'error' && 'Save failed - please try again or contact support at +1(432)640-7688'}
+            </div>
+          )}
         </div>
       </div>
     );
