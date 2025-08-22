@@ -30,8 +30,39 @@ interface Track {
   languageLyrics: string;
 }
 
+interface ReleaseData {
+  releaseTitle: string;
+  artist: string;
+  releaseType: string;
+  releaseDate: string;
+  copyright: string;
+  upc: string;
+  genre: string;
+  languageLyrics: string;
+  phonogramCopyright: string;
+  compositionCopyright: string;
+  label: string;
+  territories: string;
+  description: string;
+}
+
 export const MetadataPrep = () => {
   const [activeTemplate, setActiveTemplate] = useState<ActiveTemplate>("main");
+  const [releaseData, setReleaseData] = useState<ReleaseData>({
+    releaseTitle: "",
+    artist: "",
+    releaseType: "",
+    releaseDate: "",
+    copyright: "",
+    upc: "",
+    genre: "",
+    languageLyrics: "en",
+    phonogramCopyright: "",
+    compositionCopyright: "",
+    label: "",
+    territories: "",
+    description: ""
+  });
   const [tracks, setTracks] = useState<Track[]>([
     {
       id: "1",
@@ -52,6 +83,7 @@ export const MetadataPrep = () => {
       languageLyrics: "en"
     }
   ]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const addTrack = () => {
@@ -88,11 +120,159 @@ export const MetadataPrep = () => {
     ));
   };
 
-  const handleSave = () => {
-    toast({
-      title: "Saved Successfully",
-      description: "Your metadata has been saved to your project.",
-    });
+  const updateReleaseData = (field: keyof ReleaseData, value: string) => {
+    setReleaseData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Validate required fields
+      if (!releaseData.releaseTitle || !releaseData.artist || !releaseData.releaseType || !releaseData.releaseDate) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields (marked with *)",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Validate tracks
+      for (const track of tracks) {
+        if (!track.songTitle || !track.duration || !track.songwriters) {
+          toast({
+            title: "Validation Error", 
+            description: "Please fill in required track fields (Song Title, Duration, Songwriters)",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      // Create release payload
+      const releasePayload = {
+        title: releaseData.releaseTitle,
+        artist: releaseData.artist,
+        type: releaseData.releaseType,
+        release_date: releaseData.releaseDate,
+        copyright_year: parseInt(releaseData.copyright) || new Date().getFullYear(),
+        upc_code: releaseData.upc,
+        genre: releaseData.genre,
+        language_lyrics: releaseData.languageLyrics,
+        phonogram_copyright: releaseData.phonogramCopyright,
+        composition_copyright: releaseData.compositionCopyright,
+        record_label: releaseData.label,
+        territories: releaseData.territories,
+        description: releaseData.description
+      };
+
+      // Get API URL from environment
+      const API_URL = import.meta.env['VITE_API_URL'] || 'https://all-access-artist.onrender.com';
+      
+      // Create release
+      const releaseResponse = await fetch(`${API_URL}/api/releases`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // TODO: Add authentication header when auth is implemented
+          // 'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(releasePayload)
+      });
+
+      if (!releaseResponse.ok) {
+        throw new Error('Failed to create release');
+      }
+
+      const release = await releaseResponse.json();
+
+      // Create tracks
+      for (const track of tracks) {
+        const trackPayload = {
+          release_id: release.id,
+          title: track.songTitle,
+          track_number: track.trackNumber,
+          duration: track.duration,
+          isrc_code: track.isrc,
+          version_subtitle: track.versionSubtitle,
+          featured_artists: track.featuredArtists,
+          explicit_content: track.explicitContent,
+          preview_start_time: track.previewStartTime,
+          mix_engineer: track.mixEngineer,
+          mastering_engineer: track.masteringEngineer,
+          remixer: track.remixer,
+          songwriters: track.songwriters,
+          producers: track.producers,
+          sub_genre: track.subGenre,
+          language_lyrics: track.languageLyrics
+        };
+
+        const trackResponse = await fetch(`${API_URL}/api/songs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // TODO: Add authentication header when auth is implemented
+          },
+          body: JSON.stringify(trackPayload)
+        });
+
+        if (!trackResponse.ok) {
+          throw new Error(`Failed to create track: ${track.songTitle}`);
+        }
+      }
+
+      toast({
+        title: "Label Copy Saved Successfully",
+        description: `Release "${releaseData.releaseTitle}" with ${tracks.length} track${tracks.length !== 1 ? 's' : ''} has been saved.`,
+      });
+
+      // Reset form after successful save
+      setReleaseData({
+        releaseTitle: "",
+        artist: "",
+        releaseType: "",
+        releaseDate: "",
+        copyright: "",
+        upc: "",
+        genre: "",
+        languageLyrics: "en",
+        phonogramCopyright: "",
+        compositionCopyright: "",
+        label: "",
+        territories: "",
+        description: ""
+      });
+      
+      setTracks([{
+        id: "1",
+        songTitle: "",
+        trackNumber: 1,
+        duration: "",
+        isrc: "",
+        versionSubtitle: "",
+        featuredArtists: "",
+        explicitContent: false,
+        previewStartTime: 30,
+        mixEngineer: "",
+        masteringEngineer: "",
+        remixer: "",
+        songwriters: "",
+        producers: "",
+        subGenre: "",
+        languageLyrics: "en"
+      }]);
+
+    } catch (error) {
+      console.error('Error saving Label Copy:', error);
+      toast({
+        title: "Save Failed",
+        description: "There was an error saving your Label Copy. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (activeTemplate === "labelCopy") {
@@ -125,15 +305,27 @@ export const MetadataPrep = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="releaseTitle">Release Title *</Label>
-                <Input id="releaseTitle" placeholder="Album/EP/Single title" className="w-full" />
+                <Input 
+                  id="releaseTitle" 
+                  value={releaseData.releaseTitle}
+                  onChange={(e) => updateReleaseData('releaseTitle', e.target.value)}
+                  placeholder="Album/EP/Single title" 
+                  className="w-full" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="artist">Artist Name *</Label>
-                <Input id="artist" placeholder="Enter artist name" className="w-full" />
+                <Input 
+                  id="artist" 
+                  value={releaseData.artist}
+                  onChange={(e) => updateReleaseData('artist', e.target.value)}
+                  placeholder="Enter artist name" 
+                  className="w-full" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="releaseType">Release Type *</Label>
-                <Select>
+                <Select value={releaseData.releaseType} onValueChange={(value) => updateReleaseData('releaseType', value)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
@@ -150,22 +342,41 @@ export const MetadataPrep = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="releaseDate">Release Date *</Label>
-                <Input id="releaseDate" type="date" className="w-full" />
+                <Input 
+                  id="releaseDate" 
+                  type="date" 
+                  value={releaseData.releaseDate}
+                  onChange={(e) => updateReleaseData('releaseDate', e.target.value)}
+                  className="w-full" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="copyright">Copyright Year *</Label>
-                <Input id="copyright" type="number" placeholder="2025" className="w-full" />
+                <Input 
+                  id="copyright" 
+                  type="number" 
+                  value={releaseData.copyright}
+                  onChange={(e) => updateReleaseData('copyright', e.target.value)}
+                  placeholder="2025" 
+                  className="w-full" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="upc">UPC Code</Label>
-                <Input id="upc" placeholder="123456789012" className="w-full" />
+                <Input 
+                  id="upc" 
+                  value={releaseData.upc}
+                  onChange={(e) => updateReleaseData('upc', e.target.value)}
+                  placeholder="123456789012" 
+                  className="w-full" 
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="genre">Primary Genre *</Label>
-                <Select>
+                <Select value={releaseData.genre} onValueChange={(value) => updateReleaseData('genre', value)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select genre" />
                   </SelectTrigger>
@@ -183,7 +394,7 @@ export const MetadataPrep = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="languageLyrics">Primary Language</Label>
-                <Select defaultValue="en">
+                <Select value={releaseData.languageLyrics} onValueChange={(value) => updateReleaseData('languageLyrics', value)}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -204,25 +415,49 @@ export const MetadataPrep = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phonogramCopyright">Phonogram Copyright (℗)</Label>
-                <Input id="phonogramCopyright" placeholder="℗ 2025 Record Label Name" className="w-full" />
+                <Input 
+                  id="phonogramCopyright" 
+                  value={releaseData.phonogramCopyright}
+                  onChange={(e) => updateReleaseData('phonogramCopyright', e.target.value)}
+                  placeholder="℗ 2025 Record Label Name" 
+                  className="w-full" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="compositionCopyright">Composition Copyright (©)</Label>
-                <Input id="compositionCopyright" placeholder="© 2025 Publishing Company" className="w-full" />
+                <Input 
+                  id="compositionCopyright" 
+                  value={releaseData.compositionCopyright}
+                  onChange={(e) => updateReleaseData('compositionCopyright', e.target.value)}
+                  placeholder="© 2025 Publishing Company" 
+                  className="w-full" 
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="label">Record Label</Label>
-                <Input id="label" placeholder="Independent / Label name" className="w-full" />
+                <Input 
+                  id="label" 
+                  value={releaseData.label}
+                  onChange={(e) => updateReleaseData('label', e.target.value)}
+                  placeholder="Independent / Label name" 
+                  className="w-full" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="territories" className="flex items-center gap-2">
                   <Globe className="h-4 w-4" />
                   Territories (comma-separated)
                 </Label>
-                <Input id="territories" placeholder="US, CA, UK, AU, DE" className="w-full" />
+                <Input 
+                  id="territories" 
+                  value={releaseData.territories}
+                  onChange={(e) => updateReleaseData('territories', e.target.value)}
+                  placeholder="US, CA, UK, AU, DE" 
+                  className="w-full" 
+                />
               </div>
             </div>
 
@@ -230,6 +465,8 @@ export const MetadataPrep = () => {
               <Label htmlFor="description">Release Description</Label>
               <Textarea 
                 id="description" 
+                value={releaseData.description}
+                onChange={(e) => updateReleaseData('description', e.target.value)}
                 placeholder="Brief description of the release for promotional use..."
                 rows={3}
                 className="w-full"
@@ -422,9 +659,13 @@ export const MetadataPrep = () => {
         </Card>
 
         <div className="flex gap-4 pt-4">
-          <Button onClick={handleSave} className="flex items-center gap-2">
+          <Button 
+            onClick={handleSave} 
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
             <Save className="h-4 w-4" />
-            Save Label Copy
+            {isLoading ? 'Saving...' : 'Save Label Copy'}
           </Button>
           <Button variant="outline">Export to PDF</Button>
         </div>
