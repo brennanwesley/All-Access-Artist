@@ -335,6 +335,10 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
   };
 
   const handleSave = async () => {
+    // IMMEDIATE DEBUG - Check if function executes at all
+    console.log('🔥 HANDLEAVE FUNCTION CALLED - BUTTON CLICK DETECTED');
+    console.log('🔥 Current time:', new Date().toISOString());
+    
     setIsLoading(true);
     setSaveStatus('saving');
     
@@ -406,8 +410,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            // TODO: Add authentication header when auth is implemented
-            // 'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${import.meta.env['VITE_SUPABASE_ANON_KEY']}`
           },
           body: JSON.stringify(releasePayload)
         });
@@ -431,8 +434,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // TODO: Add authentication header when auth is implemented
-            // 'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${import.meta.env['VITE_SUPABASE_ANON_KEY']}`
           },
           body: JSON.stringify(releasePayload)
         });
@@ -1055,7 +1057,17 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         <div className="space-y-3 pt-4">
           <div className="flex gap-4">
             <Button 
-              onClick={handleSave} 
+              onClick={() => {
+                console.log('🔥 SAVE BUTTON CLICKED');
+                console.log('🔥 isLoading:', isLoading);
+                console.log('🔥 isReadOnly:', isReadOnly);
+                console.log('🔥 Button disabled:', isLoading || isReadOnly);
+                if (!isLoading && !isReadOnly) {
+                  handleSave();
+                } else {
+                  console.log('🔥 BUTTON DISABLED - SAVE BLOCKED');
+                }
+              }}
               disabled={isLoading || isReadOnly}
               className="flex items-center gap-2"
             >
