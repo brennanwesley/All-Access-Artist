@@ -73,7 +73,7 @@ export const UpdateTaskSchema = CreateTaskSchema.partial().omit({ release_id: tr
 
 // Song Schemas
 export const CreateSongSchema = z.object({
-  release_id: z.string().uuid('Invalid release ID'),
+  // Note: release_id is handled via URL parameter, not request body
   song_title: z.string().min(1, 'Song title is required').max(200, 'Song title too long'),
   track_number: z.number().int().min(1, 'Track number must be positive'),
   duration_seconds: z.number().int().min(1, 'Duration must be positive').optional(),
@@ -90,7 +90,7 @@ export const CreateSongSchema = z.object({
   language_lyrics: z.string().max(10, 'Language code too long').default('en')
 })
 
-export const UpdateSongSchema = CreateSongSchema.partial().omit({ release_id: true })
+export const UpdateSongSchema = CreateSongSchema.partial()
 
 // Lyric Sheet Schemas
 export const CreateLyricSheetSchema = z.object({

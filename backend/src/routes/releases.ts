@@ -278,6 +278,12 @@ releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (
     
     console.log('Releases: Adding song to release', releaseId, 'data:', songData)
     
+    // Validate releaseId format
+    if (!releaseId || typeof releaseId !== 'string') {
+      console.error('Releases: Invalid releaseId format:', releaseId)
+      return c.json({ success: false, error: 'Invalid release ID format' }, 400)
+    }
+    
     // Verify the release belongs to the authenticated user
     const { data: release, error: releaseError } = await supabase
       .from('music_releases')
@@ -288,25 +294,33 @@ releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (
     
     if (releaseError || !release) {
       console.error('Releases: Release not found or access denied:', releaseError)
-      throw new Error(`Release not found or access denied`)
+      return c.json({ success: false, error: 'Release not found or access denied' }, 404)
     }
+    
+    // Prepare song data with release_id from URL parameter
+    const songPayload = {
+      ...songData,
+      release_id: releaseId,
+      user_id: user.id
+    }
+    
+    console.log('Releases: Inserting song with payload:', songPayload)
     
     const { data, error } = await supabase
       .from('songs')
-      .insert({
-        ...songData,
-        release_id: releaseId,
-        user_id: user.id // Use user_id for direct user association
-      })
+      .insert(songPayload)
       .select()
       .single()
     
     if (error) {
       console.error('Releases: Database error creating song:', error)
-      throw new Error(`Database error: ${error.message}`)
+      return c.json({ 
+        success: false, 
+        error: `Database error: ${error.message}` 
+      }, 400)
     }
     
-    console.log('Releases: Song created successfully')
+    console.log('Releases: Song created successfully:', data)
     return c.json({ success: true, data }, 201)
   } catch (error) {
     console.error('Releases: Error creating song:', error)
