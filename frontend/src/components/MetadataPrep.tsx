@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, FileText, Music, Save, Users, Percent, Globe, Clock, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, Music, Save, Users, Percent, Globe, Clock, Plus, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ReleaseDetails, Song } from "@/hooks/api/useReleaseDetails";
 
@@ -91,6 +91,10 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState<{releaseData: ReleaseData; tracks: Track[]} | null>(null);
+  const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   // Helper function to convert seconds to MM:SS format
@@ -123,10 +127,81 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
     }));
   };
 
+  // Session storage key for auto-save
+  const getSessionStorageKey = () => `labelCopy_${releaseId || 'new'}`;
+
+  // Save form data to session storage
+  const saveToSessionStorage = () => {
+    if (activeTemplate === 'labelCopy') {
+      const formData = { releaseData, tracks };
+      sessionStorage.setItem(getSessionStorageKey(), JSON.stringify(formData));
+    }
+  };
+
+  // Load form data from session storage
+  const loadFromSessionStorage = () => {
+    if (activeTemplate === 'labelCopy') {
+      const saved = sessionStorage.getItem(getSessionStorageKey());
+      if (saved) {
+        try {
+          const formData = JSON.parse(saved);
+          setReleaseData(formData.releaseData || releaseData);
+          setTracks(formData.tracks || tracks);
+        } catch (error) {
+          console.error('Error loading from session storage:', error);
+        }
+      }
+    }
+  };
+
+  // Check for unsaved changes
+  const checkForUnsavedChanges = () => {
+    if (!lastSavedData) return false;
+    return JSON.stringify({ releaseData, tracks }) !== JSON.stringify(lastSavedData);
+  };
+
+  // Handle edit mode toggle
+  const handleEditToggle = () => {
+    if (isReadOnly) {
+      setIsReadOnly(false);
+      // Start auto-save when entering edit mode
+      startAutoSave();
+    } else {
+      // Check for unsaved changes before switching to read-only
+      if (checkForUnsavedChanges()) {
+        const confirmDiscard = window.confirm(
+          'You have unsaved changes. Are you sure you want to discard them?'
+        );
+        if (!confirmDiscard) return;
+      }
+      setIsReadOnly(true);
+      setHasUnsavedChanges(false);
+      stopAutoSave();
+    }
+  };
+
+  // Start auto-save interval
+  const startAutoSave = () => {
+    if (autoSaveIntervalRef.current) {
+      clearInterval(autoSaveIntervalRef.current);
+    }
+    autoSaveIntervalRef.current = setInterval(() => {
+      saveToSessionStorage();
+    }, 3000); // Auto-save every 3 seconds
+  };
+
+  // Stop auto-save interval
+  const stopAutoSave = () => {
+    if (autoSaveIntervalRef.current) {
+      clearInterval(autoSaveIntervalRef.current);
+      autoSaveIntervalRef.current = null;
+    }
+  };
+
   // Pre-populate form data when props are provided
   useEffect(() => {
     if (existingRelease) {
-      setReleaseData({
+      const populatedReleaseData = {
         releaseTitle: existingRelease.title || "",
         artist: "", // Will need to get from artist_profiles table
         releaseType: existingRelease.release_type || "",
@@ -140,13 +215,70 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         label: existingRelease.label || "",
         territories: "",
         description: existingRelease.description || ""
-      });
+      };
+      setReleaseData(populatedReleaseData);
+      
+      // Set as read-only if this is an existing release
+      setIsReadOnly(true);
+      
+      // Store as last saved data
+      const populatedTracks = existingSongs && existingSongs.length > 0 
+        ? convertSongsToTracks(existingSongs) 
+        : tracks;
+      setLastSavedData({ releaseData: populatedReleaseData, tracks: populatedTracks });
+    } else {
+      // New release - start in edit mode
+      setIsReadOnly(false);
     }
 
     if (existingSongs && existingSongs.length > 0) {
       setTracks(convertSongsToTracks(existingSongs));
     }
   }, [existingRelease, existingSongs]);
+
+  // Handle template change and session storage
+  useEffect(() => {
+    if (activeTemplate === 'labelCopy') {
+      // Load from session storage when entering label copy
+      loadFromSessionStorage();
+      
+      // Start auto-save if in edit mode
+      if (!isReadOnly) {
+        startAutoSave();
+      }
+    } else {
+      // Stop auto-save when leaving label copy
+      stopAutoSave();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      stopAutoSave();
+    };
+  }, [activeTemplate, isReadOnly]);
+
+  // Track form changes for unsaved changes detection
+  useEffect(() => {
+    if (activeTemplate === 'labelCopy' && !isReadOnly) {
+      setHasUnsavedChanges(checkForUnsavedChanges());
+    }
+  }, [releaseData, tracks, activeTemplate, isReadOnly]);
+
+  // Handle beforeunload warning for unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && activeTemplate === 'labelCopy' && !isReadOnly) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges, activeTemplate, isReadOnly]);
 
   const addTrack = () => {
     const newTrack: Track = {
@@ -177,13 +309,17 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
   };
 
   const updateTrack = (trackId: string, field: keyof Track, value: any) => {
-    setTracks(tracks.map(track => 
-      track.id === trackId ? { ...track, [field]: value } : track
-    ));
+    if (!isReadOnly) {
+      setTracks(tracks.map(track => 
+        track.id === trackId ? { ...track, [field]: value } : track
+      ));
+    }
   };
 
   const updateReleaseData = (field: keyof ReleaseData, value: string) => {
-    setReleaseData(prev => ({ ...prev, [field]: value }));
+    if (!isReadOnly) {
+      setReleaseData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   // Helper function to convert MM:SS duration to seconds
@@ -338,9 +474,20 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         }
       }
 
+      // Clear session storage on successful save
+      sessionStorage.removeItem(getSessionStorageKey());
+      
+      // Update last saved data
+      setLastSavedData({ releaseData, tracks });
+      setHasUnsavedChanges(false);
+      
+      // Set to read-only mode after successful save
+      setIsReadOnly(true);
+      stopAutoSave();
+      
       toast({
-        title: isUpdate ? "Label Copy Updated Successfully" : "Label Copy Saved Successfully",
-        description: `Release "${releaseData.releaseTitle}" with ${tracks.length} track${tracks.length !== 1 ? 's' : ''} has been ${isUpdate ? 'updated' : 'saved'}.`,
+        title: "Label Copy Saved Successfully",
+        description: `Label Copy saved successfully to database. Release "${releaseData.releaseTitle}" with ${tracks.length} track${tracks.length !== 1 ? 's' : ''} has been ${isUpdate ? 'updated' : 'saved'}.`,
       });
 
       // Only reset form if creating new (not updating)
@@ -385,7 +532,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
       console.error('Error saving Label Copy:', error);
       toast({
         title: "Save Failed",
-        description: "There was an error saving your Label Copy. Please try again.",
+        description: "Label Copy not saved, please try again or contact customer support at +1(432)640-7688.",
         variant: "destructive"
       });
     } finally {
@@ -406,26 +553,48 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
             Back to Templates
           </Button>
           <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold">Label Copy Template</h2>
-              {releaseId && existingRelease ? (
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-blue-700">Editing Mode</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-full">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-green-700">Create Mode</span>
-                </div>
-              )}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Label Copy Template</h2>
+                <p className="text-muted-foreground">
+                  {releaseId && existingRelease 
+                    ? `Updating metadata for "${existingRelease.title}"`
+                    : "Complete metadata for distribution"
+                  }
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {releaseId && existingRelease ? (
+                  <>
+                    {isReadOnly ? (
+                      <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 border border-gray-200 rounded-full">
+                        <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-gray-700">View Mode</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-blue-700">Editing Mode</span>
+                      </div>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleEditToggle}
+                      className="flex items-center gap-2"
+                    >
+                      <Edit className="h-4 w-4" />
+                      {isReadOnly ? 'Edit Label Copy' : 'Cancel Edit'}
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-full">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-green-700">Create Mode</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <p className="text-muted-foreground">
-              {releaseId && existingRelease 
-                ? `Updating metadata for "${existingRelease.title}"`
-                : "Complete metadata for distribution"
-              }
-            </p>
           </div>
         </div>
 
@@ -450,6 +619,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                   onChange={(e) => updateReleaseData('releaseTitle', e.target.value)}
                   placeholder="Album/EP/Single title" 
                   className="w-full" 
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -460,11 +630,12 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                   onChange={(e) => updateReleaseData('artist', e.target.value)}
                   placeholder="Enter artist name" 
                   className="w-full" 
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="releaseType">Release Type *</Label>
-                <Select value={releaseData.releaseType} onValueChange={(value) => updateReleaseData('releaseType', value)}>
+                <Select value={releaseData.releaseType} onValueChange={(value) => updateReleaseData('releaseType', value)} disabled={isReadOnly}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
@@ -487,6 +658,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                   value={releaseData.releaseDate}
                   onChange={(e) => updateReleaseData('releaseDate', e.target.value)}
                   className="w-full" 
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -498,6 +670,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                   onChange={(e) => updateReleaseData('copyright', e.target.value)}
                   placeholder="2025" 
                   className="w-full" 
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -508,6 +681,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                   onChange={(e) => updateReleaseData('upc', e.target.value)}
                   placeholder="123456789012" 
                   className="w-full" 
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -515,7 +689,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="genre">Primary Genre *</Label>
-                <Select value={releaseData.genre} onValueChange={(value) => updateReleaseData('genre', value)}>
+                <Select value={releaseData.genre} onValueChange={(value) => updateReleaseData('genre', value)} disabled={isReadOnly}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select genre" />
                   </SelectTrigger>
@@ -533,7 +707,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
               </div>
               <div className="space-y-2">
                 <Label htmlFor="languageLyrics">Primary Language</Label>
-                <Select value={releaseData.languageLyrics} onValueChange={(value) => updateReleaseData('languageLyrics', value)}>
+                <Select value={releaseData.languageLyrics} onValueChange={(value) => updateReleaseData('languageLyrics', value)} disabled={isReadOnly}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -560,6 +734,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                   onChange={(e) => updateReleaseData('phonogramCopyright', e.target.value)}
                   placeholder="℗ 2025 Record Label Name" 
                   className="w-full" 
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -570,6 +745,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                   onChange={(e) => updateReleaseData('compositionCopyright', e.target.value)}
                   placeholder="© 2025 Publishing Company" 
                   className="w-full" 
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -583,6 +759,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                   onChange={(e) => updateReleaseData('label', e.target.value)}
                   placeholder="Independent / Label name" 
                   className="w-full" 
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -596,6 +773,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                   onChange={(e) => updateReleaseData('territories', e.target.value)}
                   placeholder="US, CA, UK, AU, DE" 
                   className="w-full" 
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -609,6 +787,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                 placeholder="Brief description of the release for promotional use..."
                 rows={3}
                 className="w-full"
+                disabled={isReadOnly}
               />
             </div>
           </CardContent>
@@ -636,6 +815,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       size="sm"
                       onClick={() => removeTrack(track.id)}
                       className="text-red-600 hover:text-red-700"
+                      disabled={isReadOnly}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -662,6 +842,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'duration', e.target.value)}
                       placeholder="3:45" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                   <div className="space-y-2">
@@ -671,6 +852,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'isrc', e.target.value)}
                       placeholder="US-XXX-XX-XXXXX" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                 </div>
@@ -684,6 +866,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'versionSubtitle', e.target.value)}
                       placeholder="Radio Edit, Extended Mix, Acoustic" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                   <div className="space-y-2">
@@ -693,6 +876,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'featuredArtists', e.target.value)}
                       placeholder="Artist Name, Another Artist" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                 </div>
@@ -706,6 +890,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'songwriters', e.target.value)}
                       placeholder="John Doe, Jane Smith" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                   <div className="space-y-2">
@@ -715,6 +900,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'producers', e.target.value)}
                       placeholder="Producer names" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                 </div>
@@ -728,6 +914,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'mixEngineer', e.target.value)}
                       placeholder="Engineer name" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                   <div className="space-y-2">
@@ -737,6 +924,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'masteringEngineer', e.target.value)}
                       placeholder="Engineer name" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                   <div className="space-y-2">
@@ -746,6 +934,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'remixer', e.target.value)}
                       placeholder="Remixer name" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                 </div>
@@ -759,6 +948,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'subGenre', e.target.value)}
                       placeholder="Dance Pop, Alternative Rock" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                   <div className="space-y-2">
@@ -772,6 +962,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       onChange={(e) => updateTrack(track.id, 'previewStartTime', parseInt(e.target.value) || 0)}
                       placeholder="30" 
                       className="w-full" 
+                      disabled={isReadOnly}
                     />
                   </div>
                   <div className="flex items-center space-x-2 pt-6">
@@ -779,6 +970,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       id={`explicit-${track.id}`}
                       checked={track.explicitContent}
                       onCheckedChange={(checked) => updateTrack(track.id, 'explicitContent', checked)}
+                      disabled={isReadOnly}
                     />
                     <Label htmlFor={`explicit-${track.id}`} className="text-sm font-medium">
                       Explicit Content
@@ -792,6 +984,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
               onClick={addTrack}
               variant="outline" 
               className="w-full"
+              disabled={isReadOnly}
             >
               <Plus className="mr-2 h-4 w-4" />
               Add Track
@@ -802,7 +995,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         <div className="flex gap-4 pt-4">
           <Button 
             onClick={handleSave} 
-            disabled={isLoading}
+            disabled={isLoading || isReadOnly}
             className="flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
