@@ -463,7 +463,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
-              // TODO: Add authentication header when auth is implemented
+              'Authorization': `Bearer ${await getAccessToken()}`
             },
             body: JSON.stringify(trackPayload)
           });
@@ -477,7 +477,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              // TODO: Add authentication header when auth is implemented
+              'Authorization': `Bearer ${await getAccessToken()}`
             },
             body: JSON.stringify({
               ...trackPayload,
