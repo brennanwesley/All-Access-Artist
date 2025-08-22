@@ -8,7 +8,7 @@ import { z } from 'zod'
 export const CreateReleaseSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
   user_id: z.string().uuid('Invalid user ID'),
-  release_date: z.string().datetime('Invalid release date'),
+  release_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Release date must be in YYYY-MM-DD format'),
   release_type: z.enum(['single', 'album', 'ep', 'mixtape'], {
     errorMap: () => ({ message: 'Release type must be single, album, ep, or mixtape' })
   }),

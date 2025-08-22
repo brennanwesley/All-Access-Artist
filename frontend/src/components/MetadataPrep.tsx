@@ -374,7 +374,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
       const releasePayload = {
         title: releaseData.releaseTitle,
         release_type: releaseData.releaseType,
-        release_date: releaseData.releaseDate,
+        release_date: releaseData.releaseDate ? new Date(releaseData.releaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0], // Convert to YYYY-MM-DD format
         copyright_year: parseInt(releaseData.copyright) || new Date().getFullYear(),
         upc: releaseData.upc,
         genre: releaseData.genre,
@@ -384,11 +384,19 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         label: releaseData.label,
         territories: releaseData.territories ? releaseData.territories.split(',').map(t => t.trim()) : [],
         description: releaseData.description,
-        ...(isUpdate ? {} : { user_id: 'temp-user-id' }) // Only add user_id for new releases
+        ...(isUpdate ? {} : { user_id: crypto.randomUUID() }) // Generate proper UUID for new releases
       };
 
       // Get API URL from environment
       const API_URL = import.meta.env['VITE_API_URL'] || 'https://all-access-artist.onrender.com';
+
+      // DEBUG LOGGING - Remove after testing
+      console.log('=== LABEL COPY SAVE DEBUG START ===');
+      console.log('1. Save Operation Type:', isUpdate ? 'UPDATE' : 'CREATE');
+      console.log('2. Release ID:', releaseId);
+      console.log('3. Release Payload:', JSON.stringify(releasePayload, null, 2));
+      console.log('4. Tracks with Content:', tracksWithContent.length);
+      console.log('5. API URL:', API_URL);
       
       let currentReleaseId = releaseId;
       
@@ -405,8 +413,18 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         });
 
         if (!releaseResponse.ok) {
-          throw new Error('Failed to update release');
+          // DEBUG LOGGING - Remove after testing
+          const errorText = await releaseResponse.text();
+          console.error('UPDATE RELEASE FAILED:');
+          console.error('Status:', releaseResponse.status, releaseResponse.statusText);
+          console.error('Response:', errorText);
+          console.error('Request URL:', `${API_URL}/api/releases/${releaseId}`);
+          console.error('Request Payload:', JSON.stringify(releasePayload, null, 2));
+          throw new Error(`Failed to update release: ${releaseResponse.status} ${errorText}`);
         }
+        
+        // DEBUG LOGGING - Remove after testing
+        console.log('6. Release UPDATE successful');
       } else {
         // Create new release
         const releaseResponse = await fetch(`${API_URL}/api/releases`, {
@@ -420,8 +438,18 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         });
 
         if (!releaseResponse.ok) {
-          throw new Error('Failed to create release');
+          // DEBUG LOGGING - Remove after testing
+          const errorText = await releaseResponse.text();
+          console.error('CREATE RELEASE FAILED:');
+          console.error('Status:', releaseResponse.status, releaseResponse.statusText);
+          console.error('Response:', errorText);
+          console.error('Request URL:', `${API_URL}/api/releases`);
+          console.error('Request Payload:', JSON.stringify(releasePayload, null, 2));
+          throw new Error(`Failed to create release: ${releaseResponse.status} ${errorText}`);
         }
+        
+        // DEBUG LOGGING - Remove after testing
+        console.log('6. Release CREATE successful');
 
         const release = await releaseResponse.json();
         currentReleaseId = release.data?.id || release.id;
@@ -503,6 +531,11 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
       
       // Clear success status after 3 seconds
       setTimeout(() => setSaveStatus('idle'), 3000);
+      
+      // DEBUG LOGGING - Remove after testing
+      console.log('=== LABEL COPY SAVE SUCCESS ===');
+      console.log('Final Release ID:', currentReleaseId);
+      console.log('=== DEBUG END ===');
 
       // Only reset form if creating new (not updating)
       if (!isUpdate) {
@@ -543,7 +576,15 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
       }
 
     } catch (error) {
-      console.error('Error saving Label Copy:', error);
+      // DEBUG LOGGING - Remove after testing
+      console.error('=== LABEL COPY SAVE ERROR ===');
+      console.error('Error Type:', error?.constructor?.name);
+      console.error('Error Message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error Stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('Release Data:', JSON.stringify(releaseData, null, 2));
+      console.error('Tracks Data:', JSON.stringify(tracks, null, 2));
+      console.error('=== ERROR DEBUG END ===');
+      
       setSaveStatus('error');
       
       toast({
