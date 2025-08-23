@@ -18,7 +18,7 @@ export const SongSelector = ({ songs, onSongSelect, onBack }: SongSelectorProps)
   const handleContinue = () => {
     const selectedSong = songs.find(song => song.id === selectedSongId);
     if (selectedSong) {
-      onSongSelect(selectedSongId, selectedSong.title);
+      onSongSelect(selectedSongId, selectedSong.song_title);
     }
   };
 
@@ -51,7 +51,7 @@ export const SongSelector = ({ songs, onSongSelect, onBack }: SongSelectorProps)
               <SelectContent>
                 {songs.map((song) => (
                   <SelectItem key={song.id} value={song.id}>
-                    {song.title}
+                    {song.song_title}
                   </SelectItem>
                 ))}
               </SelectContent>
