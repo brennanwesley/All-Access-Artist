@@ -59,7 +59,7 @@ export const SplitSheetForm = ({ songId, songTitle, releaseId, onBack }: SplitSh
   useEffect(() => {
     if (splitSheetData) {
       setFormData({
-        song_title: splitSheetData.song_title,
+        song_title: songTitle, // Always use the selected song title, not the stored one
         artist_name: splitSheetData.artist_name || '',
         album_project: splitSheetData.album_project || '',
         song_aka: splitSheetData.song_aka || '',
@@ -70,7 +70,7 @@ export const SplitSheetForm = ({ songId, songTitle, releaseId, onBack }: SplitSh
       });
       resetContributors(splitSheetData.contributors);
     }
-  }, [splitSheetData, resetContributors]);
+  }, [splitSheetData, resetContributors, songTitle]);
 
   // Update split sheet data when contributors change
   useEffect(() => {
