@@ -97,6 +97,37 @@ export const CreateSongSchema = z.object({
 
 export const UpdateSongSchema = CreateSongSchema.partial()
 
+// Label Copy Schemas
+export const CreateLabelCopySchema = z.object({
+  release_id: z.string().uuid('Invalid release ID'),
+  user_id: z.string().uuid('Invalid user ID').optional(), // Will be set by backend
+  version_subtitle: z.string().max(200, 'Version subtitle too long').optional(),
+  phonogram_copyright: z.string().max(200, 'Phonogram copyright too long').optional(),
+  composition_copyright: z.string().max(200, 'Composition copyright too long').optional(),
+  sub_genre: z.string().max(100, 'Sub-genre too long').optional(),
+  territories: z.array(z.string().max(50, 'Territory name too long')).optional(),
+  explicit_content: z.boolean().default(false),
+  language_lyrics: z.string().max(10, 'Language code too long').default('en'),
+  tracks_metadata: z.array(z.object({
+    track_number: z.number().int().min(1, 'Track number must be positive'),
+    duration_seconds: z.number().int().min(1, 'Duration must be positive').optional(),
+    isrc: z.string().max(12, 'ISRC code too long').optional(),
+    version_subtitle: z.string().max(200, 'Version subtitle too long').optional(),
+    featured_artists: z.string().max(300, 'Featured artists too long').optional(),
+    explicit_content: z.boolean().default(false),
+    preview_start_time: z.number().int().min(0, 'Preview start time must be non-negative').optional(),
+    mix_engineer: z.string().max(200, 'Mix engineer name too long').optional(),
+    mastering_engineer: z.string().max(200, 'Mastering engineer name too long').optional(),
+    remixer: z.string().max(200, 'Remixer name too long').optional(),
+    songwriters: z.string().max(500, 'Songwriters list too long').optional(),
+    producers: z.string().max(500, 'Producers list too long').optional(),
+    sub_genre: z.string().max(100, 'Sub-genre too long').optional(),
+    language_lyrics: z.string().max(10, 'Language code too long').default('en')
+  })).default([])
+})
+
+export const UpdateLabelCopySchema = CreateLabelCopySchema.partial().omit({ release_id: true })
+
 // Lyric Sheet Schemas
 export const CreateLyricSheetSchema = z.object({
   song_id: z.string().uuid('Invalid song ID'),

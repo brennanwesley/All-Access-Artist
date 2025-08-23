@@ -14,6 +14,7 @@ import analytics from './routes/analytics.js'
 import lyrics from './routes/lyrics.js'
 import tasks from './routes/tasks.js'
 import songs from './routes/songs.js'
+import labelcopy from './routes/labelcopy.js'
 import profile from './routes/profile.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
@@ -45,6 +46,7 @@ app.route('/api/analytics', analytics)
 app.route('/api/lyrics', lyrics)
 app.route('/api/tasks', tasks)
 app.route('/api/songs', songs)
+app.route('/api/labelcopy', labelcopy)
 app.route('/api/profile', profile)
 
 // 404 handler

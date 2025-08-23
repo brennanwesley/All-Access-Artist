@@ -436,60 +436,48 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         currentReleaseId = release.data?.id || release.id;
       }
 
-      // Handle tracks - only process tracks with content
-      for (const track of tracksWithContent) {
-        const trackPayload = {
-          track_number: track.trackNumber,
-          duration_seconds: parseDuration(track.duration),
-          isrc: track.isrc,
-          version_subtitle: track.versionSubtitle,
-          featured_artists: track.featuredArtists,
-          explicit_content: track.explicitContent,
-          preview_start_time: track.previewStartTime,
-          mix_engineer: track.mixEngineer,
-          mastering_engineer: track.masteringEngineer,
-          remixer: track.remixer,
-          language_lyrics: track.languageLyrics,
-          songwriters: track.songwriters,
-          producers: track.producers
-          // Note: song_title is managed in Release Details → Songs tab only
-        };
+      // Prepare tracks metadata for label copy
+      const tracksMetadata = tracksWithContent.map(track => ({
+        track_number: track.trackNumber,
+        duration_seconds: parseDuration(track.duration),
+        isrc: track.isrc,
+        version_subtitle: track.versionSubtitle,
+        featured_artists: track.featuredArtists,
+        explicit_content: track.explicitContent,
+        preview_start_time: track.previewStartTime,
+        mix_engineer: track.mixEngineer,
+        mastering_engineer: track.masteringEngineer,
+        remixer: track.remixer,
+        language_lyrics: track.languageLyrics,
+        songwriters: track.songwriters,
+        producers: track.producers,
+        sub_genre: track.subGenre
+      }));
 
-        // Check if this track already exists (has a UUID-like ID)
-        const isExistingTrack = track.id && track.id.length > 10; // UUID is longer than generated IDs
-        
-        if (isUpdate && isExistingTrack) {
-          // Update existing track
-          const trackResponse = await fetch(`${API_URL}/api/songs/${track.id}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await getAccessToken()}`
-            },
-            body: JSON.stringify(trackPayload)
-          });
+      // Create label copy payload
+      const labelCopyPayload = {
+        version_subtitle: releaseData.versionSubtitle,
+        phonogram_copyright: releaseData.phonogramCopyright,
+        composition_copyright: releaseData.compositionCopyright,
+        sub_genre: releaseData.subGenre,
+        territories: releaseData.territories ? releaseData.territories.split(',').map(t => t.trim()) : [],
+        explicit_content: releaseData.explicitContent || false,
+        language_lyrics: releaseData.languageLyrics,
+        tracks_metadata: tracksMetadata
+      };
 
-          if (!trackResponse.ok) {
-            throw new Error(`Failed to update track: ${track.songTitle}`);
-          }
-        } else {
-          // Create new track
-          const trackResponse = await fetch(`${API_URL}/api/releases/${currentReleaseId}/songs`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await getAccessToken()}`
-            },
-            body: JSON.stringify({
-              ...trackPayload,
-              release_id: currentReleaseId
-            })
-          });
+      // Save label copy data
+      const labelCopyResponse = await fetch(`${API_URL}/api/labelcopy/${currentReleaseId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getAccessToken()}`
+        },
+        body: JSON.stringify(labelCopyPayload)
+      });
 
-          if (!trackResponse.ok) {
-            throw new Error(`Failed to create track: ${track.songTitle}`);
-          }
-        }
+      if (!labelCopyResponse.ok) {
+        throw new Error('Failed to save Label Copy data');
       }
 
       // Clear session storage on successful save
