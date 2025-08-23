@@ -56,8 +56,8 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
     } catch (error) {
       console.error('Error loading split sheet:', error);
       toast({
-        title: "Error",
-        description: "Failed to load split sheet data",
+        title: "Load Failed",
+        description: "Split Sheet data could not be loaded, please try again or contact customer support at +1(432)640-7688.",
         variant: "destructive",
       });
     } finally {
@@ -93,14 +93,14 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
       sessionStorage.removeItem(sessionStorageKey);
       
       toast({
-        title: "Success",
-        description: "Split sheet saved to database successfully",
+        title: "Split Sheet Saved Successfully",
+        description: `Split Sheet saved successfully to database. Song "${data.song_title}" split sheet has been saved.`,
       });
     } catch (error) {
       console.error('Error saving split sheet:', error);
       toast({
-        title: "Error",
-        description: "Failed to save split sheet",
+        title: "Save Failed",
+        description: "Split Sheet not saved, please try again or contact customer support at +1(432)640-7688.",
         variant: "destructive",
       });
     }

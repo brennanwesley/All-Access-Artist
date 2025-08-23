@@ -16,6 +16,7 @@ import tasks from './routes/tasks.js'
 import songs from './routes/songs.js'
 import labelcopy from './routes/labelcopy.js'
 import profile from './routes/profile.js'
+import splitsheets from './routes/splitsheets.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
 
@@ -48,6 +49,7 @@ app.route('/api/tasks', tasks)
 app.route('/api/songs', songs)
 app.route('/api/labelcopy', labelcopy)
 app.route('/api/profile', profile)
+app.route('/api/splitsheets', splitsheets)
 
 // 404 handler
 app.notFound((c) => {
@@ -62,7 +64,8 @@ app.notFound((c) => {
       'GET|POST /api/analytics',
       'GET|PUT /api/profile',
       'POST /api/profile/referral',
-      'GET /api/profile/referral-stats'
+      'GET /api/profile/referral-stats',
+      'GET|PUT|DELETE /api/splitsheets/song/:songId'
     ]
   }, 404)
 })
