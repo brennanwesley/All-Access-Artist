@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { SplitSheetData } from '../types';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { SplitSheetData } from "../types";
+import { apiClient } from "@/lib/api";
 
 interface UseSplitSheetProps {
   songId: string;
@@ -17,31 +18,27 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
   const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  const sessionStorageKey = `splitSheet_${songId}`;
+  const sessionStorageKey = `splitSheet_${songId || 'unknown'}`;
 
   // Load existing split sheet data
   const loadSplitSheet = useCallback(async () => {
+    if (!songId) {
+      console.warn('No songId provided to loadSplitSheet');
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      // TODO: Replace with actual API call in Phase 3
-      // const response = await fetch(`/api/splitsheets/song/${songId}`);
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   setSplitSheetData(data);
-      //   setLastSavedData(data);
-      // } else {
-      //   // No existing split sheet, create empty one
-      //   const emptyData: SplitSheetData = {
-      //     song_title: songTitle,
-      //     artist_name: '',
-      //     album_project: '',
-      //     release_id: releaseId,
-      //     contributors: [],
-      //   };
-      //   setSplitSheetData(emptyData);
-      // }
+      // Try to load existing split sheet from API
+      const response = await apiClient.getSplitSheet(songId);
+      
+      if (response.data && response.status === 200) {
+        setSplitSheetData(response.data);
+        setLastSavedData(response.data);
+        return;
+      }
 
-      // For now, create empty data structure
+      // If no existing data, create empty data structure
       const emptyData: SplitSheetData = {
         song_title: songTitle,
         artist_name: '',
@@ -70,17 +67,23 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
 
   // Save split sheet data
   const saveSplitSheet = useCallback(async (data: SplitSheetData) => {
+    if (!songId) {
+      console.error('No songId provided to saveSplitSheet');
+      toast({
+        title: "Error",
+        description: "No song ID available for saving",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
-      // TODO: Replace with actual API call in Phase 3
-      // const response = await fetch(`/api/splitsheets/song/${songId}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
-      // 
-      // if (!response.ok) {
-      //   throw new Error('Failed to save split sheet');
-      // }
+      // Save to backend API
+      const response = await apiClient.saveSplitSheet(songId, data);
+      
+      if (response.error || response.status !== 200) {
+        throw new Error(response.error || 'Failed to save split sheet');
+      }
 
       setLastSavedData(data);
       setHasUnsavedChanges(false);
@@ -91,7 +94,7 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
       
       toast({
         title: "Success",
-        description: "Split sheet saved successfully",
+        description: "Split sheet saved to database successfully",
       });
     } catch (error) {
       console.error('Error saving split sheet:', error);

@@ -1359,25 +1359,11 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
 
   if (activeTemplate === "splitSheet") {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setActiveTemplate("main")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <h2 className="text-3xl font-bold">Split Sheet Template</h2>
-        </div>
-        
-        <SplitSheetTemplate 
-          releaseId={releaseId}
-          existingSongs={existingSongs}
-          onBack={() => setActiveTemplate("main")}
-        />
-      </div>
+      <SplitSheetTemplate 
+        releaseId={releaseId}
+        existingSongs={existingSongs}
+        onBack={() => setActiveTemplate("main")}
+      />
     );
   }
 

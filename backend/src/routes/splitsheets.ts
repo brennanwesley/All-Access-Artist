@@ -26,7 +26,7 @@ splitsheets.get('/song/:songId', async (c) => {
       .from('split_sheets')
       .select('*')
       .eq('user_id', user.id)
-      .eq('song_title', songId) // Using song_title as identifier for now
+      .eq('song_id', songId)
       .single()
     
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -94,7 +94,7 @@ splitsheets.put('/song/:songId', zValidator('json', UpdateSplitSheetSchema), asy
       .from('split_sheets')
       .select('id')
       .eq('user_id', user.id)
-      .eq('song_title', songId)
+      .eq('song_id', songId)
       .single()
     
     let result
@@ -118,7 +118,7 @@ splitsheets.put('/song/:songId', zValidator('json', UpdateSplitSheetSchema), asy
         .from('split_sheets')
         .insert({
           user_id: user.id,
-          song_title: songId,
+          song_id: songId,
           ...splitSheetData
         })
         .select()
@@ -160,7 +160,7 @@ splitsheets.delete('/song/:songId', async (c) => {
       .from('split_sheets')
       .delete()
       .eq('user_id', user.id)
-      .eq('song_title', songId)
+      .eq('song_id', songId)
     
     if (error) {
       console.error('SplitSheet: Database error deleting split sheet:', error)

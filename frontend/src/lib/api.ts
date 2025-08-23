@@ -248,6 +248,24 @@ class ApiClient {
   async getReferralStats(): Promise<ApiResponse<any>> {
     return this.makeRequest('/api/profile/referral-stats')
   }
+
+  // Split Sheets API
+  async getSplitSheet(songId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/splitsheets/song/${songId}`)
+  }
+
+  async saveSplitSheet(songId: string, splitSheetData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/splitsheets/song/${songId}`, {
+      method: 'PUT',
+      body: JSON.stringify(splitSheetData),
+    })
+  }
+
+  async deleteSplitSheet(songId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/api/splitsheets/song/${songId}`, {
+      method: 'DELETE',
+    })
+  }
 }
 
 export const apiClient = new ApiClient()
