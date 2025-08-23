@@ -15,22 +15,23 @@ The All Access Artist platform uses **Supabase** (PostgreSQL 16.x) as its primar
 
 ## Database Architecture
 
-### Core Tables (12)
+### Core Tables (13)
 **Primary Tables:**
 1. **`music_releases`** - Track and album management with enhanced Label Copy metadata
 2. **`release_tasks`** - Project checklist and task management
 3. **`songs`** - Individual track information with comprehensive Label Copy fields
-4. **`lyric_sheets`** - Lyric management and organization
-5. **`lyric_sheet_sections`** - Structured lyric content by section
-6. **`split_sheets`** - Professional split sheet management (song-level)
-7. **`split_sheet_writers`** - Comprehensive contributor and writer information
-8. **`split_sheet_publishers`** - Publisher entity management and contact details
-9. **`task_templates`** - Predefined task templates for release types
-10. **`user_profiles`** - User profile information and settings
+4. **`label_copy`** - Dedicated Label Copy metadata storage (release-level)
+5. **`lyric_sheets`** - Lyric management and organization
+6. **`lyric_sheet_sections`** - Structured lyric content by section
+7. **`split_sheets`** - Professional split sheet management (song-level)
+8. **`split_sheet_writers`** - Comprehensive contributor and writer information
+9. **`split_sheet_publishers`** - Publisher entity management and contact details
+10. **`task_templates`** - Predefined task templates for release types
+11. **`user_profiles`** - User profile information and settings
 
 **Legacy Tables (Optional):**
-11. **`artist_profiles`** - Optional artist metadata (not required for core functionality)
-12. **`audit_log`** - Database change tracking and forensics
+12. **`artist_profiles`** - Optional artist metadata (not required for core functionality)
+13. **`audit_log`** - Database change tracking and forensics
 
 ### Authentication Architecture
 - **Direct user authentication**: Core tables use `user_id` columns that reference `auth.uid()` directly
@@ -207,6 +208,7 @@ The All Access Artist platform uses **Supabase** (PostgreSQL 16.x) as its primar
 auth.users (Supabase Auth)
     ↓ (user_id - direct authentication)
     ├── music_releases
+    ├── label_copy
     ├── release_tasks
     ├── songs
     ├── lyric_sheets
@@ -215,6 +217,8 @@ auth.users (Supabase Auth)
 
 ### Foreign Key Constraints (Current)
 - `music_releases.user_id` → `auth.users.id`
+- `label_copy.user_id` → `auth.users.id`
+- `label_copy.release_id` → `music_releases.id`
 - `release_tasks.user_id` → `auth.users.id`
 - `songs.user_id` → `auth.users.id`
 - `lyric_sheets.user_id` → `auth.users.id`
@@ -235,6 +239,7 @@ All core tables use simplified RLS policies with direct user authentication:
 
 **Current RLS Policies:**
 - `music_releases`: `user_id = auth.uid()`
+- `label_copy`: `user_id = auth.uid()`
 - `release_tasks`: `user_id = auth.uid()`
 - `songs`: `user_id = auth.uid()`
 - `lyric_sheets`: `user_id = auth.uid()`
@@ -321,11 +326,12 @@ All core tables use simplified RLS policies with direct user authentication:
 **Database Type**: PostgreSQL 16.x (Supabase)  
 **Environment**: Production  
 **Access Method**: Supabase Client with RLS  
-**API Integration**: Via Hono backend with JWT authentication  
+**API Integration**: Via Hono backend on Render with JWT authentication  
 
-**Backend API Endpoints**:
+**Backend API Endpoints** (Render hosting):
 - `GET/POST /api/artists` - Artist profile management
 - `GET/POST /api/releases` - Music release management
+- `PUT/GET/DELETE /api/labelcopy` - Label Copy metadata management
 - `GET/POST /api/analytics` - Fan analytics data
 - `GET/POST /api/calendar` - Content calendar management
 - `GET/POST /api/royalty` - Royalty data management
@@ -349,7 +355,7 @@ All core tables use simplified RLS policies with direct user authentication:
 | `completed_at` | timestamptz | Completion timestamp |
 
 #### songs
-**Purpose**: Individual track management with comprehensive Label Copy fields  
+**Purpose**: Individual track management (minimal schema)  
 **Authentication**: `user_id = auth.uid()`
 
 | Key Columns | Type | Description |
@@ -361,16 +367,24 @@ All core tables use simplified RLS policies with direct user authentication:
 | `song_title` | text | Track title |
 | `track_number` | integer | Track position |
 | `duration_seconds` | integer | Track duration |
-| **Label Copy Fields** | | **Track-level metadata** |
-| `version_subtitle` | text | Track version info |
-| `featured_artists` | text | Guest performers |
-| `explicit_content` | boolean | Track content flag |
-| `preview_start_time` | integer | 30-second preview timestamp |
-| `mix_engineer` | text | Mixing credit |
-| `mastering_engineer` | text | Mastering credit |
-| `remixer` | text | Remix credit |
-| `isrc` | text | International Standard Recording Code |
-| `language_lyrics` | text | Track-specific language code |
+
+#### label_copy
+**Purpose**: Dedicated Label Copy metadata storage (release-level)  
+**Authentication**: `user_id = auth.uid()`
+
+| Key Columns | Type | Description |
+|-------------|------|-------------|
+| `id` | uuid | Primary key |
+| `release_id` | uuid | Links to music_releases |
+| `user_id` | uuid | Direct user authentication |
+| `version_subtitle` | text | Release version info |
+| `phonogram_copyright` | text | ℗ Line copyright holder |
+| `composition_copyright` | text | © Line copyright holder |
+| `sub_genre` | text | Specific genre classification |
+| `territories` | text[] | Distribution regions array |
+| `explicit_content` | boolean | Content rating flag |
+| `language_lyrics` | text | Primary language code |
+| `tracks_metadata` | jsonb | Track-level Label Copy data array |
 
 #### split_sheets
 **Purpose**: Professional split sheet management (song-level)  

@@ -52,6 +52,9 @@ interface ReleaseData {
   label: string;
   territories: string;
   description: string;
+  versionSubtitle: string;
+  subGenre: string;
+  explicitContent: boolean;
 }
 
 export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: MetadataPrepProps = {}) => {
@@ -70,7 +73,10 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
     compositionCopyright: "",
     label: "",
     territories: "",
-    description: ""
+    description: "",
+    versionSubtitle: "",
+    subGenre: "",
+    explicitContent: false
   });
   const [tracks, setTracks] = useState<Track[]>([
     {
@@ -217,7 +223,10 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
         compositionCopyright: "",
         label: existingRelease.label || "",
         territories: "",
-        description: existingRelease.description || ""
+        description: existingRelease.description || "",
+        versionSubtitle: "",
+        subGenre: "",
+        explicitContent: false
       };
       setReleaseData(populatedReleaseData);
       
@@ -319,7 +328,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
     }
   };
 
-  const updateReleaseData = (field: keyof ReleaseData, value: string) => {
+  const updateReleaseData = (field: keyof ReleaseData, value: string | boolean) => {
     if (!isReadOnly) {
       setReleaseData(prev => ({ ...prev, [field]: value }));
     }
@@ -522,7 +531,10 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
           compositionCopyright: "",
           label: "",
           territories: "",
-          description: ""
+          description: "",
+          versionSubtitle: "",
+          subGenre: "",
+          explicitContent: false
         });
         
         setTracks([{
@@ -716,7 +728,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="genre">Primary Genre *</Label>
                 <Select value={releaseData.genre} onValueChange={(value) => updateReleaseData('genre', value)} disabled={isReadOnly}>
@@ -734,6 +746,17 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                     <SelectItem value="folk">Folk</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subGenre">Sub-Genre</Label>
+                <Input 
+                  id="subGenre" 
+                  value={releaseData.subGenre}
+                  onChange={(e) => updateReleaseData('subGenre', e.target.value)}
+                  placeholder="Dance Pop, Alternative Rock" 
+                  className="w-full" 
+                  disabled={isReadOnly}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="languageLyrics">Primary Language</Label>
@@ -780,7 +803,18 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="versionSubtitle">Version Subtitle</Label>
+                <Input 
+                  id="versionSubtitle" 
+                  value={releaseData.versionSubtitle}
+                  onChange={(e) => updateReleaseData('versionSubtitle', e.target.value)}
+                  placeholder="Deluxe Edition, Remastered" 
+                  className="w-full" 
+                  disabled={isReadOnly}
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="label">Record Label</Label>
                 <Input 
@@ -808,17 +842,33 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Release Description</Label>
-              <Textarea 
-                id="description" 
-                value={releaseData.description}
-                onChange={(e) => updateReleaseData('description', e.target.value)}
-                placeholder="Brief description of the release for promotional use..."
-                rows={3}
-                className="w-full"
-                disabled={isReadOnly}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="description">Release Description</Label>
+                <Textarea 
+                  id="description" 
+                  value={releaseData.description}
+                  onChange={(e) => updateReleaseData('description', e.target.value)}
+                  placeholder="Brief description of the release for promotional use..."
+                  rows={3}
+                  className="w-full"
+                  disabled={isReadOnly}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-base font-medium">Content Rating</Label>
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox 
+                    id="explicitContent"
+                    checked={releaseData.explicitContent}
+                    onCheckedChange={(checked) => updateReleaseData('explicitContent', checked as boolean)}
+                    disabled={isReadOnly}
+                  />
+                  <Label htmlFor="explicitContent" className="text-sm font-medium">
+                    Explicit Content (Release-level)
+                  </Label>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -970,17 +1020,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                 </div>
 
                 {/* Additional Info */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Sub-Genre</Label>
-                    <Input 
-                      value={track.subGenre}
-                      onChange={(e) => updateTrack(track.id, 'subGenre', e.target.value)}
-                      placeholder="Dance Pop, Alternative Rock" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -1003,7 +1043,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                       disabled={isReadOnly}
                     />
                     <Label htmlFor={`explicit-${track.id}`} className="text-sm font-medium">
-                      Explicit Content
+                      Explicit Content (Track-level)
                     </Label>
                   </div>
                 </div>
