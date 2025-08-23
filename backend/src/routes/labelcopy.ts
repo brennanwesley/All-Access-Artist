@@ -30,6 +30,8 @@ labelcopy.put('/:releaseId', zValidator('json', UpdateLabelCopySchema), async (c
         release_id: releaseId,
         user_id: user.id,
         ...labelCopyData
+      }, {
+        onConflict: 'release_id'
       })
       .select()
       .single()
