@@ -25,7 +25,7 @@ splitsheets.get('/song/:songId', async (c) => {
     // First, get the song title from the songs table using the songId
     const { data: songData, error: songError } = await supabase
       .from('songs')
-      .select('title')
+      .select('song_title')
       .eq('id', songId)
       .single()
     
@@ -34,14 +34,14 @@ splitsheets.get('/song/:songId', async (c) => {
       return c.json({ success: false, error: 'Song not found' }, 404)
     }
     
-    console.log('SplitSheet: Found song title:', songData.title)
+    console.log('SplitSheet: Found song title:', songData.song_title)
     
     // Now query split_sheets using the actual song title
     const { data, error } = await supabase
       .from('split_sheets')
       .select('*')
       .eq('user_id', user.id)
-      .eq('song_title', songData.title)
+      .eq('song_title', songData.song_title)
       .single()
     
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
