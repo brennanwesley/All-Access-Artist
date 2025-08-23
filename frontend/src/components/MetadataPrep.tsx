@@ -103,6 +103,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<{releaseData: ReleaseData; tracks: Track[]} | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [isLoadingLabelCopy, setIsLoadingLabelCopy] = useState(false);
   const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
@@ -134,6 +135,72 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
       subGenre: "",
       languageLyrics: "en"
     }));
+  };
+
+  // Helper function to merge Label Copy data with tracks
+  const mergeLabelCopyWithTracks = (existingTracks: Track[], labelCopyTracks: any[]): Track[] => {
+    return existingTracks.map((track) => {
+      // Find matching track in label copy data by track number
+      const labelCopyTrack = labelCopyTracks.find(lct => lct.track_number === track.trackNumber);
+      
+      if (labelCopyTrack) {
+        return {
+          ...track,
+          duration: formatDuration(labelCopyTrack.duration_seconds) || track.duration,
+          isrc: labelCopyTrack.isrc || track.isrc,
+          versionSubtitle: labelCopyTrack.version_subtitle || track.versionSubtitle,
+          featuredArtists: labelCopyTrack.featured_artists || track.featuredArtists,
+          explicitContent: labelCopyTrack.explicit_content ?? track.explicitContent,
+          previewStartTime: labelCopyTrack.preview_start_time ?? track.previewStartTime,
+          mixEngineer: labelCopyTrack.mix_engineer || track.mixEngineer,
+          masteringEngineer: labelCopyTrack.mastering_engineer || track.masteringEngineer,
+          remixer: labelCopyTrack.remixer || track.remixer,
+          songwriters: labelCopyTrack.songwriters || track.songwriters,
+          producers: labelCopyTrack.producers || track.producers,
+          subGenre: labelCopyTrack.sub_genre || track.subGenre,
+          languageLyrics: labelCopyTrack.language_lyrics || track.languageLyrics
+        };
+      }
+      
+      return track;
+    });
+  };
+
+  // Fetch existing Label Copy data
+  const fetchLabelCopyData = async (releaseId: string) => {
+    setIsLoadingLabelCopy(true);
+    try {
+      const API_URL = import.meta.env['VITE_API_URL'] || 'https://all-access-artist.onrender.com';
+      const response = await fetch(`${API_URL}/api/labelcopy/${releaseId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${await getAccessToken()}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No label copy data exists yet - this is normal for new releases
+          console.log('No existing label copy data found for release:', releaseId);
+          return null;
+        }
+        throw new Error(`Failed to fetch label copy data: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.success && result.data) {
+        console.log('Label copy data loaded successfully:', result.data);
+        return result.data;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching label copy data:', error);
+      // Don't show error toast for missing data - it's expected for new releases
+      return null;
+    } finally {
+      setIsLoadingLabelCopy(false);
+    }
   };
 
   // Session storage key for auto-save
@@ -209,44 +276,80 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
 
   // Pre-populate form data when props are provided
   useEffect(() => {
-    if (existingRelease) {
-      const populatedReleaseData = {
-        releaseTitle: existingRelease.title || "",
-        artist: "", // Will need to get from artist_profiles table
-        releaseType: existingRelease.release_type || "",
-        releaseDate: existingRelease.release_date || "",
-        copyright: existingRelease.copyright_info || "",
-        upc: existingRelease.upc_code || "",
-        genre: existingRelease.genre || "",
-        languageLyrics: "en", // Default
-        phonogramCopyright: "",
-        compositionCopyright: "",
-        label: existingRelease.label || "",
-        territories: "",
-        description: existingRelease.description || "",
-        versionSubtitle: "",
-        subGenre: "",
-        explicitContent: false
-      };
-      setReleaseData(populatedReleaseData);
-      
-      // Set as read-only if this is an existing release
-      setIsReadOnly(true);
-      
-      // Store as last saved data
-      const populatedTracks = existingSongs && existingSongs.length > 0 
-        ? convertSongsToTracks(existingSongs) 
-        : tracks;
-      setLastSavedData({ releaseData: populatedReleaseData, tracks: populatedTracks });
-    } else {
-      // New release - start in edit mode
-      setIsReadOnly(false);
-    }
+    const loadReleaseData = async () => {
+      if (existingRelease && releaseId) {
+        // First, populate basic release data from music_releases table
+        const baseReleaseData = {
+          releaseTitle: existingRelease.title || "",
+          artist: "", // Will need to get from artist_profiles table
+          releaseType: existingRelease.release_type || "",
+          releaseDate: existingRelease.release_date || "",
+          copyright: existingRelease.copyright_info || "",
+          upc: existingRelease.upc_code || "",
+          genre: existingRelease.genre || "",
+          languageLyrics: "en", // Default
+          phonogramCopyright: "",
+          compositionCopyright: "",
+          label: existingRelease.label || "",
+          territories: "",
+          description: existingRelease.description || "",
+          versionSubtitle: "",
+          subGenre: "",
+          explicitContent: false
+        };
 
-    if (existingSongs && existingSongs.length > 0) {
-      setTracks(convertSongsToTracks(existingSongs));
-    }
-  }, [existingRelease, existingSongs]);
+        // Convert songs to tracks first
+        const baseTracks = existingSongs && existingSongs.length > 0 
+          ? convertSongsToTracks(existingSongs) 
+          : tracks;
+
+        // Fetch existing Label Copy data and merge it
+        const labelCopyData = await fetchLabelCopyData(releaseId);
+        
+        let finalReleaseData = baseReleaseData;
+        let finalTracks = baseTracks;
+
+        if (labelCopyData) {
+          // Merge Label Copy data with base release data
+          finalReleaseData = {
+            ...baseReleaseData,
+            versionSubtitle: labelCopyData.version_subtitle || baseReleaseData.versionSubtitle,
+            phonogramCopyright: labelCopyData.phonogram_copyright || baseReleaseData.phonogramCopyright,
+            compositionCopyright: labelCopyData.composition_copyright || baseReleaseData.compositionCopyright,
+            subGenre: labelCopyData.sub_genre || baseReleaseData.subGenre,
+            territories: Array.isArray(labelCopyData.territories) 
+              ? labelCopyData.territories.join(', ') 
+              : (labelCopyData.territories || baseReleaseData.territories),
+            explicitContent: labelCopyData.explicit_content ?? baseReleaseData.explicitContent,
+            languageLyrics: labelCopyData.language_lyrics || baseReleaseData.languageLyrics
+          };
+
+          // Merge track metadata if it exists
+          if (labelCopyData.tracks_metadata && Array.isArray(labelCopyData.tracks_metadata)) {
+            finalTracks = mergeLabelCopyWithTracks(baseTracks, labelCopyData.tracks_metadata);
+          }
+        }
+
+        setReleaseData(finalReleaseData);
+        setTracks(finalTracks);
+        
+        // Set as read-only if this is an existing release
+        setIsReadOnly(true);
+        
+        // Store as last saved data
+        setLastSavedData({ releaseData: finalReleaseData, tracks: finalTracks });
+      } else {
+        // New release - start in edit mode
+        setIsReadOnly(false);
+        
+        if (existingSongs && existingSongs.length > 0) {
+          setTracks(convertSongsToTracks(existingSongs));
+        }
+      }
+    };
+
+    loadReleaseData();
+  }, [existingRelease, existingSongs, releaseId]);
 
   // Handle template change and session storage
   useEffect(() => {
@@ -604,6 +707,12 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
                     : "Complete metadata for distribution"
                   }
                 </p>
+                {isLoadingLabelCopy && (
+                  <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading saved data...</span>
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {releaseId && existingRelease ? (
