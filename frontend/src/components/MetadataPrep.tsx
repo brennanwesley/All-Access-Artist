@@ -10,8 +10,9 @@ import { ArrowLeft, FileText, Music, Save, Globe, Clock, Plus, Trash2, Edit } fr
 import { useToast } from "@/components/ui/use-toast";
 import { ReleaseDetails, Song } from "@/hooks/api/useReleaseDetails";
 import { useAuth } from "@/contexts/AuthContext";
+import { SplitSheetTemplate } from "@/components/split-sheet";
 
-type ActiveTemplate = "main" | "labelCopy" | "lyricSheet" | null;
+type ActiveTemplate = "main" | "labelCopy" | "lyricSheet" | "splitSheet" | null;
 
 interface MetadataPrepProps {
   releaseId?: string;
@@ -1356,6 +1357,29 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
     );
   }
 
+  if (activeTemplate === "splitSheet") {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setActiveTemplate("main")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h2 className="text-3xl font-bold">Split Sheet Template</h2>
+        </div>
+        
+        <SplitSheetTemplate 
+          releaseId={releaseId}
+          existingSongs={existingSongs}
+          onBack={() => setActiveTemplate("main")}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -1423,10 +1447,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
             <Button 
               variant="outline" 
               className="w-full"
-              onClick={() => {
-                // TODO: Navigate to new Split Sheet Template component
-                console.log('Split Sheet clicked - will integrate new component in Phase 5');
-              }}
+              onClick={() => setActiveTemplate("splitSheet")}
             >
               Create Split Sheet
             </Button>

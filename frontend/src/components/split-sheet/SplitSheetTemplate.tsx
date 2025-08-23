@@ -4,8 +4,8 @@ import { SplitSheetForm } from "./SplitSheetForm";
 import { Song } from "@/hooks/api/useReleaseDetails";
 
 interface SplitSheetTemplateProps {
-  releaseId?: string;
-  existingSongs?: Song[];
+  releaseId?: string | undefined;
+  existingSongs?: Song[] | undefined;
   onBack: () => void;
 }
 

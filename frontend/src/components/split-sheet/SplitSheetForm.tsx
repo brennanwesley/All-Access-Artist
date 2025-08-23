@@ -15,7 +15,7 @@ import { SplitSheetData } from "./types";
 interface SplitSheetFormProps {
   songId: string;
   songTitle: string;
-  releaseId?: string;
+  releaseId?: string | undefined;
   onBack: () => void;
 }
 
