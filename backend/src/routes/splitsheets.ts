@@ -12,21 +12,36 @@ const splitsheets = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 // GET /api/splitsheets/song/:songId - Get split sheet for a song
 splitsheets.get('/song/:songId', async (c) => {
   try {
-    const songId = c.req.param('songId')
     const supabase = c.get('supabase')
     const user = c.get('user')
+    const { songId } = c.req.param()
     
     if (!user?.id) {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('SplitSheet: Getting split sheet for song', songId, 'user', user.id)
+    console.log('SplitSheet: Getting split sheet for song ID', songId, 'user', user.id)
     
+    // First, get the song title from the songs table using the songId
+    const { data: songData, error: songError } = await supabase
+      .from('songs')
+      .select('title')
+      .eq('id', songId)
+      .single()
+    
+    if (songError) {
+      console.error('SplitSheet: Error getting song title:', songError)
+      return c.json({ success: false, error: 'Song not found' }, 404)
+    }
+    
+    console.log('SplitSheet: Found song title:', songData.title)
+    
+    // Now query split_sheets using the actual song title
     const { data, error } = await supabase
       .from('split_sheets')
       .select('*')
       .eq('user_id', user.id)
-      .eq('song_title', songId)
+      .eq('song_title', songData.title)
       .single()
     
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
