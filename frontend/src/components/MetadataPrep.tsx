@@ -321,7 +321,9 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
               ? labelCopyData.territories.join(', ') 
               : (labelCopyData.territories || baseReleaseData.territories),
             explicitContent: labelCopyData.explicit_content ?? baseReleaseData.explicitContent,
-            languageLyrics: labelCopyData.language_lyrics || baseReleaseData.languageLyrics
+            languageLyrics: labelCopyData.language_lyrics || baseReleaseData.languageLyrics,
+            upc: labelCopyData.upc_code || baseReleaseData.upc,
+            copyright: labelCopyData.copyright_year ? labelCopyData.copyright_year.toString() : baseReleaseData.copyright
           };
 
           // Merge track metadata if it exists

@@ -108,6 +108,8 @@ export const CreateLabelCopySchema = z.object({
   territories: z.array(z.string().max(50, 'Territory name too long')).optional(),
   explicit_content: z.boolean().default(false),
   language_lyrics: z.string().max(10, 'Language code too long').default('en'),
+  upc_code: z.string().max(20, 'UPC code too long').optional(),
+  copyright_year: z.number().int().min(1900).max(2100).optional(),
   tracks_metadata: z.array(z.object({
     track_number: z.number().int().min(1, 'Track number must be positive'),
     duration_seconds: z.number().int().min(1, 'Duration must be positive').optional(),
