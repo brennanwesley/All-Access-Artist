@@ -384,6 +384,8 @@ All core tables use simplified RLS policies with direct user authentication:
 | `territories` | text[] | Distribution regions array |
 | `explicit_content` | boolean | Content rating flag |
 | `language_lyrics` | text | Primary language code |
+| `upc_code` | varchar(20) | UPC barcode for release |
+| `copyright_year` | integer | Copyright year (1900-2100) |
 | `tracks_metadata` | jsonb | Track-level Label Copy data array |
 
 #### split_sheets

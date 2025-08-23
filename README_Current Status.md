@@ -497,6 +497,25 @@ All critical issues have been resolved. The platform provides secure, isolated u
     - **Simplified save flow**: Two API calls (release + label_copy) instead of multiple song operations
     - **Data integrity**: Proper validation and user isolation throughout
 
+30. **Label Copy UPC Code and Copyright Year Enhancement**
+    - Added `upc_code VARCHAR(20)` and `copyright_year INTEGER` columns to `label_copy` table
+    - Updated backend Zod schemas to validate new fields with proper constraints
+    - Enhanced frontend data mapping to merge UPC and copyright from Label Copy API
+    - Centralized UPC and copyright year storage in Label Copy system
+    - Maintains backward compatibility with existing functionality
+
+31. **Label Copy Data Display and Loading Improvements**
+    - Added loading indicator with spinner during Label Copy data fetch
+    - Fixed data merging to populate UPC code and copyright year from saved Label Copy data
+    - Enhanced user feedback with "Loading saved data..." message
+    - Resolved lint warning for unused `isLoadingLabelCopy` state variable
+
+32. **Label Copy Upsert Constraint Fix**
+    - Fixed database constraint violation error preventing Label Copy updates
+    - Added `onConflict: 'release_id'` parameter to Supabase upsert operation
+    - Resolves 500 error when editing and saving existing Label Copy data
+    - Enables proper UPDATE operations instead of failed INSERT attempts
+
 ### 🔧 Technical Improvements
 
 **Database Schema:**

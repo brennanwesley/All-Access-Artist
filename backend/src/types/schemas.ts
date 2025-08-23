@@ -165,21 +165,47 @@ export const CreateCalendarSchema = z.object({
   type: z.string()
 })
 
-// Split Sheet Schemas
-export const CreateSplitSheetSchema = z.object({
-  song_id: z.string().uuid('Invalid song ID'),
-  user_id: z.string().uuid('Invalid user ID'),
-  song_title: z.string().min(1, 'Song title is required').max(200, 'Song title too long'),
-  release_title: z.string().min(1, 'Release title is required').max(200, 'Release title too long'),
-  aka_titles: z.array(z.string().max(200, 'AKA title too long')).optional(),
-  creation_location: z.string().max(200, 'Creation location too long').optional(),
-  sample_use_clause: z.string().max(2000, 'Sample use clause too long').optional(),
-  agreement_date: z.string().date('Invalid agreement date').optional(),
-  is_signed: z.boolean().default(false),
-  sheet_created_at: z.string().date('Invalid sheet creation date').optional()
+// Split Sheet Schemas - JSONB-based approach
+const ContributorSchema = z.object({
+  legal_name: z.string().min(1, 'Legal name is required').max(200, 'Legal name too long'),
+  stage_name: z.string().max(200, 'Stage name too long').optional(),
+  role: z.enum(['writer', 'co-writer', 'lyricist', 'composer', 'producer', 'arranger', 'beat-maker']),
+  contribution: z.string().max(500, 'Contribution description too long').optional(),
+  writer_share_percent: z.number().min(0, 'Writer share must be non-negative').max(100, 'Writer share cannot exceed 100%'),
+  publisher_share_percent: z.number().min(0, 'Publisher share must be non-negative').max(100, 'Publisher share cannot exceed 100%'),
+  contact: z.object({
+    email: z.string().email('Invalid email').optional(),
+    phone: z.string().max(20, 'Phone number too long').optional(),
+    address: z.string().max(500, 'Address too long').optional()
+  }).optional(),
+  pro_affiliation: z.string().max(100, 'PRO affiliation too long').optional(),
+  ipi_number: z.string().max(50, 'IPI number too long').optional(),
+  publisher: z.object({
+    company_name: z.string().max(200, 'Company name too long').optional(),
+    pro_affiliation: z.string().max(100, 'PRO affiliation too long').optional(),
+    ipi_number: z.string().max(50, 'IPI number too long').optional(),
+    contact: z.object({
+      email: z.string().email('Invalid email').optional(),
+      phone: z.string().max(20, 'Phone number too long').optional(),
+      address: z.string().max(500, 'Address too long').optional()
+    }).optional()
+  }).optional()
 })
 
-export const UpdateSplitSheetSchema = CreateSplitSheetSchema.partial().omit({ song_id: true, user_id: true })
+export const CreateSplitSheetSchema = z.object({
+  song_title: z.string().min(1, 'Song title is required').max(200, 'Song title too long'),
+  song_aka: z.string().max(200, 'Song AKA too long').optional(),
+  artist_name: z.string().min(1, 'Artist name is required').max(200, 'Artist name too long'),
+  album_project: z.string().max(200, 'Album/project name too long').optional(),
+  date_created: z.string().date('Invalid date').optional(),
+  song_length: z.string().max(10, 'Song length too long').optional(),
+  studio_location: z.string().max(200, 'Studio location too long').optional(),
+  additional_notes: z.string().max(2000, 'Additional notes too long').optional(),
+  contributors: z.array(ContributorSchema).min(1, 'At least one contributor is required').max(20, 'Maximum 20 contributors allowed'),
+  release_id: z.string().uuid('Invalid release ID').optional()
+})
+
+export const UpdateSplitSheetSchema = CreateSplitSheetSchema.partial()
 
 // Split Sheet Writer Schemas
 export const CreateSplitSheetWriterSchema = z.object({

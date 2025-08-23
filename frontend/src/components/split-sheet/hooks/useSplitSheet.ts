@@ -1,0 +1,207 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import { SplitSheetData } from '../types';
+
+interface UseSplitSheetProps {
+  songId: string;
+  songTitle: string;
+  releaseId?: string | undefined;
+}
+
+export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetProps) => {
+  const [splitSheetData, setSplitSheetData] = useState<SplitSheetData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState<SplitSheetData | null>(null);
+  const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { toast } = useToast();
+
+  const sessionStorageKey = `splitSheet_${songId}`;
+
+  // Load existing split sheet data
+  const loadSplitSheet = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // TODO: Replace with actual API call in Phase 3
+      // const response = await fetch(`/api/splitsheets/song/${songId}`);
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   setSplitSheetData(data);
+      //   setLastSavedData(data);
+      // } else {
+      //   // No existing split sheet, create empty one
+      //   const emptyData: SplitSheetData = {
+      //     song_title: songTitle,
+      //     artist_name: '',
+      //     album_project: '',
+      //     release_id: releaseId,
+      //     contributors: [],
+      //   };
+      //   setSplitSheetData(emptyData);
+      // }
+
+      // For now, create empty data structure
+      const emptyData: SplitSheetData = {
+        song_title: songTitle,
+        artist_name: '',
+        album_project: '',
+        date_created: new Date().toISOString().split('T')[0],
+        contributors: [],
+      };
+      
+      // Only add release_id if it exists
+      if (releaseId) {
+        emptyData.release_id = releaseId;
+      }
+      setSplitSheetData(emptyData);
+      setLastSavedData(emptyData);
+    } catch (error) {
+      console.error('Error loading split sheet:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load split sheet data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [songId, songTitle, releaseId, toast]);
+
+  // Save split sheet data
+  const saveSplitSheet = useCallback(async (data: SplitSheetData) => {
+    try {
+      // TODO: Replace with actual API call in Phase 3
+      // const response = await fetch(`/api/splitsheets/song/${songId}`, {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(data),
+      // });
+      // 
+      // if (!response.ok) {
+      //   throw new Error('Failed to save split sheet');
+      // }
+
+      setLastSavedData(data);
+      setHasUnsavedChanges(false);
+      setIsReadOnly(true);
+      
+      // Clear session storage
+      sessionStorage.removeItem(sessionStorageKey);
+      
+      toast({
+        title: "Success",
+        description: "Split sheet saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving split sheet:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save split sheet",
+        variant: "destructive",
+      });
+    }
+  }, [songId, sessionStorageKey, toast]);
+
+  // Auto-save to session storage
+  const autoSave = useCallback((data: SplitSheetData) => {
+    sessionStorage.setItem(sessionStorageKey, JSON.stringify(data));
+  }, [sessionStorageKey]);
+
+  // Start editing mode
+  const startEditing = useCallback(() => {
+    setIsReadOnly(false);
+    
+    // Load from session storage if available
+    const savedData = sessionStorage.getItem(sessionStorageKey);
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        setSplitSheetData(parsedData);
+      } catch (error) {
+        console.error('Error parsing session storage data:', error);
+      }
+    }
+
+    // Start auto-save interval
+    autoSaveIntervalRef.current = setInterval(() => {
+      if (splitSheetData) {
+        autoSave(splitSheetData);
+      }
+    }, 3000); // 3 seconds
+  }, [sessionStorageKey, splitSheetData, autoSave]);
+
+  // Stop editing mode
+  const stopEditing = useCallback(() => {
+    setIsReadOnly(true);
+    setHasUnsavedChanges(false);
+    
+    // Clear auto-save interval
+    if (autoSaveIntervalRef.current) {
+      clearInterval(autoSaveIntervalRef.current);
+      autoSaveIntervalRef.current = null;
+    }
+    
+    // Reset to last saved data
+    if (lastSavedData) {
+      setSplitSheetData(lastSavedData);
+    }
+    
+    // Clear session storage
+    sessionStorage.removeItem(sessionStorageKey);
+  }, [lastSavedData, sessionStorageKey]);
+
+  // Update split sheet data
+  const updateSplitSheetData = useCallback((updates: Partial<SplitSheetData>) => {
+    setSplitSheetData(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, ...updates };
+      setHasUnsavedChanges(true);
+      return updated;
+    });
+  }, []);
+
+  // Browser warning for unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    if (hasUnsavedChanges) {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Load data on mount
+  useEffect(() => {
+    loadSplitSheet();
+  }, [loadSplitSheet]);
+
+  return {
+    splitSheetData,
+    isLoading,
+    isReadOnly,
+    hasUnsavedChanges,
+    startEditing,
+    stopEditing,
+    updateSplitSheetData,
+    saveSplitSheet,
+    reload: loadSplitSheet,
+  };
+};

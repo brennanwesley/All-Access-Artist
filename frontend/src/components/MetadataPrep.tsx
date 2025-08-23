@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, FileText, Music, Save, Users, Percent, Globe, Clock, Plus, Trash2, Edit } from "lucide-react";
+import { ArrowLeft, FileText, Music, Save, Globe, Clock, Plus, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ReleaseDetails, Song } from "@/hooks/api/useReleaseDetails";
 import { useAuth } from "@/contexts/AuthContext";
 
-type ActiveTemplate = "main" | "labelCopy" | "lyricSheet" | "splitSheet" | null;
+type ActiveTemplate = "main" | "labelCopy" | "lyricSheet" | null;
 
 interface MetadataPrepProps {
   releaseId?: string;
@@ -692,12 +692,12 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
       <div className="space-y-6">
         <div className="flex items-center gap-4 mb-6">
           <Button 
-            variant="ghost" 
-            onClick={() => setActiveTemplate(null)}
-            className="flex items-center gap-2"
+            variant="outline" 
+            size="sm"
+            onClick={() => setActiveTemplate("main")}
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Templates
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
           <div className="flex-1">
             <div className="flex items-center justify-between">
@@ -1356,179 +1356,6 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
     );
   }
 
-  if (activeTemplate === "splitSheet") {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setActiveTemplate("main")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <h2 className="text-3xl font-bold">Split Sheet Template</h2>
-        </div>
-
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Song Information
-            </CardTitle>
-            <CardDescription>
-              Document songwriter credits and publishing split percentages
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="songTitle">Song Title *</Label>
-                <Input id="songTitle" placeholder="Enter song title" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="artist">Artist *</Label>
-                <Input id="artist" placeholder="Enter artist name" />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="album">Album/Project</Label>
-                <Input id="album" placeholder="Album or project name" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="date">Date Created</Label>
-                <Input id="date" type="date" />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Percent className="h-5 w-5" />
-                <Label className="text-base font-semibold">Writer Credits & Splits</Label>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-12 gap-2 text-sm font-medium text-muted-foreground">
-                  <div className="col-span-4">Writer Name</div>
-                  <div className="col-span-3">Role</div>
-                  <div className="col-span-2">Split %</div>
-                  <div className="col-span-3">Publishing Info</div>
-                </div>
-                
-                {/* Writer 1 */}
-                <div className="grid grid-cols-12 gap-2 items-start">
-                  <div className="col-span-4">
-                    <Input placeholder="Full legal name" />
-                  </div>
-                  <div className="col-span-3">
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="writer">Writer</SelectItem>
-                        <SelectItem value="co-writer">Co-Writer</SelectItem>
-                        <SelectItem value="producer">Producer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-2">
-                    <Input placeholder="%" type="number" min="0" max="100" />
-                  </div>
-                  <div className="col-span-3">
-                    <Input placeholder="Publisher/PRO" />
-                  </div>
-                </div>
-
-                {/* Writer 2 */}
-                <div className="grid grid-cols-12 gap-2 items-start">
-                  <div className="col-span-4">
-                    <Input placeholder="Full legal name" />
-                  </div>
-                  <div className="col-span-3">
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="writer">Writer</SelectItem>
-                        <SelectItem value="co-writer">Co-Writer</SelectItem>
-                        <SelectItem value="producer">Producer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-2">
-                    <Input placeholder="%" type="number" min="0" max="100" />
-                  </div>
-                  <div className="col-span-3">
-                    <Input placeholder="Publisher/PRO" />
-                  </div>
-                </div>
-
-                {/* Writer 3 */}
-                <div className="grid grid-cols-12 gap-2 items-start">
-                  <div className="col-span-4">
-                    <Input placeholder="Full legal name" />
-                  </div>
-                  <div className="col-span-3">
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="writer">Writer</SelectItem>
-                        <SelectItem value="co-writer">Co-Writer</SelectItem>
-                        <SelectItem value="producer">Producer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-2">
-                    <Input placeholder="%" type="number" min="0" max="100" />
-                  </div>
-                  <div className="col-span-3">
-                    <Input placeholder="Publisher/PRO" />
-                  </div>
-                </div>
-                
-                <Button variant="outline" size="sm">
-                  + Add Writer
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Additional Notes</Label>
-              <Textarea 
-                id="notes" 
-                placeholder="Any additional terms, agreements, or notes about the splits..."
-                rows={3}
-              />
-            </div>
-
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                <strong>Note:</strong> This split sheet serves as a working document. 
-                All parties should review and agree to these terms before finalizing. 
-                Consider having this document reviewed by legal counsel for official agreements.
-              </p>
-            </div>
-
-            <div className="flex gap-4 pt-4">
-              <Button onClick={handleSave} className="flex items-center gap-2">
-                <Save className="h-4 w-4" />
-                Save Split Sheet
-              </Button>
-              <Button variant="outline">Export to PDF</Button>
-              <Button variant="outline">Send for Signatures</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">
@@ -1596,7 +1423,10 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
             <Button 
               variant="outline" 
               className="w-full"
-              onClick={() => setActiveTemplate("splitSheet")}
+              onClick={() => {
+                // TODO: Navigate to new Split Sheet Template component
+                console.log('Split Sheet clicked - will integrate new component in Phase 5');
+              }}
             >
               Create Split Sheet
             </Button>
