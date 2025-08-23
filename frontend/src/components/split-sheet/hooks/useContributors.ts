@@ -8,22 +8,12 @@ const createEmptyContributor = (): Contributor => ({
   contribution: '',
   writer_share_percent: 0,
   publisher_share_percent: 0,
-  contact: {
-    email: '',
-    phone: '',
-    address: '',
-  },
   pro_affiliation: '',
   ipi_number: '',
   publisher: {
     company_name: '',
     pro_affiliation: '',
     ipi_number: '',
-    contact: {
-      email: '',
-      phone: '',
-      address: '',
-    },
   },
 });
 
@@ -44,7 +34,7 @@ export const useContributors = (initialContributors: Contributor[] = []) => {
     setContributors(prev => {
       const updated = [...prev];
       if (field.includes('.')) {
-        // Handle nested fields like 'contact.email'
+        // Handle nested fields like 'publisher.company_name'
         const [parentField, childField] = field.split('.') as [keyof Contributor, string];
         updated[index] = {
           ...updated[index],

@@ -174,7 +174,7 @@ const ContributorSchema = z.object({
   writer_share_percent: z.number().min(0, 'Writer share must be non-negative').max(100, 'Writer share cannot exceed 100%'),
   publisher_share_percent: z.number().min(0, 'Publisher share must be non-negative').max(100, 'Publisher share cannot exceed 100%'),
   contact: z.object({
-    email: z.string().email('Invalid email').optional(),
+    email: z.string().email('Invalid email').or(z.literal('')).optional(),
     phone: z.string().max(20, 'Phone number too long').optional(),
     address: z.string().max(500, 'Address too long').optional()
   }).optional(),
@@ -185,7 +185,7 @@ const ContributorSchema = z.object({
     pro_affiliation: z.string().max(100, 'PRO affiliation too long').optional(),
     ipi_number: z.string().max(50, 'IPI number too long').optional(),
     contact: z.object({
-      email: z.string().email('Invalid email').optional(),
+      email: z.string().email('Invalid email').or(z.literal('')).optional(),
       phone: z.string().max(20, 'Phone number too long').optional(),
       address: z.string().max(500, 'Address too long').optional()
     }).optional()

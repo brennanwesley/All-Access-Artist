@@ -5,22 +5,12 @@ export interface Contributor {
   contribution?: string;
   writer_share_percent: number;
   publisher_share_percent: number;
-  contact?: {
-    email?: string;
-    phone?: string;
-    address?: string;
-  };
   pro_affiliation?: string;
   ipi_number?: string;
   publisher?: {
     company_name?: string;
     pro_affiliation?: string;
     ipi_number?: string;
-    contact?: {
-      email?: string;
-      phone?: string;
-      address?: string;
-    };
   };
 }
 
