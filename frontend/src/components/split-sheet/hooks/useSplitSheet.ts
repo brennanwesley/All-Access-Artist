@@ -82,7 +82,11 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
       const response = await apiClient.saveSplitSheet(songId, data);
       
       if (response.error || response.status !== 200) {
-        throw new Error(response.error || 'Failed to save split sheet');
+        console.error('Split Sheet API Error:', response);
+        const errorMessage = typeof response.error === 'string' 
+          ? response.error 
+          : JSON.stringify(response.error) || 'Failed to save split sheet';
+        throw new Error(errorMessage);
       }
 
       setLastSavedData(data);

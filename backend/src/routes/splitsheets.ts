@@ -51,10 +51,24 @@ splitsheets.get('/song/:songId', async (c) => {
 })
 
 // PUT /api/splitsheets/song/:songId - Create or update split sheet for a song
-splitsheets.put('/song/:songId', zValidator('json', UpdateSplitSheetSchema), async (c) => {
+splitsheets.put('/song/:songId', async (c) => {
   try {
     const songId = c.req.param('songId')
-    const splitSheetData = c.req.valid('json')
+    const rawData = await c.req.json()
+    console.log('SplitSheet: Raw request data:', JSON.stringify(rawData, null, 2))
+    
+    // Manual validation with detailed error reporting
+    const validationResult = UpdateSplitSheetSchema.safeParse(rawData)
+    if (!validationResult.success) {
+      console.error('SplitSheet: Validation failed:', validationResult.error.issues)
+      return c.json({ 
+        success: false, 
+        error: 'Validation failed', 
+        details: validationResult.error.issues 
+      }, 400)
+    }
+    
+    const splitSheetData = validationResult.data
     const supabase = c.get('supabase')
     const user = c.get('user')
     
