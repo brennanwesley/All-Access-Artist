@@ -133,15 +133,8 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
   if (showMetadata) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => setShowMetadata(false)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Release Dashboard
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Metadata Management</h1>
-            <p className="text-muted-foreground">{release.title}</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold">Metadata Management / {release.title}</h1>
         </div>
         <MetadataPrep 
           releaseId={release.id}

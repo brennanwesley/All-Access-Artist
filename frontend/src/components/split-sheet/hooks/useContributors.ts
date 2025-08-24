@@ -3,18 +3,14 @@ import { Contributor } from '../types';
 
 const createEmptyContributor = (): Contributor => ({
   legal_name: '',
-  stage_name: '',
+  stage_name: undefined,
   role: 'writer',
-  contribution: '',
+  contribution: undefined,
   writer_share_percent: 0,
   publisher_share_percent: 0,
-  pro_affiliation: '',
-  ipi_number: '',
-  publisher: {
-    company_name: '',
-    pro_affiliation: '',
-    ipi_number: '',
-  },
+  pro_affiliation: undefined,
+  ipi_number: undefined,
+  publisher: undefined,
 });
 
 export const useContributors = (initialContributors: Contributor[] = []) => {
@@ -33,21 +29,28 @@ export const useContributors = (initialContributors: Contributor[] = []) => {
   const updateContributor = useCallback((index: number, field: keyof Contributor, value: any) => {
     setContributors(prev => {
       const updated = [...prev];
+      
+      // Safety check: ensure the contributor exists at the given index
+      if (!updated[index]) {
+        return prev;
+      }
+      
       if (field.includes('.')) {
         // Handle nested fields like 'publisher.company_name'
         const [parentField, childField] = field.split('.') as [keyof Contributor, string];
+        const currentParentValue = updated[index][parentField];
         updated[index] = {
           ...updated[index],
           [parentField]: {
-            ...updated[index][parentField] as any,
+            ...(typeof currentParentValue === 'object' && currentParentValue !== null ? currentParentValue : {}),
             [childField]: value,
           },
-        };
+        } as Contributor;
       } else {
         updated[index] = {
           ...updated[index],
           [field]: value,
-        };
+        } as Contributor;
       }
       return updated;
     });

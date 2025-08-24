@@ -1,17 +1,17 @@
 export interface Contributor {
   legal_name: string;
-  stage_name?: string;
+  stage_name?: string | undefined;
   role: ContributorRole;
-  contribution?: string;
+  contribution?: string | undefined;
   writer_share_percent: number;
   publisher_share_percent: number;
-  pro_affiliation?: string;
-  ipi_number?: string;
+  pro_affiliation?: string | undefined;
+  ipi_number?: string | undefined;
   publisher?: {
-    company_name?: string;
-    pro_affiliation?: string;
-    ipi_number?: string;
-  };
+    company_name?: string | undefined;
+    pro_affiliation?: string | undefined;
+    ipi_number?: string | undefined;
+  } | undefined;
 }
 
 export type ContributorRole = 

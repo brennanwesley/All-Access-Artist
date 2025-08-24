@@ -48,7 +48,7 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
         song_title: songTitle,
         artist_name: '',
         album_project: '',
-        date_created: new Date().toISOString().split('T')[0],
+        date_created: new Date().toISOString().substring(0, 10),
         contributors: [],
       };
       
