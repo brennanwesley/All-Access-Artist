@@ -37,12 +37,16 @@ splitsheets.get('/song/:songId', async (c) => {
     console.log('SplitSheet: Found song title:', songData.song_title)
     
     // Now query split_sheets using the actual song title
+    // Use order by updated_at desc and limit 1 to get the most recent record
+    // This handles cases where duplicate records exist
     const { data, error } = await supabase
       .from('split_sheets')
       .select('*')
       .eq('user_id', user.id)
       .eq('song_title', songData.song_title)
-      .single()
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
     
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
       console.error('SplitSheet: Database error getting split sheet:', error)
