@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Dashboard } from "@/components/Dashboard";
 import { ReleaseCalendar } from "@/components/ReleaseCalendar";
-import { ContentCalendar } from "@/components/ContentCalendar";
+import { ContentCreator } from "@/components/ContentCreator";
 import { RoyaltyDashboard } from "@/components/RoyaltyDashboard";
 import { Fans } from "@/components/Fans";
 import { Create } from "@/components/Create";
@@ -46,8 +46,8 @@ const Index = () => {
         console.log('Index: Rendering ReleaseCalendar');
         return <ReleaseCalendar />;
       case "content":
-        console.log('Index: Rendering ContentCalendar');
-        return <ContentCalendar />;
+        console.log('Index: Rendering ContentCreator');
+        return <ContentCreator />;
       case "royalties":
         console.log('Index: Rendering RoyaltyDashboard');
         return <RoyaltyDashboard />;
