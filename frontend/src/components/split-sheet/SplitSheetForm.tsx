@@ -207,12 +207,12 @@ export const SplitSheetForm = ({ songId, songTitle, releaseId, onBack }: SplitSh
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="songAka">Song AKA</Label>
+              <Label htmlFor="songAka">Song AKA (Alternate Titles)</Label>
               <Input 
                 id="songAka" 
                 value={formData.song_aka || ''}
                 onChange={(e) => handleFormFieldChange('song_aka', e.target.value)}
-                placeholder="Alternative song title" 
+                placeholder="Working titles, alternate names" 
                 className="w-full" 
                 disabled={isReadOnly}
               />
@@ -254,16 +254,6 @@ export const SplitSheetForm = ({ songId, songTitle, releaseId, onBack }: SplitSh
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="songAka">Song AKA (Alternate Titles)</Label>
-              <Input 
-                id="songAka" 
-                placeholder="Working titles, alternate names"
-                value={formData.song_aka || ''}
-                onChange={(e) => handleFormFieldChange('song_aka', e.target.value)}
-                disabled={isReadOnly}
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="songLength">Song Length</Label>
               <Input 
