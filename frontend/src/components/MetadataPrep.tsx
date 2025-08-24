@@ -12,12 +12,13 @@ import { ReleaseDetails, Song } from "@/hooks/api/useReleaseDetails";
 import { useAuth } from "@/contexts/AuthContext";
 import { SplitSheetTemplate } from "@/components/split-sheet";
 
-type ActiveTemplate = "main" | "labelCopy" | "lyricSheet" | "splitSheet" | null;
+type ActiveTemplate = "main" | "labelCopy" | "splitSheet" | null;
 
 interface MetadataPrepProps {
   releaseId?: string;
   existingRelease?: ReleaseDetails;
   existingSongs?: Song[];
+  onBack?: () => void;
 }
 
 interface Track {
@@ -58,7 +59,7 @@ interface ReleaseData {
   explicitContent: boolean;
 }
 
-export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: MetadataPrepProps = {}) => {
+export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack }: MetadataPrepProps = {}) => {
   const { getAccessToken } = useAuth();
   const [activeTemplate, setActiveTemplate] = useState<ActiveTemplate>("main");
   const [releaseData, setReleaseData] = useState<ReleaseData>({
@@ -1219,6 +1220,17 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
     );
   }
 
+
+  if (activeTemplate === "splitSheet") {
+    return (
+      <SplitSheetTemplate 
+        releaseId={releaseId}
+        existingSongs={existingSongs}
+        onBack={() => setActiveTemplate("main")}
+      />
+    );
+  }
+
   if (activeTemplate === "lyricSheet") {
     return (
       <div className="space-y-6">
@@ -1357,23 +1369,25 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
     );
   }
 
-  if (activeTemplate === "splitSheet") {
-    return (
-      <SplitSheetTemplate 
-        releaseId={releaseId}
-        existingSongs={existingSongs}
-        onBack={() => setActiveTemplate("main")}
-      />
-    );
-  }
-
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold">Metadata Management</h2>
-        <p className="text-muted-foreground mt-2">
-          Streamline your track metadata for all DSPs
-        </p>
+      <div className="flex items-center gap-4 mb-6">
+        {onBack && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onBack}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+        )}
+        <div>
+          <h2 className="text-3xl font-bold">Metadata Management</h2>
+          <p className="text-muted-foreground mt-2">
+            Streamline your track metadata for all DSPs
+          </p>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -1398,26 +1412,6 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs }: Meta
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-elegant transition-all duration-300 cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Music className="h-5 w-5" />
-              Lyric Sheet
-            </CardTitle>
-            <CardDescription>
-              Create structured lyric sheets with proper song sections
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => setActiveTemplate("lyricSheet")}
-            >
-               Create Lyric Sheet
-            </Button>
-          </CardContent>
-        </Card>
 
         <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-elegant transition-all duration-300 cursor-pointer">
           <CardHeader>

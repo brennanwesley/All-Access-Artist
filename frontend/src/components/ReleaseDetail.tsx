@@ -140,6 +140,7 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
           releaseId={release.id}
           existingRelease={release}
           existingSongs={release.songs || []}
+          onBack={() => setShowMetadata(false)}
         />
       </div>
     );
