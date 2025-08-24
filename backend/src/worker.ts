@@ -6,6 +6,7 @@
 
 import { Hono } from 'hono'
 import { corsMiddleware } from './middleware/cors.js'
+import { rateLimitMiddleware } from './middleware/rateLimit.js'
 import { supabaseAuth } from './middleware/auth.js'
 import artists from './routes/artists.js'
 import releases from './routes/releases.js'
@@ -26,13 +27,16 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 // Apply CORS middleware globally
 app.use('*', corsMiddleware)
 
+// Apply rate limiting middleware to all API routes
+app.use('/api/*', rateLimitMiddleware)
+
 // Health check endpoint (no authentication required)
 app.get('/health', (c) => {
   return c.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     version: '2.0.0',
-    deployment_trigger: 'profile-api-fixes'
+    deployment_trigger: 'rate-limiting-implementation'
   })
 })
 
