@@ -299,3 +299,105 @@ export type CreateUserProfileData = z.infer<typeof CreateUserProfileSchema>
 export type UpdateUserProfileData = z.infer<typeof UpdateUserProfileSchema>
 export type ReferralValidationData = z.infer<typeof ReferralValidationSchema>
 export type ApiResponse = z.infer<typeof ApiResponseSchema>
+
+// =====================================================
+// CONTENT CREATOR SCHEMAS
+// =====================================================
+
+// Generated Content Schemas
+export const CreateGeneratedContentSchema = z.object({
+  content_type: z.enum(['image', 'text', 'video', 'audio'], {
+    errorMap: () => ({ message: 'Content type must be image, text, video, or audio' })
+  }),
+  file_url: z.string().url('Invalid file URL').optional(),
+  file_size_bytes: z.number().int().positive('File size must be positive').optional(),
+  file_format: z.string().max(20, 'File format too long').optional(),
+  prompt_text: z.string().min(1, 'Prompt text is required').max(2000, 'Prompt text too long'),
+  generation_model: z.string().max(100, 'Generation model name too long').optional(),
+  generation_settings: z.record(z.any()).optional(),
+  title: z.string().max(300, 'Title too long').optional(),
+  description: z.string().max(1000, 'Description too long').optional(),
+  tags: z.array(z.string().max(50, 'Tag too long')).optional(),
+  quality_score: z.number().min(0).max(1).optional(),
+  is_approved: z.boolean().default(true),
+  moderation_flags: z.record(z.any()).optional()
+})
+
+export const UpdateGeneratedContentSchema = CreateGeneratedContentSchema.partial()
+
+// Artist Assets Schemas (Brand Kit)
+export const CreateArtistAssetSchema = z.object({
+  asset_name: z.string().min(1, 'Asset name is required').max(200, 'Asset name too long'),
+  asset_type: z.enum(['logo', 'headshot', 'artwork', 'background', 'icon', 'other'], {
+    errorMap: () => ({ message: 'Asset type must be logo, headshot, artwork, background, icon, or other' })
+  }),
+  file_url: z.string().url('Invalid file URL'),
+  file_size_bytes: z.number().int().positive('File size must be positive'),
+  file_format: z.string().min(1, 'File format is required').max(20, 'File format too long'),
+  dimensions_width: z.number().int().positive('Width must be positive').optional(),
+  dimensions_height: z.number().int().positive('Height must be positive').optional(),
+  dominant_colors: z.array(z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color')).optional(),
+  description: z.string().max(1000, 'Description too long').optional(),
+  usage_notes: z.string().max(500, 'Usage notes too long').optional(),
+  is_primary: z.boolean().default(false),
+  ai_description: z.string().max(1000, 'AI description too long').optional(),
+  tags: z.array(z.string().max(50, 'Tag too long')).optional(),
+  folder: z.string().max(100, 'Folder name too long').default('general')
+})
+
+export const UpdateArtistAssetSchema = CreateArtistAssetSchema.partial()
+
+// Generation Jobs Schemas
+export const CreateGenerationJobSchema = z.object({
+  job_type: z.enum(['image', 'text', 'video', 'audio', 'batch'], {
+    errorMap: () => ({ message: 'Job type must be image, text, video, audio, or batch' })
+  }),
+  input_prompt: z.string().min(1, 'Input prompt is required').max(2000, 'Input prompt too long'),
+  generation_model: z.string().min(1, 'Generation model is required').max(100, 'Generation model name too long'),
+  generation_settings: z.record(z.any()).optional(),
+  source_asset_id: z.string().uuid('Invalid source asset ID').optional(),
+  estimated_completion_at: z.string().datetime('Invalid datetime format').optional(),
+  max_retries: z.number().int().min(0).max(10).default(3),
+  external_job_id: z.string().max(200, 'External job ID too long').optional(),
+  webhook_url: z.string().url('Invalid webhook URL').optional()
+})
+
+export const UpdateGenerationJobSchema = z.object({
+  job_status: z.enum(['pending', 'processing', 'completed', 'failed', 'cancelled']).optional(),
+  progress_percentage: z.number().int().min(0).max(100).optional(),
+  result_content_id: z.string().uuid('Invalid result content ID').optional(),
+  error_message: z.string().max(1000, 'Error message too long').optional(),
+  retry_count: z.number().int().min(0).optional(),
+  started_at: z.string().datetime('Invalid datetime format').optional(),
+  completed_at: z.string().datetime('Invalid datetime format').optional()
+})
+
+// Enhanced Content Calendar Schema (with generated content support)
+export const UpdateContentCalendarSchema = z.object({
+  generated_content_id: z.string().uuid('Invalid generated content ID').optional(),
+  post_text: z.string().max(2000, 'Post text too long').optional(),
+  platform: z.enum(['instagram', 'tiktok', 'twitter', 'youtube', 'facebook']).optional(),
+  content_pillar: z.enum(['upcoming', 'new_songs', 'covers', 'lifestyle', 'behind_scenes']).optional(),
+  status: z.enum(['draft', 'scheduled', 'posted']).optional(),
+  scheduled_at: z.string().datetime('Invalid datetime format').optional(),
+  posted_at: z.string().datetime('Invalid datetime format').optional(),
+  engagement_data: z.record(z.any()).optional()
+})
+
+// File Upload Schema for Supabase Storage
+export const FileUploadSchema = z.object({
+  file_name: z.string().min(1, 'File name is required').max(255, 'File name too long'),
+  file_type: z.string().min(1, 'File type is required').max(100, 'File type too long'),
+  file_size: z.number().int().positive('File size must be positive').max(50 * 1024 * 1024, 'File too large (max 50MB)'),
+  folder: z.string().max(100, 'Folder name too long').default('uploads')
+})
+
+// Type exports for Content Creator schemas
+export type CreateGeneratedContentData = z.infer<typeof CreateGeneratedContentSchema>
+export type UpdateGeneratedContentData = z.infer<typeof UpdateGeneratedContentSchema>
+export type CreateArtistAssetData = z.infer<typeof CreateArtistAssetSchema>
+export type UpdateArtistAssetData = z.infer<typeof UpdateArtistAssetSchema>
+export type CreateGenerationJobData = z.infer<typeof CreateGenerationJobSchema>
+export type UpdateGenerationJobData = z.infer<typeof UpdateGenerationJobSchema>
+export type UpdateContentCalendarData = z.infer<typeof UpdateContentCalendarSchema>
+export type FileUploadData = z.infer<typeof FileUploadSchema>

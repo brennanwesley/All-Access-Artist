@@ -5,7 +5,7 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { CalendarService } from '../services/calendarService.js'
-import { CreateCalendarSchema } from '../types/schemas.js'
+import { CreateCalendarSchema, UpdateContentCalendarSchema } from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
 
 const calendar = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -82,6 +82,45 @@ calendar.put('/:id', zValidator('json', CreateCalendarSchema.partial()), async (
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update calendar event' 
+    }, 500)
+  }
+})
+
+// PATCH /api/calendar/:id/content - Associate generated content with calendar event
+calendar.patch('/:id/content', zValidator('json', UpdateContentCalendarSchema), async (c) => {
+  try {
+    const id = c.req.param('id')
+    const contentData = c.req.valid('json')
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const calendarService = new CalendarService(bindings)
+    
+    const data = await calendarService.updateCalendarEvent(userId, id, contentData)
+    return c.json({ success: true, data })
+  } catch (error) {
+    console.error('Error associating content with calendar event:', error)
+    return c.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to associate content with calendar event' 
+    }, 500)
+  }
+})
+
+// GET /api/calendar/:id/content - Get calendar event with associated generated content
+calendar.get('/:id/content', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const userId = c.get('jwtPayload').sub
+    const bindings = c.env
+    const calendarService = new CalendarService(bindings)
+    
+    const data = await calendarService.getCalendarEventWithContent(userId, id)
+    return c.json({ success: true, data })
+  } catch (error) {
+    console.error('Error fetching calendar event with content:', error)
+    return c.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to fetch calendar event with content' 
     }, 500)
   }
 })

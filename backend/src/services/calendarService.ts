@@ -91,4 +91,30 @@ export class CalendarService {
 
     return { success: true }
   }
+
+  async getCalendarEventWithContent(userId: string, eventId: string) {
+    const { data, error } = await this.supabase
+      .from('content_calendar')
+      .select(`
+        *,
+        generated_content:generated_content_id (
+          id,
+          content_type,
+          file_url,
+          title,
+          description,
+          tags,
+          created_at
+        )
+      `)
+      .eq('id', eventId)
+      .eq('user_id', userId)
+      .single()
+
+    if (error) {
+      throw new Error(`Failed to fetch calendar event with content: ${error.message}`)
+    }
+
+    return data
+  }
 }

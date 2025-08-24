@@ -18,6 +18,9 @@ import songs from './routes/songs.js'
 import labelcopy from './routes/labelcopy.js'
 import profile from './routes/profile.js'
 import splitsheets from './routes/splitsheets.js'
+import assets from './routes/assets.js'
+import content from './routes/content.js'
+import jobs from './routes/jobs.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
 
@@ -54,6 +57,9 @@ app.route('/api/songs', songs)
 app.route('/api/labelcopy', labelcopy)
 app.route('/api/profile', profile)
 app.route('/api/splitsheets', splitsheets)
+app.route('/api/assets', assets)
+app.route('/api/content', content)
+app.route('/api/jobs', jobs)
 
 // 404 handler
 app.notFound((c) => {
