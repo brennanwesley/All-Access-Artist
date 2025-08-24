@@ -33,9 +33,14 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
       const response = await apiClient.getSplitSheet(songId);
       
       if (response.data && response.status === 200) {
-        setSplitSheetData(response.data);
-        setLastSavedData(response.data);
-        return;
+        // Backend returns { success: true, data: splitSheetData }
+        const splitSheetData = response.data.data;
+        if (splitSheetData) {
+          setSplitSheetData(splitSheetData);
+          setLastSavedData(splitSheetData);
+          console.log('Split sheet data loaded successfully:', splitSheetData);
+          return;
+        }
       }
 
       // If no existing data, create empty data structure
