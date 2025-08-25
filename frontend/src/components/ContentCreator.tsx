@@ -94,7 +94,7 @@ export const ContentCreator = () => {
         <div>
           <h2 className="text-3xl font-bold">Content Creator</h2>
           <p className="text-muted-foreground mt-2">
-            AI-powered content creation and brand management
+            Connect with your audience genuinely through original, custom-made content.
           </p>
         </div>
         <Button variant="hero" size="lg">
@@ -175,7 +175,7 @@ export const ContentCreator = () => {
             Craft Your Brand
           </CardTitle>
           <CardDescription>
-            Upload up to 3 reference images for AI content generation
+            Provide up to 3 reference photos to inspire creations that match your aesthetic.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -230,7 +230,7 @@ export const ContentCreator = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-primary" />
-            AI Content Assistant
+            Content Assistant
           </CardTitle>
           <CardDescription>
             Get personalized content ideas and strategy advice

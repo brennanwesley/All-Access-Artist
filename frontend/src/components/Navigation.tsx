@@ -34,7 +34,7 @@ export const Navigation = ({ activeSection: propActiveSection, onSectionChange: 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "releases", label: "Release Manager", icon: Calendar },
-    { id: "content", label: "Content Planner", icon: Video },
+    { id: "content", label: "Content Creator", icon: Video },
     { id: "fans", label: "Fans", icon: Users },
     { id: "community", label: "Community", icon: Users },
     { id: "create", label: "Create", icon: Palette },
