@@ -41,25 +41,27 @@ export const ReleaseChecklist = ({ tasks, releaseDate }: ReleaseChecklistProps) 
     })
   }
 
-  // Sort tasks by order, then by completion status (incomplete first)
-  const sortedTasks = [...tasks].sort((a, b) => {
-    if (a.task_order !== b.task_order) {
-      return a.task_order - b.task_order
-    }
-    // If same order, put incomplete tasks first
-    const aCompleted = !!a.completed_at
-    const bCompleted = !!b.completed_at
-    if (aCompleted !== bCompleted) {
-      return aCompleted ? 1 : -1
-    }
-    return 0
-  })
+  // Filter and sort checklist tasks only
+  const checklistTasks = tasks
+    .filter(task => task.task_category === 'checklist')
+    .sort((a, b) => {
+      if (a.task_order !== b.task_order) {
+        return a.task_order - b.task_order
+      }
+      // If same order, put incomplete tasks first
+      const aCompleted = !!a.completed_at
+      const bCompleted = !!b.completed_at
+      if (aCompleted !== bCompleted) {
+        return aCompleted ? 1 : -1
+      }
+      return 0
+    })
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Project Timeline - 40% (2/5 columns) */}
       <div className="lg:col-span-2">
-        <ProjectTimeline releaseDate={releaseDate} />
+        <ProjectTimeline releaseDate={releaseDate} tasks={tasks} />
       </div>
 
       {/* Project Checklist - 60% (3/5 columns) */}
@@ -72,12 +74,10 @@ export const ReleaseChecklist = ({ tasks, releaseDate }: ReleaseChecklistProps) 
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {sortedTasks.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No tasks found for this release.</p>
-              </div>
+            {checklistTasks.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No tasks available</p>
             ) : (
-              sortedTasks.map((task) => {
+              checklistTasks.map((task) => {
                 const isCompleted = !!task.completed_at
                 return (
                   <div 

@@ -112,7 +112,7 @@ export class ReleasesService {
   }
 
   /**
-   * Generates release-specific tasks from templates
+   * Generates release-specific tasks from templates (both checklist and timeline)
    * @param releaseId - ID of the newly created release
    * @param userId - ID of the user creating the release
    * @param releaseType - Type of release (single, ep, album)
@@ -121,46 +121,80 @@ export class ReleasesService {
     // First, ensure task templates exist by creating them if missing
     await this.ensureTaskTemplatesExist()
 
-    // Fetch the appropriate task template
-    const { data: template, error: templateError } = await this.supabase
+    // Fetch BOTH checklist and timeline templates for this release type
+    const { data: templates, error: templateError } = await this.supabase
       .from('task_templates')
-      .select('tasks')
+      .select('template_name, tasks')
       .eq('release_type', releaseType)
       .eq('is_active', true)
-      .single()
 
     if (templateError) {
-      throw new Error(`Failed to fetch task template for ${releaseType}: ${templateError.message}`)
+      throw new Error(`Failed to fetch task templates for ${releaseType}: ${templateError.message}`)
     }
 
-    if (!template || !template.tasks) {
-      throw new Error(`No active task template found for release type: ${releaseType}`)
+    if (!templates || templates.length === 0) {
+      throw new Error(`No active task templates found for release type: ${releaseType}`)
     }
 
-    // Extract tasks array from JSONB
-    const tasks = template.tasks as string[]
-    
-    if (!Array.isArray(tasks) || tasks.length === 0) {
-      throw new Error(`Invalid or empty task template for release type: ${releaseType}`)
+    // Separate checklist and timeline templates
+    const checklistTemplate = templates.find(t => t.template_name.includes('Checklist'))
+    const timelineTemplate = templates.find(t => t.template_name === 'Project Timeline Tasks')
+
+    let allTaskRecords: any[] = []
+    let taskOrderOffset = 0
+
+    // Generate checklist tasks first (if template exists)
+    if (checklistTemplate && checklistTemplate.tasks) {
+      const checklistTasks = checklistTemplate.tasks as string[]
+      
+      if (Array.isArray(checklistTasks) && checklistTasks.length > 0) {
+        const checklistRecords = checklistTasks.map((taskDescription: string, index: number) => ({
+          release_id: releaseId,
+          user_id: userId,
+          task_description: taskDescription,
+          task_order: index,
+          task_category: 'checklist', // Add category to distinguish task types
+          completed_at: null
+        }))
+        
+        allTaskRecords = [...allTaskRecords, ...checklistRecords]
+        taskOrderOffset = checklistTasks.length
+      }
     }
 
-    // Prepare task records for bulk insert
-    const taskRecords = tasks.map((taskDescription: string, index: number) => ({
-      release_id: releaseId,
-      user_id: userId,
-      task_description: taskDescription,
-      task_order: index,
-      completed_at: null
-    }))
+    // Generate timeline tasks second (if template exists)
+    if (timelineTemplate && timelineTemplate.tasks) {
+      const timelineTasks = timelineTemplate.tasks as string[]
+      
+      if (Array.isArray(timelineTasks) && timelineTasks.length > 0) {
+        const timelineRecords = timelineTasks.map((taskDescription: string, index: number) => ({
+          release_id: releaseId,
+          user_id: userId,
+          task_description: taskDescription,
+          task_order: taskOrderOffset + index,
+          task_category: 'timeline', // Add category to distinguish task types
+          completed_at: null
+        }))
+        
+        allTaskRecords = [...allTaskRecords, ...timelineRecords]
+      }
+    }
 
-    // Bulk insert all tasks
+    // Ensure we have at least some tasks to insert
+    if (allTaskRecords.length === 0) {
+      throw new Error(`No valid tasks found in templates for release type: ${releaseType}`)
+    }
+
+    // Bulk insert all tasks (checklist + timeline)
     const { error: tasksError } = await this.supabase
       .from('release_tasks')
-      .insert(taskRecords)
+      .insert(allTaskRecords)
 
     if (tasksError) {
       throw new Error(`Failed to insert release tasks: ${tasksError.message}`)
     }
+
+    console.log(`Generated ${allTaskRecords.length} tasks for release ${releaseId} (${releaseType})`)
   }
 
   /**

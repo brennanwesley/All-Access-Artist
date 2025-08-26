@@ -10,9 +10,7 @@ export interface ReleaseTask {
   user_id: string
   task_description: string
   task_category: string
-  task_priority: string
-  task_status: string
-  due_date?: string
+  task_order: number
   completed_at?: string
   created_at: string
   updated_at: string

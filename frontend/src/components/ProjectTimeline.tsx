@@ -1,11 +1,52 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { CheckCircle2, Loader2, RotateCcw } from "lucide-react"
+import { useUpdateTask, ReleaseTask } from "@/hooks/api/useReleaseDetails"
 
 interface ProjectTimelineProps {
   releaseDate?: string | undefined
+  tasks: ReleaseTask[]
 }
 
-export const ProjectTimeline = ({ releaseDate }: ProjectTimelineProps) => {
-  const milestones = [
+export const ProjectTimeline = ({ releaseDate, tasks }: ProjectTimelineProps) => {
+  const updateTaskMutation = useUpdateTask()
+
+  // Filter timeline tasks and sort by task_order
+  const timelineTasks = tasks
+    .filter(task => task.task_category === 'timeline')
+    .sort((a, b) => a.task_order - b.task_order)
+
+  const handleMarkComplete = async (taskId: string, currentStatus: boolean) => {
+    updateTaskMutation.mutate({
+      taskId,
+      completed: !currentStatus
+    })
+  }
+
+  const handleUncheckTask = (taskId: string) => {
+    updateTaskMutation.mutate({
+      taskId,
+      completed: false
+    })
+  }
+
+  // Check if this specific task is being updated
+  const isTaskUpdating = (taskId: string) => {
+    return updateTaskMutation.isPending && updateTaskMutation.variables?.taskId === taskId
+  }
+
+  const formatCompletedDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: '2-digit' 
+    })
+  }
+
+  // Fallback milestones for releases without timeline tasks (backward compatibility)
+  const fallbackMilestones = [
     { name: "Recording Complete", daysBeforeRelease: 42 },
     { name: "Artwork & Design", daysBeforeRelease: 35 },
     { name: "Launch Presave Campaign", daysBeforeRelease: 35 },
@@ -63,33 +104,113 @@ export const ProjectTimeline = ({ releaseDate }: ProjectTimelineProps) => {
         <CardTitle>Project Timeline</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {milestones.map((milestone, index) => {
-          const targetDate = calculateTargetDate(milestone.daysBeforeRelease)
-          const status = getStatus(targetDate)
-          const statusColor = getStatusColor(status)
-          
-          return (
-            <div 
-              key={index}
-              className="flex items-start justify-between p-4 rounded-lg bg-secondary/20 border border-border/50"
-            >
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium">
-                  {milestone.name}
-                </h4>
-                <div className="mt-1 text-sm text-muted-foreground">
-                  {targetDate ? formatDate(targetDate) : 'Release date needed'}
+        {timelineTasks.length > 0 ? (
+          // Render database timeline tasks with interactive buttons
+          timelineTasks.map((task) => {
+            const isCompleted = !!task.completed_at
+            return (
+              <div 
+                key={task.id}
+                className="flex items-start justify-between p-4 rounded-lg bg-secondary/20 border border-border/50"
+              >
+                <div className="flex-1 min-w-0">
+                  <h4 className={`font-medium ${
+                    isCompleted ? 'text-muted-foreground line-through' : ''
+                  }`}>
+                    {task.task_description}
+                  </h4>
+                  <div className="mt-1 text-sm text-muted-foreground">
+                    {releaseDate ? 'Target date calculated from release' : 'Release date needed'}
+                  </div>
+                </div>
+
+                <div className="flex-shrink-0 ml-4">
+                  {isCompleted ? (
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>
+                          Completed {task.completed_at ? formatCompletedDate(task.completed_at) : 'Unknown'}
+                        </span>
+                      </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                            disabled={isTaskUpdating(task.id)}
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Mark task as incomplete?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will remove the completion date and move this task back to your active tasks list.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleUncheckTask(task.id)}>
+                              Mark Incomplete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={() => handleMarkComplete(task.id, isCompleted)}
+                      disabled={isTaskUpdating(task.id)}
+                      className="min-w-[120px]"
+                    >
+                      {isTaskUpdating(task.id) ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        'Mark Complete'
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
+            )
+          })
+        ) : (
+          // Fallback to static milestones for backward compatibility
+          fallbackMilestones.map((milestone, index) => {
+            const targetDate = calculateTargetDate(milestone.daysBeforeRelease)
+            const status = getStatus(targetDate)
+            const statusColor = getStatusColor(status)
+            
+            return (
+              <div 
+                key={index}
+                className="flex items-start justify-between p-4 rounded-lg bg-secondary/20 border border-border/50"
+              >
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium">
+                    {milestone.name}
+                  </h4>
+                  <div className="mt-1 text-sm text-muted-foreground">
+                    {targetDate ? formatDate(targetDate) : 'Release date needed'}
+                  </div>
+                </div>
 
-              <div className="flex-shrink-0 ml-4">
-                <span className={`px-2 py-1 text-xs font-medium rounded-md ${statusColor}`}>
-                  {status}
-                </span>
+                <div className="flex-shrink-0 ml-4">
+                  <span className={`px-2 py-1 text-xs font-medium rounded-md ${statusColor}`}>
+                    {status}
+                  </span>
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </CardContent>
     </Card>
   )
