@@ -12,6 +12,19 @@ interface ProjectTimelineProps {
 export const ProjectTimeline = ({ releaseDate, tasks }: ProjectTimelineProps) => {
   const updateTaskMutation = useUpdateTask()
 
+  // Mapping of task descriptions to days before release for date calculation
+  const taskDaysMapping: Record<string, number> = {
+    "Recording Complete": 42,
+    "Artwork & Design": 35,
+    "Launch Presave Campaign": 35,
+    "Music Video Production": 35,
+    "Mixing & Mastering": 32,
+    "Upload to Distribution": 28,
+    "Music Video Complete": 21,
+    "Metadata Submission": 21,
+    "DSP Distribution": 21
+  }
+
   // Filter timeline tasks and sort by task_order
   const timelineTasks = tasks
     .filter(task => task.task_category === 'timeline')
@@ -120,7 +133,14 @@ export const ProjectTimeline = ({ releaseDate, tasks }: ProjectTimelineProps) =>
                     {task.task_description}
                   </h4>
                   <div className="mt-1 text-sm text-muted-foreground">
-                    {releaseDate ? 'Target date calculated from release' : 'Release date needed'}
+                    {(() => {
+                      const daysBeforeRelease = taskDaysMapping[task.task_description]
+                      if (releaseDate && daysBeforeRelease) {
+                        const targetDate = calculateTargetDate(daysBeforeRelease)
+                        return targetDate ? formatDate(targetDate) : 'Release date needed'
+                      }
+                      return 'Release date needed'
+                    })()}
                   </div>
                 </div>
 
