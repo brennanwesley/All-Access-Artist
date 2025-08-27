@@ -26,7 +26,7 @@ labelcopy.put('/:releaseId', async (c) => {
       territories: Array.isArray(rawData.territories) 
         ? rawData.territories 
         : (typeof rawData.territories === 'string' 
-          ? rawData.territories.split(',').map(t => t.trim()) 
+          ? rawData.territories.split(',').map((t: string) => t.trim()) 
           : []),
       explicit_content: rawData.explicitContent ?? rawData.explicit_content ?? false,
       language_lyrics: rawData.languageLyrics || rawData.language_lyrics || 'en',
