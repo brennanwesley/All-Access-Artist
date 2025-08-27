@@ -10,12 +10,43 @@ import type { Bindings, Variables } from '../types/bindings.js'
 const labelcopy = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 // PUT /api/labelcopy/:releaseId - Create or update label copy
-labelcopy.put('/:releaseId', zValidator('json', UpdateLabelCopySchema), async (c) => {
+labelcopy.put('/:releaseId', async (c) => {
   try {
     const releaseId = c.req.param('releaseId')
-    const labelCopyData = c.req.valid('json')
+    const rawData = await c.req.json()
     const supabase = c.get('supabase')
     const user = c.get('user')
+    
+    // Transform legacy payload format to current schema format
+    const transformedData = {
+      version_subtitle: rawData.versionSubtitle || rawData.version_subtitle,
+      phonogram_copyright: rawData.phonogramCopyright || rawData.phonogram_copyright,
+      composition_copyright: rawData.compositionCopyright || rawData.composition_copyright,
+      sub_genre: rawData.subGenre || rawData.sub_genre,
+      territories: Array.isArray(rawData.territories) 
+        ? rawData.territories 
+        : (typeof rawData.territories === 'string' 
+          ? rawData.territories.split(',').map(t => t.trim()) 
+          : []),
+      explicit_content: rawData.explicitContent ?? rawData.explicit_content ?? false,
+      language_lyrics: rawData.languageLyrics || rawData.language_lyrics || 'en',
+      upc_code: rawData.upc || rawData.upc_code,
+      copyright_year: rawData.copyright ? parseInt(rawData.copyright) : rawData.copyright_year,
+      tracks_metadata: rawData.tracks_metadata || []
+    }
+    
+    // Validate the transformed data
+    const validationResult = UpdateLabelCopySchema.safeParse(transformedData)
+    if (!validationResult.success) {
+      console.error('LabelCopy: Validation failed:', validationResult.error)
+      return c.json({ 
+        success: false, 
+        error: 'Invalid data format',
+        details: validationResult.error.issues 
+      }, 400)
+    }
+    
+    const labelCopyData = validationResult.data
     
     if (!user?.id) {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
