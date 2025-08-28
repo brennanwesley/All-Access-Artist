@@ -579,6 +579,8 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
         territories: releaseData.territories ? releaseData.territories.split(',').map(t => t.trim()) : [],
         explicit_content: releaseData.explicitContent || false,
         language_lyrics: releaseData.languageLyrics,
+        upc_code: releaseData.upc,
+        copyright_year: parseInt(releaseData.copyright) || undefined,
         tracks_metadata: tracksMetadata
       };
 
