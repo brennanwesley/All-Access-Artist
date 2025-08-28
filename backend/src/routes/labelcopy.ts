@@ -17,21 +17,17 @@ labelcopy.put('/:releaseId', async (c) => {
     const supabase = c.get('supabase')
     const user = c.get('user')
     
-    // Transform legacy payload format to current schema format
+    // Transform payload format to current schema format (handles both legacy and new formats)
     const transformedData = {
-      version_subtitle: rawData.versionSubtitle || rawData.version_subtitle,
-      phonogram_copyright: rawData.phonogramCopyright || rawData.phonogram_copyright,
-      composition_copyright: rawData.compositionCopyright || rawData.composition_copyright,
-      sub_genre: rawData.subGenre || rawData.sub_genre,
-      territories: Array.isArray(rawData.territories) 
-        ? rawData.territories 
-        : (typeof rawData.territories === 'string' 
-          ? rawData.territories.split(',').map((t: string) => t.trim()) 
-          : []),
-      explicit_content: rawData.explicitContent ?? rawData.explicit_content ?? false,
-      language_lyrics: rawData.languageLyrics || rawData.language_lyrics || 'en',
-      upc_code: rawData.upc || rawData.upc_code,
-      copyright_year: rawData.copyright ? parseInt(rawData.copyright) : rawData.copyright_year,
+      version_subtitle: rawData.version_subtitle || rawData.versionSubtitle,
+      phonogram_copyright: rawData.phonogram_copyright || rawData.phonogramCopyright,
+      composition_copyright: rawData.composition_copyright || rawData.compositionCopyright,
+      sub_genre: rawData.sub_genre || rawData.subGenre,
+      territories: rawData.territories || [],
+      explicit_content: rawData.explicit_content ?? rawData.explicitContent ?? false,
+      language_lyrics: rawData.language_lyrics || rawData.languageLyrics || 'en',
+      upc_code: rawData.upc_code || rawData.upc,
+      copyright_year: rawData.copyright_year || (rawData.copyright ? parseInt(rawData.copyright) : undefined),
       tracks_metadata: rawData.tracks_metadata || []
     }
     
