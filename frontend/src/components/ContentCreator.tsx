@@ -19,11 +19,13 @@ import {
   Music,
   Wand2
 } from "lucide-react";
+import { XIcon } from "@/components/ui/x-icon";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { SocialConnectionModal } from "@/components/SocialConnectionModal";
 
 export const ContentCreator = () => {
   const { toast } = useToast();
@@ -37,6 +39,16 @@ export const ContentCreator = () => {
   // Professional Content Tools state
   const [selectedProfessionalTool, setSelectedProfessionalTool] = useState<string | null>(null);
   const [selectedBaseAsset, setSelectedBaseAsset] = useState<number | null>(null);
+
+  // Social connection state
+  const [socialConnections, setSocialConnections] = useState<Record<string, string>>({
+    tiktok: "",
+    instagram: "",
+    youtube: "",
+    twitter: ""
+  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<{ id: string; name: string } | null>(null);
 
   // Creation tools from Create.tsx
   const creationTools = [
@@ -78,10 +90,10 @@ export const ContentCreator = () => {
   ];
 
   const platforms = [
-    { name: "TikTok", icon: Video, color: "bg-pink-500", connected: true },
-    { name: "Instagram", icon: Instagram, color: "bg-gradient-to-r from-purple-500 to-pink-500", connected: true },
-    { name: "YouTube Shorts", icon: Play, color: "bg-red-500", connected: false },
-    { name: "Twitter", icon: Share, color: "bg-blue-500", connected: false }
+    { id: "tiktok", name: "TikTok", icon: Video, color: "bg-pink-500", connected: true },
+    { id: "instagram", name: "Instagram", icon: Instagram, color: "bg-gradient-to-r from-purple-500 to-pink-500", connected: true },
+    { id: "youtube", name: "YouTube Shorts", icon: Play, color: "bg-red-500", connected: false },
+    { id: "twitter", name: "X (aka Twitter)", icon: XIcon, color: "bg-black", connected: false }
   ];
 
   // Brand assets for AI generation reference
@@ -138,6 +150,50 @@ export const ContentCreator = () => {
     });
   };
 
+  // Extract username from URL for display
+  const extractUsername = (url: string, platformId: string): string => {
+    if (!url) return "";
+    
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      
+      switch (platformId) {
+        case "tiktok":
+          return pathname.replace(/^\/(@)?/, "@");
+        case "instagram":
+          return pathname.replace(/^\//, "@");
+        case "youtube":
+          return pathname.replace(/^\/(@)?/, "@");
+        case "twitter":
+          return pathname.replace(/^\//, "@");
+        default:
+          return pathname.replace(/^\//, "@");
+      }
+    } catch {
+      return url;
+    }
+  };
+
+  // Handle platform connection
+  const handlePlatformClick = (platform: { id: string; name: string }) => {
+    setSelectedPlatform(platform);
+    setIsModalOpen(true);
+  };
+
+  // Handle social connection
+  const handleSocialConnect = async (platformId: string, url: string) => {
+    // TODO: Connect to artist_profiles API to update URL
+    setSocialConnections(prev => ({
+      ...prev,
+      [platformId]: url
+    }));
+    
+    // Update platform connected status
+    // This would normally come from the API response
+    console.log(`Connecting ${platformId} with URL: ${url}`);
+  };
+
   const getPillarDistribution = (): Record<string, number> => {
     // For MVP, show static distribution - will connect to real data later
     return {
@@ -178,17 +234,34 @@ export const ContentCreator = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {platforms.map((platform) => {
               const Icon = platform.icon;
+              const isConnected = Boolean(socialConnections[platform.id]);
+              const username = isConnected ? extractUsername(socialConnections[platform.id] || "", platform.id) : "";
+              
               return (
-                <div key={platform.name} className="flex items-center justify-between p-4 rounded-lg bg-secondary/20 border border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg ${platform.color} flex items-center justify-center`}>
-                      <Icon className="h-4 w-4 text-white" />
+                <div key={platform.id} className="flex flex-col p-4 rounded-lg bg-secondary/20 border border-border/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg ${platform.color} flex items-center justify-center`}>
+                        <Icon className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="font-medium text-sm">{platform.name}</span>
                     </div>
-                    <span className="font-medium text-sm">{platform.name}</span>
                   </div>
-                  <Badge variant={platform.connected ? "default" : "outline"}>
-                    {platform.connected ? "Connected" : "Connect"}
-                  </Badge>
+                  
+                  {username && (
+                    <div className="mb-2 px-2">
+                      <span className="text-xs text-muted-foreground">{username}</span>
+                    </div>
+                  )}
+                  
+                  <Button
+                    variant={isConnected ? "default" : "outline"}
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handlePlatformClick({ id: platform.id, name: platform.name })}
+                  >
+                    {isConnected ? "Connected" : "Connect"}
+                  </Button>
                 </div>
               );
             })}
@@ -572,6 +645,15 @@ export const ContentCreator = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Social Connection Modal */}
+      <SocialConnectionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        platform={selectedPlatform}
+        onConnect={handleSocialConnect}
+        currentUrl={selectedPlatform ? (socialConnections[selectedPlatform.id] || "") : ""}
+      />
     </div>
   );
 };
