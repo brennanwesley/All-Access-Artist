@@ -23,6 +23,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 
 export const ContentCreator = () => {
@@ -493,21 +494,31 @@ export const ContentCreator = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="video-style">Video Style</Label>
-                      <select className="w-full p-2 border rounded-md">
-                        <option>Kinetic Typography</option>
-                        <option>Minimalist</option>
-                        <option>Animated Background</option>
-                        <option>Photo Slideshow</option>
-                      </select>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select video style" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="kinetic">Kinetic Typography</SelectItem>
+                          <SelectItem value="minimalist">Minimalist</SelectItem>
+                          <SelectItem value="animated">Animated Background</SelectItem>
+                          <SelectItem value="slideshow">Photo Slideshow</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="color-scheme">Color Scheme</Label>
-                      <select className="w-full p-2 border rounded-md">
-                        <option>Match album artwork</option>
-                        <option>Monochrome</option>
-                        <option>Vibrant</option>
-                        <option>Pastel</option>
-                      </select>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select color scheme" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="album">Match album artwork</SelectItem>
+                          <SelectItem value="monochrome">Monochrome</SelectItem>
+                          <SelectItem value="vibrant">Vibrant</SelectItem>
+                          <SelectItem value="pastel">Pastel</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
@@ -517,12 +528,17 @@ export const ContentCreator = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div className="space-y-2">
                     <Label htmlFor="clip-style">Canvas Style</Label>
-                    <select className="w-full p-2 border rounded-md">
-                      <option>Visualizer</option>
-                      <option>Looping Artwork</option>
-                      <option>Abstract Animation</option>
-                      <option>Text Animation</option>
-                    </select>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select canvas style" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="visualizer">Visualizer</SelectItem>
+                        <SelectItem value="looping">Looping Artwork</SelectItem>
+                        <SelectItem value="abstract">Abstract Animation</SelectItem>
+                        <SelectItem value="text">Text Animation</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="duration">Duration (seconds)</Label>
