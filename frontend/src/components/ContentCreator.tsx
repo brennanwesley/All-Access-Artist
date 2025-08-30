@@ -23,7 +23,6 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 
 export const ContentCreator = () => {
@@ -356,13 +355,20 @@ export const ContentCreator = () => {
               return (
                 <div 
                   key={tool.id}
-                  className={`cursor-pointer p-4 rounded-lg border transition-all hover:shadow-md ${
+                  className={`relative cursor-pointer p-4 rounded-lg border transition-all hover:shadow-md ${
                     selectedProfessionalTool === tool.id 
                       ? "bg-primary/10 border-primary/50 ring-2 ring-primary/20" 
                       : "bg-secondary/20 border-border/50 hover:border-primary/30"
-                  }`}
-                  onClick={() => setSelectedProfessionalTool(tool.id)}
+                  } ${tool.id !== "press-release" ? "opacity-75" : ""}`}
+                  onClick={() => tool.id === "press-release" ? setSelectedProfessionalTool(tool.id) : null}
                 >
+                  {tool.id !== "press-release" && (
+                    <div className="absolute top-2 right-2">
+                      <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 border-amber-200">
+                        Coming Soon
+                      </Badge>
+                    </div>
+                  )}
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                       <Icon className="h-4 w-4 text-primary" />
@@ -388,7 +394,7 @@ export const ContentCreator = () => {
           </div>
 
           {/* Dynamic Form Section */}
-          {selectedProfessionalTool && (
+          {selectedProfessionalTool === "press-release" && (
             <div className="p-6 rounded-lg bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
               <div className="flex items-center gap-2 mb-4">
                 <Wand2 className="h-5 w-5 text-primary" />
@@ -430,122 +436,25 @@ export const ContentCreator = () => {
                 </p>
               </div>
 
-              {/* Tool-Specific Forms */}
-              {selectedProfessionalTool === "press-release" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="song-title">Song/Album Title</Label>
-                    <Input id="song-title" placeholder="Enter title..." />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="release-date">Release Date</Label>
-                    <Input id="release-date" type="date" />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="press-content">Key Information</Label>
-                    <Textarea 
-                      id="press-content" 
-                      placeholder="Describe your release, inspiration, collaborations, etc..."
-                      className="min-h-[100px]"
-                    />
-                  </div>
+              {/* Tool-Specific Forms - Only Press Release is functional */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="space-y-2">
+                  <Label htmlFor="song-title">Song/Album Title</Label>
+                  <Input id="song-title" placeholder="Enter title..." />
                 </div>
-              )}
-
-              {(selectedProfessionalTool === "announce-banners" || selectedProfessionalTool === "tour-announcement") && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="main-text">Main Text</Label>
-                    <Input id="main-text" placeholder="NEW SINGLE OUT NOW" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sub-text">Subtitle</Label>
-                    <Input id="sub-text" placeholder="Stream everywhere" />
-                  </div>
-                  {selectedProfessionalTool === "tour-announcement" && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="tour-dates">Tour Dates</Label>
-                        <Textarea 
-                          id="tour-dates" 
-                          placeholder="March 15 - Nashville, TN&#10;March 18 - Atlanta, GA&#10;March 22 - Miami, FL"
-                          className="min-h-[80px]"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="ticket-info">Ticket Information</Label>
-                        <Input id="ticket-info" placeholder="Tickets on sale Friday" />
-                      </div>
-                    </>
-                  )}
+                <div className="space-y-2">
+                  <Label htmlFor="release-date">Release Date</Label>
+                  <Input id="release-date" type="date" />
                 </div>
-              )}
-
-              {selectedProfessionalTool === "lyric-video" && (
-                <div className="space-y-4 mb-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="lyrics">Song Lyrics</Label>
-                    <Textarea 
-                      id="lyrics" 
-                      placeholder="Paste your lyrics here..."
-                      className="min-h-[200px]"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="video-style">Video Style</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select video style" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="kinetic">Kinetic Typography</SelectItem>
-                          <SelectItem value="minimalist">Minimalist</SelectItem>
-                          <SelectItem value="animated">Animated Background</SelectItem>
-                          <SelectItem value="slideshow">Photo Slideshow</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="color-scheme">Color Scheme</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select color scheme" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="album">Match album artwork</SelectItem>
-                          <SelectItem value="monochrome">Monochrome</SelectItem>
-                          <SelectItem value="vibrant">Vibrant</SelectItem>
-                          <SelectItem value="pastel">Pastel</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="press-content">Key Information</Label>
+                  <Textarea 
+                    id="press-content" 
+                    placeholder="Describe your release, inspiration, collaborations, etc..."
+                    className="min-h-[100px]"
+                  />
                 </div>
-              )}
-
-              {selectedProfessionalTool === "spotify-clips" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="clip-style">Canvas Style</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select canvas style" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="visualizer">Visualizer</SelectItem>
-                        <SelectItem value="looping">Looping Artwork</SelectItem>
-                        <SelectItem value="abstract">Abstract Animation</SelectItem>
-                        <SelectItem value="text">Text Animation</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="duration">Duration (seconds)</Label>
-                    <Input id="duration" type="number" min="3" max="8" defaultValue="6" />
-                  </div>
-                </div>
-              )}
+              </div>
 
               {/* Output Format Selection */}
               <div className="mb-6">
