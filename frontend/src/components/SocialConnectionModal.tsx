@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { useUpdateSinglePlatform, type SocialMediaUrls } from '../hooks/api/useSocialMedia';
 
 interface SocialConnectionModalProps {
   isOpen: boolean;
@@ -12,7 +12,6 @@ interface SocialConnectionModalProps {
     name: string;
     id: string;
   } | null;
-  onConnect: (platform: string, url: string) => Promise<void>;
   currentUrl?: string;
 }
 
@@ -20,12 +19,10 @@ export const SocialConnectionModal: React.FC<SocialConnectionModalProps> = ({
   isOpen,
   onClose,
   platform,
-  onConnect,
   currentUrl = ""
 }) => {
   const [inputValue, setInputValue] = useState(currentUrl);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const updatePlatform = useUpdateSinglePlatform();
 
   const normalizeUrl = (input: string, platformId: string): string => {
     if (!input.trim()) return "";
@@ -81,51 +78,37 @@ export const SocialConnectionModal: React.FC<SocialConnectionModalProps> = ({
     e.preventDefault();
     if (!platform || !inputValue.trim()) return;
 
-    setIsLoading(true);
     try {
       const normalizedUrl = normalizeUrl(inputValue, platform.id);
-      await onConnect(platform.id, normalizedUrl);
+      const platformKey = `${platform.id}_url` as keyof SocialMediaUrls;
       
-      toast({
-        title: "Connected successfully!",
-        description: `Your ${platform.name} account has been connected.`,
+      await updatePlatform.mutateAsync({
+        platform: platformKey,
+        url: normalizedUrl
       });
       
       onClose();
       setInputValue("");
     } catch (error) {
-      toast({
-        title: "Connection failed",
-        description: "Please check your username/URL and try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      console.error('Failed to update platform:', error);
     }
   };
 
   const handleDisconnect = async () => {
     if (!platform) return;
     
-    setIsLoading(true);
     try {
-      await onConnect(platform.id, ""); // Empty string to disconnect
+      const platformKey = `${platform.id}_url` as keyof SocialMediaUrls;
       
-      toast({
-        title: "Disconnected successfully!",
-        description: `Your ${platform.name} account has been disconnected.`,
+      await updatePlatform.mutateAsync({
+        platform: platformKey,
+        url: null
       });
       
       onClose();
       setInputValue("");
     } catch (error) {
-      toast({
-        title: "Disconnection failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      console.error('Failed to disconnect platform:', error);
     }
   };
 
@@ -176,7 +159,7 @@ export const SocialConnectionModal: React.FC<SocialConnectionModalProps> = ({
               placeholder={getPlaceholder(platform.id)}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              disabled={isLoading}
+              disabled={updatePlatform.isPending}
             />
           </div>
           
@@ -186,16 +169,16 @@ export const SocialConnectionModal: React.FC<SocialConnectionModalProps> = ({
                 type="button"
                 variant="outline"
                 onClick={handleDisconnect}
-                disabled={isLoading}
+                disabled={updatePlatform.isPending}
               >
                 Disconnect
               </Button>
             )}
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={updatePlatform.isPending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !inputValue.trim()}>
-              {isLoading ? "Connecting..." : isConnected ? "Update" : "Connect"}
+            <Button type="submit" disabled={updatePlatform.isPending || !inputValue.trim()}>
+              {updatePlatform.isPending ? "Connecting..." : isConnected ? "Update" : "Connect"}
             </Button>
           </div>
         </form>

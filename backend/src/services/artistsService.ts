@@ -92,4 +92,26 @@ export class ArtistsService {
 
     return { success: true }
   }
+
+  async updateSocialMediaUrls(userId: string, socialMediaData: Partial<{
+    instagram_url: string
+    tiktok_url: string
+    twitter_url: string
+    youtube_url: string
+    spotify_url: string
+    apple_music_url: string
+  }>) {
+    const { data, error } = await this.supabase
+      .from('artist_profiles')
+      .update(socialMediaData)
+      .eq('user_id', userId)
+      .select()
+      .single()
+
+    if (error) {
+      throw new Error(`Failed to update social media URLs: ${error.message}`)
+    }
+
+    return data
+  }
 }

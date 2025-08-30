@@ -92,6 +92,13 @@ class ApiClient {
     })
   }
 
+  async updateSocialMediaUrls(socialMediaData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/artists/social-media', {
+      method: 'PATCH',
+      body: JSON.stringify(socialMediaData),
+    })
+  }
+
   // Releases API
   async getReleases(): Promise<ApiResponse<any[]>> {
     return this.makeRequest('/api/releases')

@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { useSocialMediaUrls } from '../hooks/api/useSocialMedia'
 import { SocialConnectionModal } from "@/components/SocialConnectionModal";
 
 export const ContentCreator = () => {
@@ -40,13 +41,8 @@ export const ContentCreator = () => {
   const [selectedProfessionalTool, setSelectedProfessionalTool] = useState<string | null>(null);
   const [selectedBaseAsset, setSelectedBaseAsset] = useState<number | null>(null);
 
-  // Social connection state
-  const [socialConnections, setSocialConnections] = useState<Record<string, string>>({
-    tiktok: "",
-    instagram: "",
-    youtube: "",
-    twitter: ""
-  });
+  // Social media connection state
+  const { data: socialMediaUrls } = useSocialMediaUrls();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<{ id: string; name: string } | null>(null);
 
@@ -181,18 +177,6 @@ export const ContentCreator = () => {
     setIsModalOpen(true);
   };
 
-  // Handle social connection
-  const handleSocialConnect = async (platformId: string, url: string) => {
-    // TODO: Connect to artist_profiles API to update URL
-    setSocialConnections(prev => ({
-      ...prev,
-      [platformId]: url
-    }));
-    
-    // Update platform connected status
-    // This would normally come from the API response
-    console.log(`Connecting ${platformId} with URL: ${url}`);
-  };
 
   const getPillarDistribution = (): Record<string, number> => {
     // For MVP, show static distribution - will connect to real data later
@@ -234,8 +218,9 @@ export const ContentCreator = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {platforms.map((platform) => {
               const Icon = platform.icon;
-              const isConnected = Boolean(socialConnections[platform.id]);
-              const username = isConnected ? extractUsername(socialConnections[platform.id] || "", platform.id) : "";
+              const platformKey = `${platform.id}_url` as keyof typeof socialMediaUrls;
+              const isConnected = socialMediaUrls?.[platformKey];
+              const username = isConnected ? extractUsername(socialMediaUrls[platformKey] || "", platform.id) : "";
               
               return (
                 <div key={platform.id} className="flex flex-col p-4 rounded-lg bg-secondary/20 border border-border/50">
@@ -651,8 +636,7 @@ export const ContentCreator = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         platform={selectedPlatform}
-        onConnect={handleSocialConnect}
-        currentUrl={selectedPlatform ? (socialConnections[selectedPlatform.id] || "") : ""}
+        currentUrl={selectedPlatform ? socialMediaUrls?.[`${selectedPlatform.id}_url` as keyof typeof socialMediaUrls] || "" : ""}
       />
     </div>
   );

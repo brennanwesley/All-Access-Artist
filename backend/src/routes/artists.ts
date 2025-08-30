@@ -141,4 +141,45 @@ artists.delete('/:id', async (c) => {
   }
 })
 
+// PATCH /api/artists/social-media - Update social media URLs for current user
+artists.patch('/social-media', async (c) => {
+  try {
+    const body = await c.req.json()
+    const supabase = c.get('supabase')
+    const user = c.get('user')
+    const artistsService = new ArtistsService(supabase)
+    
+    // Validate social media URLs using partial schema
+    const socialMediaFields = {
+      instagram_url: body.instagram_url,
+      tiktok_url: body.tiktok_url,
+      twitter_url: body.twitter_url,
+      youtube_url: body.youtube_url,
+      spotify_url: body.spotify_url,
+      apple_music_url: body.apple_music_url
+    }
+    
+    // Filter out undefined values
+    const updateData = Object.fromEntries(
+      Object.entries(socialMediaFields).filter(([_, value]) => value !== undefined)
+    )
+    
+    const data = await artistsService.updateSocialMediaUrls(user.sub, updateData)
+    return c.json({ 
+      success: true, 
+      data,
+      meta: {
+        timestamp: new Date().toISOString(),
+        version: '2.0.0'
+      }
+    })
+  } catch (error) {
+    console.error('Error updating social media URLs:', error)
+    return c.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to update social media URLs' 
+    }, 500)
+  }
+})
+
 export default artists
