@@ -13,17 +13,69 @@ import {
   MessageCircle,
   Sparkles,
   Download,
-  Trash2
+  Trash2,
+  FileText,
+  Calendar,
+  Music,
+  Wand2
 } from "lucide-react";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 
 export const ContentCreator = () => {
+  const { toast } = useToast();
   const [brandPillars] = useState([
     "Upcoming Release",
     "New Songs I'm Working On", 
     "Covers of Songs I Love",
     "Personality/Lifestyle"
   ]);
+
+  // Professional Content Tools state
+  const [selectedProfessionalTool, setSelectedProfessionalTool] = useState<string | null>(null);
+  const [selectedBaseAsset, setSelectedBaseAsset] = useState<number | null>(null);
+
+  // Creation tools from Create.tsx
+  const creationTools = [
+    {
+      id: "press-release",
+      name: "Press Release",
+      icon: FileText,
+      description: "Generate professional press releases for your music",
+      dimensions: ["Document format"]
+    },
+    {
+      id: "lyric-video",
+      name: "Lyric Video",
+      icon: Video,
+      description: "Create engaging lyric videos for your songs",
+      dimensions: ["1920x1080 (YouTube)", "1080x1080 (Instagram)", "1080x1920 (TikTok)"]
+    },
+    {
+      id: "announce-banners",
+      name: "Announce Banners",
+      icon: Image,
+      description: "Design eye-catching announcement graphics",
+      dimensions: ["1080x566", "1080x1080", "1080x1350", "1920x1080"]
+    },
+    {
+      id: "tour-announcement",
+      name: "Tour Announcement",
+      icon: Calendar,
+      description: "Create professional tour announcement graphics",
+      dimensions: ["1080x566", "1080x1080", "1080x1350", "1920x1080"]
+    },
+    {
+      id: "spotify-clips",
+      name: "Spotify Clips",
+      icon: Music,
+      description: "Generate Spotify Canvas clips for your tracks",
+      dimensions: ["1080x1920 (Canvas)", "640x640 (Story)"]
+    }
+  ];
 
   const platforms = [
     { name: "TikTok", icon: Video, color: "bg-pink-500", connected: true },
@@ -76,6 +128,14 @@ export const ContentCreator = () => {
         ? { ...asset, file: null, preview: null }
         : asset
     ));
+  };
+
+  // Handle professional content generation
+  const handleProfessionalGenerate = () => {
+    toast({
+      title: "Generating content...",
+      description: "Your AI-generated content will be ready shortly!",
+    });
   };
 
   const getPillarDistribution = (): Record<string, number> => {
@@ -272,6 +332,234 @@ export const ContentCreator = () => {
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Professional Content Tools */}
+      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wand2 className="h-5 w-5 text-primary" />
+            Professional Content Tools
+          </CardTitle>
+          <CardDescription>
+            Create marketing materials and promotional content using your brand assets
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          
+          {/* Tool Selection Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {creationTools.map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <div 
+                  key={tool.id}
+                  className={`cursor-pointer p-4 rounded-lg border transition-all hover:shadow-md ${
+                    selectedProfessionalTool === tool.id 
+                      ? "bg-primary/10 border-primary/50 ring-2 ring-primary/20" 
+                      : "bg-secondary/20 border-border/50 hover:border-primary/30"
+                  }`}
+                  onClick={() => setSelectedProfessionalTool(tool.id)}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                      <Icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <h4 className="font-medium text-sm">{tool.name}</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">{tool.description}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {tool.dimensions.slice(0, 2).map((dim, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {dim}
+                      </Badge>
+                    ))}
+                    {tool.dimensions.length > 2 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{tool.dimensions.length - 2} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Dynamic Form Section */}
+          {selectedProfessionalTool && (
+            <div className="p-6 rounded-lg bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
+              <div className="flex items-center gap-2 mb-4">
+                <Wand2 className="h-5 w-5 text-primary" />
+                <h4 className="font-semibold">
+                  Create {creationTools.find(t => t.id === selectedProfessionalTool)?.name}
+                </h4>
+              </div>
+              
+              {/* Base Image Upload - Uses existing brand assets */}
+              <div className="mb-6">
+                <Label className="text-sm font-medium mb-2 block">Base Image</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  {brandAssets.map((asset) => (
+                    <div 
+                      key={asset.id}
+                      className={`aspect-square rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedBaseAsset === asset.id 
+                          ? "border-primary ring-2 ring-primary/20" 
+                          : "border-border/50 hover:border-primary/30"
+                      }`}
+                      onClick={() => setSelectedBaseAsset(asset.preview ? asset.id : null)}
+                    >
+                      {asset.preview ? (
+                        <img 
+                          src={asset.preview} 
+                          alt={asset.name}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-secondary/20 rounded-lg">
+                          <Upload className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Select a brand asset to use as the base for your {creationTools.find(t => t.id === selectedProfessionalTool)?.name.toLowerCase()}
+                </p>
+              </div>
+
+              {/* Tool-Specific Forms */}
+              {selectedProfessionalTool === "press-release" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="song-title">Song/Album Title</Label>
+                    <Input id="song-title" placeholder="Enter title..." />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="release-date">Release Date</Label>
+                    <Input id="release-date" type="date" />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="press-content">Key Information</Label>
+                    <Textarea 
+                      id="press-content" 
+                      placeholder="Describe your release, inspiration, collaborations, etc..."
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(selectedProfessionalTool === "announce-banners" || selectedProfessionalTool === "tour-announcement") && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="main-text">Main Text</Label>
+                    <Input id="main-text" placeholder="NEW SINGLE OUT NOW" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sub-text">Subtitle</Label>
+                    <Input id="sub-text" placeholder="Stream everywhere" />
+                  </div>
+                  {selectedProfessionalTool === "tour-announcement" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="tour-dates">Tour Dates</Label>
+                        <Textarea 
+                          id="tour-dates" 
+                          placeholder="March 15 - Nashville, TN&#10;March 18 - Atlanta, GA&#10;March 22 - Miami, FL"
+                          className="min-h-[80px]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ticket-info">Ticket Information</Label>
+                        <Input id="ticket-info" placeholder="Tickets on sale Friday" />
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {selectedProfessionalTool === "lyric-video" && (
+                <div className="space-y-4 mb-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="lyrics">Song Lyrics</Label>
+                    <Textarea 
+                      id="lyrics" 
+                      placeholder="Paste your lyrics here..."
+                      className="min-h-[200px]"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="video-style">Video Style</Label>
+                      <select className="w-full p-2 border rounded-md">
+                        <option>Kinetic Typography</option>
+                        <option>Minimalist</option>
+                        <option>Animated Background</option>
+                        <option>Photo Slideshow</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="color-scheme">Color Scheme</Label>
+                      <select className="w-full p-2 border rounded-md">
+                        <option>Match album artwork</option>
+                        <option>Monochrome</option>
+                        <option>Vibrant</option>
+                        <option>Pastel</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedProfessionalTool === "spotify-clips" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="clip-style">Canvas Style</Label>
+                    <select className="w-full p-2 border rounded-md">
+                      <option>Visualizer</option>
+                      <option>Looping Artwork</option>
+                      <option>Abstract Animation</option>
+                      <option>Text Animation</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Duration (seconds)</Label>
+                    <Input id="duration" type="number" min="3" max="8" defaultValue="6" />
+                  </div>
+                </div>
+              )}
+
+              {/* Output Format Selection */}
+              <div className="mb-6">
+                <Label className="text-sm font-medium mb-2 block">Output Formats</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {creationTools.find(t => t.id === selectedProfessionalTool)?.dimensions.map((format, index) => (
+                    <label key={index} className="flex items-center space-x-2 text-sm">
+                      <input type="checkbox" defaultChecked className="rounded" />
+                      <span>{format}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Generate Button */}
+              <div className="flex justify-between items-center">
+                <div className="text-xs text-muted-foreground">
+                  {brandAssets.filter(a => a.file).length} brand assets • {selectedBaseAsset ? '1 selected' : 'No base selected'}
+                </div>
+                <Button 
+                  variant="hero" 
+                  disabled={!selectedBaseAsset}
+                  onClick={handleProfessionalGenerate}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate {creationTools.find(t => t.id === selectedProfessionalTool)?.name}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
