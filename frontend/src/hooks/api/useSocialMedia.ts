@@ -44,22 +44,26 @@ export const useSocialMediaUrls = () => {
       const artists = response.data as ArtistProfile[]
       const userProfile = artists?.find(artist => artist.user_id === user.id)
       
-      if (!userProfile) return null
-      
-      // Extract social media URLs
-      const socialMediaUrls: SocialMediaUrls = {
-        instagram_url: userProfile.instagram_url,
-        tiktok_url: userProfile.tiktok_url,
-        twitter_url: userProfile.twitter_url,
-        youtube_url: userProfile.youtube_url,
-        spotify_url: userProfile.spotify_url,
-        apple_music_url: userProfile.apple_music_url
+      if (!userProfile) {
+        console.log('No user profile found for user:', user.id)
+        return null
       }
       
+      // Extract social media URLs with debug logging
+      const socialMediaUrls: SocialMediaUrls = {
+        instagram_url: userProfile.instagram_url || undefined,
+        tiktok_url: userProfile.tiktok_url || undefined,
+        twitter_url: userProfile.twitter_url || undefined,
+        youtube_url: userProfile.youtube_url || undefined,
+        spotify_url: userProfile.spotify_url || undefined,
+        apple_music_url: userProfile.apple_music_url || undefined
+      }
+      
+      console.log('Fetched social media URLs:', socialMediaUrls)
       return socialMediaUrls
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 1 * 60 * 1000, // 1 minute for debugging
     retry: 2,
   })
 }
@@ -106,13 +110,14 @@ export const useUpdateSinglePlatform = () => {
       }
       return response.data as ArtistProfile
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Social media update successful:', data)
       // Invalidate related caches
       queryClient.invalidateQueries({ queryKey: ['social-media-urls', user?.id] })
       queryClient.invalidateQueries({ queryKey: ['artist-profile', user?.id] })
       queryClient.invalidateQueries({ queryKey: ['artists'] })
       
-      toast.success('Social media profile updated successfully!')
+      toast.success('Social media profile connected successfully!')
     },
     onError: (error) => {
       console.error('Failed to update social media URL:', error)

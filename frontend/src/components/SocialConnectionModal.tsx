@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -139,6 +139,9 @@ export const SocialConnectionModal: React.FC<SocialConnectionModalProps> = ({
           <DialogTitle>
             {isConnected ? `Update ${platform.name} Connection` : `Connect ${platform.name}`}
           </DialogTitle>
+          <DialogDescription>
+            {isConnected ? `Update your ${platform.name} username or profile URL` : `Enter your ${platform.name} username or profile URL to connect your account`}
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
