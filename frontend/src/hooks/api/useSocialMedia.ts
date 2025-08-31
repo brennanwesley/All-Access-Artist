@@ -40,9 +40,6 @@ export const useSocialMediaUrls = () => {
         throw new Error(response.error || 'Failed to fetch social media URLs')
       }
       
-      console.log('API response:', response)
-      console.log('Response data type:', typeof response.data)
-      console.log('Response data:', response.data)
       
       // Handle different response structures
       let artists: ArtistProfile[]
@@ -59,11 +56,10 @@ export const useSocialMediaUrls = () => {
       const userProfile = artists?.find(artist => artist.user_id === user.id)
       
       if (!userProfile) {
-        console.log('No user profile found for user:', user.id)
         return null
       }
       
-      // Extract social media URLs with debug logging
+      // Extract social media URLs
       const socialMediaUrls: SocialMediaUrls = {
         instagram_url: userProfile.instagram_url || undefined,
         tiktok_url: userProfile.tiktok_url || undefined,
@@ -73,11 +69,10 @@ export const useSocialMediaUrls = () => {
         apple_music_url: userProfile.apple_music_url || undefined
       }
       
-      console.log('Fetched social media URLs:', socialMediaUrls)
       return socialMediaUrls
     },
     enabled: !!user?.id,
-    staleTime: 1 * 60 * 1000, // 1 minute for debugging
+    staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
   })
 }
@@ -124,8 +119,7 @@ export const useUpdateSinglePlatform = () => {
       }
       return response.data as ArtistProfile
     },
-    onSuccess: (data) => {
-      console.log('Social media update successful:', data)
+    onSuccess: () => {
       // Invalidate related caches
       queryClient.invalidateQueries({ queryKey: ['social-media-urls', user?.id] })
       queryClient.invalidateQueries({ queryKey: ['artist-profile', user?.id] })
