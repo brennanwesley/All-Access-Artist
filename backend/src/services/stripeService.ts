@@ -220,8 +220,8 @@ export class StripeService {
         stripe_subscription_id: subscription.id,
         subscription_status: subscription.status,
         subscription_plan_id: subscription.items.data[0]?.price.id,
-        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        current_period_start: (subscription as any).current_period_start ? new Date((subscription as any).current_period_start * 1000).toISOString() : null,
+        current_period_end: (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : null,
         cancel_at_period_end: subscription.cancel_at_period_end,
         stripe_updated_at: new Date().toISOString()
       })
