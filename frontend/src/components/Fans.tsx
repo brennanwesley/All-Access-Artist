@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Upload, Mail, Users, Download, Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { ComingSoonOverlay } from "@/components/ComingSoonOverlay";
 
 export const Fans = () => {
   const [fanData, setFanData] = useState(null);
@@ -65,7 +66,8 @@ export const Fans = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      <ComingSoonOverlay feature="Fan Analytics" />
       <div>
         <h1 className="text-3xl font-bold mb-2">Fan Management</h1>
         <p className="text-muted-foreground">Manage your fan data and communicate with your audience</p>

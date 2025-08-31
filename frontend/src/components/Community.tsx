@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Play
 } from "lucide-react";
+import { ComingSoonOverlay } from "@/components/ComingSoonOverlay";
 
 export const Community = () => {
   const [openToCollaborations, setOpenToCollaborations] = useState(false);
@@ -75,7 +76,8 @@ export const Community = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
+      <ComingSoonOverlay feature="Community Hub" />
       {/* Header */}
       <Card className="bg-gradient-primary text-white border-0">
         <CardContent className="p-6">

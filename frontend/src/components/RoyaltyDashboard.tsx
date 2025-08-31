@@ -14,8 +14,8 @@ import {
   BarChart3,
   FileText
 } from "lucide-react";
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
 import { useState } from "react";
+import { ComingSoonOverlay } from "@/components/ComingSoonOverlay";
 
 export const RoyaltyDashboard = () => {
   const [tooltipContent, setTooltipContent] = useState("");
@@ -90,7 +90,8 @@ export const RoyaltyDashboard = () => {
   const totalEarnings = platforms.reduce((sum, platform) => sum + platform.earnings, 0);
 
   return (
-    <div className="space-y-8">
+    <div className="relative space-y-8">
+      <ComingSoonOverlay feature="Royalties & Analytics" />
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold">Royalties & Analytics</h2>
