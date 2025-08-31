@@ -57,22 +57,25 @@ export const Navigation = ({ activeSection: propActiveSection, onSectionChange: 
           const isActive = activeSection === item.id;
           
           return (
-            <Button
-              key={item.id}
-              variant={isActive ? "default" : "ghost"}
-              className={`w-full justify-start h-12 ${
-                isActive ? "shadow-elegant" : "hover:bg-secondary/50"
-              }`}
-              onClick={() => handleSectionChange(item.id)}
-            >
-              <Icon className="mr-3 h-5 w-5" />
-              {item.label}
+            <div key={item.id} className="space-y-1">
+              <Button
+                variant={isActive ? "default" : "ghost"}
+                className={`w-full justify-start h-12 ${
+                  isActive ? "shadow-elegant" : "hover:bg-secondary/50"
+                }`}
+                onClick={() => handleSectionChange(item.id)}
+              >
+                <Icon className="mr-3 h-5 w-5" />
+                {item.label}
+              </Button>
               {(item.id === "fans" || item.id === "community" || item.id === "royalties") && (
-                <Badge variant="outline" className="ml-auto text-xs">
-                  Coming Soon
-                </Badge>
+                <div className="flex justify-center">
+                  <Badge variant="outline" className="text-xs px-2 py-0.5 text-muted-foreground border-muted-foreground/30">
+                    Coming Soon
+                  </Badge>
+                </div>
               )}
-            </Button>
+            </div>
           );
         })}
       </div>
