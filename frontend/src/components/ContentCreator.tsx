@@ -10,7 +10,6 @@ import {
   Home,
   Upload,
   Image,
-  MessageCircle,
   Sparkles,
   Download,
   Trash2,
@@ -190,17 +189,11 @@ export const ContentCreator = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold">Content Creator</h2>
-          <p className="text-muted-foreground mt-2">
-            Connect with your audience genuinely through original, custom-made content.
-          </p>
-        </div>
-        <Button variant="hero" size="lg">
-          <Sparkles className="mr-2 h-5 w-5" />
-          Generate Content
-        </Button>
+      <div>
+        <h2 className="text-3xl font-bold">Content Creator</h2>
+        <p className="text-muted-foreground mt-2">
+          Connect with your audience genuinely through original, custom-made content.
+        </p>
       </div>
 
       {/* Platform Connections */}
@@ -286,113 +279,6 @@ export const ContentCreator = () => {
         </CardContent>
       </Card>
 
-      {/* Craft Your Brand */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Image className="h-5 w-5 text-primary" />
-            Craft Your Brand
-          </CardTitle>
-          <CardDescription>
-            Provide up to 3 reference photos to inspire creations that match your aesthetic.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4">
-            {brandAssets.map((asset) => (
-              <div key={asset.id} className="relative">
-                <div className="aspect-square rounded-lg border-2 border-dashed border-border/50 bg-secondary/20 flex flex-col items-center justify-center p-4 hover:border-primary/50 transition-colors">
-                  {asset.preview ? (
-                    <>
-                      <img 
-                        src={asset.preview} 
-                        alt={asset.name}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="absolute top-2 right-2"
-                        onClick={() => removeAsset(asset.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm font-medium text-center">{asset.name}</p>
-                      <p className="text-xs text-muted-foreground text-center mt-1">Click to upload</p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleAssetUpload(asset.id, file);
-                        }}
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="text-center text-sm text-muted-foreground mt-4">
-            <p>These images will be used as reference for AI-generated content</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* AI Content Assistant */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-primary" />
-            Content Assistant
-          </CardTitle>
-          <CardDescription>
-            Get personalized content ideas and strategy advice
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-secondary/20 border border-border/50">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Hi! I'm your AI content assistant. I can help you brainstorm ideas, plan your content strategy, and create engaging posts. What would you like to work on today?
-                  </p>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button variant="outline" size="sm">
-                      Content Ideas
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      Caption Writing
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      Strategy Tips
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="Ask me anything about content creation..."
-                className="flex-1 px-3 py-2 rounded-lg border border-border/50 bg-background text-sm"
-              />
-              <Button size="sm">
-                Send
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Professional Content Tools */}
       <Card className="bg-card/50 backdrop-blur-sm border-border/50">
@@ -544,6 +430,64 @@ export const ContentCreator = () => {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Craft Your Brand */}
+      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Image className="h-5 w-5 text-primary" />
+            Craft Your Brand
+          </CardTitle>
+          <CardDescription>
+            Provide up to 3 reference photos to inspire creations that match your aesthetic.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            {brandAssets.map((asset) => (
+              <div key={asset.id} className="relative">
+                <div className="aspect-square rounded-lg border-2 border-dashed border-border/50 bg-secondary/20 flex flex-col items-center justify-center p-4 hover:border-primary/50 transition-colors">
+                  {asset.preview ? (
+                    <>
+                      <img 
+                        src={asset.preview} 
+                        alt={asset.name}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="absolute top-2 right-2"
+                        onClick={() => removeAsset(asset.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-sm font-medium text-center">{asset.name}</p>
+                      <p className="text-xs text-muted-foreground text-center mt-1">Click to upload</p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleAssetUpload(asset.id, file);
+                        }}
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center text-sm text-muted-foreground mt-4">
+            <p>These images will be used as reference for AI-generated content</p>
+          </div>
         </CardContent>
       </Card>
 

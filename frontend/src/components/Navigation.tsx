@@ -68,7 +68,7 @@ export const Navigation = ({ activeSection: propActiveSection, onSectionChange: 
               <Icon className="mr-3 h-5 w-5" />
               {item.label}
               {(item.id === "fans" || item.id === "community" || item.id === "royalties") && (
-                <Badge variant="outline" className="ml-1 text-xs px-2 py-0.5 text-muted-foreground border-muted-foreground/30">
+                <Badge variant="outline" className="ml-0.5 text-xs px-2 py-0.5 text-muted-foreground border-muted-foreground/30">
                   Coming Soon
                 </Badge>
               )}
