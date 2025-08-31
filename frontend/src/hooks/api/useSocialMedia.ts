@@ -40,8 +40,22 @@ export const useSocialMediaUrls = () => {
         throw new Error(response.error || 'Failed to fetch social media URLs')
       }
       
+      console.log('API response:', response)
+      console.log('Response data type:', typeof response.data)
+      console.log('Response data:', response.data)
+      
+      // Handle different response structures
+      let artists: ArtistProfile[]
+      if (Array.isArray(response.data)) {
+        artists = response.data as ArtistProfile[]
+      } else if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        artists = (response.data as any).data as ArtistProfile[]
+      } else {
+        console.error('Unexpected response structure:', response.data)
+        return null
+      }
+      
       // Find the artist profile for the current user
-      const artists = response.data as ArtistProfile[]
       const userProfile = artists?.find(artist => artist.user_id === user.id)
       
       if (!userProfile) {
