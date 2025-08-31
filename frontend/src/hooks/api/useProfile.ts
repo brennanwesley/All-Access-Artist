@@ -9,6 +9,7 @@ export interface UserProfile {
   email: string
   phone?: string
   phone_verified: boolean
+  account_type?: 'admin' | 'artist' | 'manager' | 'label'
   billing_address?: {
     street?: string
     city?: string

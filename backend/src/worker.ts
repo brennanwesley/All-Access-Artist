@@ -21,6 +21,7 @@ import splitsheets from './routes/splitsheets.js'
 import assets from './routes/assets.js'
 import content from './routes/content.js'
 import jobs from './routes/jobs.js'
+import admin from './routes/admin.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
 
@@ -60,6 +61,7 @@ app.route('/api/splitsheets', splitsheets)
 app.route('/api/assets', assets)
 app.route('/api/content', content)
 app.route('/api/jobs', jobs)
+app.route('/api/admin', admin)
 
 // 404 handler
 app.notFound((c) => {
@@ -75,7 +77,9 @@ app.notFound((c) => {
       'GET|PUT /api/profile',
       'POST /api/profile/referral',
       'GET /api/profile/referral-stats',
-      'GET|PUT|DELETE /api/splitsheets/song/:songId'
+      'GET|PUT|DELETE /api/splitsheets/song/:songId',
+      'GET /api/admin/users',
+      'GET /api/admin/stats'
     ]
   }, 404)
 })

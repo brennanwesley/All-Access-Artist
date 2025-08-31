@@ -274,6 +274,17 @@ export const ReferralValidationSchema = z.object({
   referral_code: z.string().regex(/^[A-Z0-9]{6}$/, 'Invalid referral code format')
 })
 
+// Admin Schemas
+export const AdminUserListSchema = z.object({
+  id: z.string().uuid(),
+  first_name: z.string().nullable(),
+  last_name: z.string().nullable(),
+  email: z.string().email(),
+  account_type: z.enum(['admin', 'artist', 'manager', 'label']),
+  created_at: z.string(),
+  phone_verified: z.boolean().nullable()
+})
+
 // Export types
 export type CreateReleaseData = z.infer<typeof CreateReleaseSchema>
 export type UpdateReleaseData = z.infer<typeof UpdateReleaseSchema>
@@ -298,6 +309,7 @@ export type UpdateSplitSheetPublisherData = z.infer<typeof UpdateSplitSheetPubli
 export type CreateUserProfileData = z.infer<typeof CreateUserProfileSchema>
 export type UpdateUserProfileData = z.infer<typeof UpdateUserProfileSchema>
 export type ReferralValidationData = z.infer<typeof ReferralValidationSchema>
+export type AdminUserListData = z.infer<typeof AdminUserListSchema>
 export type ApiResponse = z.infer<typeof ApiResponseSchema>
 
 // =====================================================

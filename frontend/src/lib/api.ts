@@ -273,6 +273,15 @@ class ApiClient {
       method: 'DELETE',
     })
   }
+
+  // Admin API
+  async getAdminUsers(): Promise<ApiResponse<any[]>> {
+    return this.makeRequest('/api/admin/users')
+  }
+
+  async getAdminStats(): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/admin/stats')
+  }
 }
 
 export const apiClient = new ApiClient()

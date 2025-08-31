@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Dashboard } from "@/components/Dashboard";
+import { AdminDashboard } from "@/components/AdminDashboard";
 import { ReleaseCalendar } from "@/components/ReleaseCalendar";
 import { ContentCreator } from "@/components/ContentCreator";
 import { RoyaltyDashboard } from "@/components/RoyaltyDashboard";
@@ -11,11 +12,13 @@ import { Community } from "@/components/Community";
 import { Settings } from "@/components/Settings";
 import { Onboarding } from "@/components/Onboarding";
 import { useNavigation } from "@/contexts/NavigationContext";
+import { useProfile } from "@/hooks/api/useProfile";
 
 const Index = () => {
   const location = useLocation();
   const navigation = useNavigation();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const { data: userProfile } = useProfile();
 
   // Handle navigation state from route transitions
   useEffect(() => {
@@ -36,10 +39,15 @@ const Index = () => {
 
   const renderActiveSection = () => {
     console.log('Index: renderActiveSection called with activeSection:', navigation.activeSection);
+    console.log('Index: User account type:', userProfile?.account_type);
     
     switch (navigation.activeSection) {
       case "dashboard":
-        console.log('Index: Rendering Dashboard');
+        console.log('Index: Rendering Dashboard based on account type');
+        // Route to AdminDashboard for admin users, regular Dashboard for others
+        if (userProfile?.account_type === 'admin') {
+          return <AdminDashboard />;
+        }
         return <Dashboard />;
       case "releases":
         console.log('Index: Rendering ReleaseCalendar');
@@ -83,6 +91,10 @@ const Index = () => {
         return <Settings />;
       default:
         console.log('Index: Default case - rendering Dashboard for activeSection:', navigation.activeSection);
+        // Default also respects account type
+        if (userProfile?.account_type === 'admin') {
+          return <AdminDashboard />;
+        }
         return <Dashboard />;
     }
   };
