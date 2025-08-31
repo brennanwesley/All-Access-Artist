@@ -43,7 +43,7 @@ export const Navigation = ({ activeSection: propActiveSection, onSectionChange: 
   ];
 
   return (
-    <nav className="bg-card/50 backdrop-blur-sm border-r border-border h-screen w-80 p-6 fixed left-0 top-0 z-40 flex flex-col">
+    <nav className="bg-card/50 backdrop-blur-sm border-r border-border h-screen w-50 p-6 fixed left-0 top-0 z-40 flex flex-col">
       <div className="mb-8">
         <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
           All Access Artist
@@ -60,17 +60,15 @@ export const Navigation = ({ activeSection: propActiveSection, onSectionChange: 
             <Button
               key={item.id}
               variant={isActive ? "default" : "ghost"}
-              className={`w-full justify-between h-12 ${
+              className={`w-full justify-start h-12 ${
                 isActive ? "shadow-elegant" : "hover:bg-secondary/50"
               }`}
               onClick={() => handleSectionChange(item.id)}
             >
-              <div className="flex items-center">
-                <Icon className="mr-3 h-5 w-5" />
-                {item.label}
-              </div>
+              <Icon className="mr-3 h-5 w-5" />
+              {item.label}
               {(item.id === "fans" || item.id === "community" || item.id === "royalties") && (
-                <Badge variant="outline" className="text-xs px-2 py-0.5 text-muted-foreground border-muted-foreground/30">
+                <Badge variant="outline" className="ml-2 text-xs px-2 py-0.5 text-muted-foreground border-muted-foreground/30">
                   Coming Soon
                 </Badge>
               )}
