@@ -1,31 +1,32 @@
 # Backend Deployment Configuration
 
 ## Overview
-This backend uses **isolated dependency management** to prevent workspace lockfile conflicts and ensure stable deployments.
+This backend uses **isolated dependency management** to prevent workspace lockfile conflicts and ensure stable deployments on Render.
 
 ## Architecture
 - **Isolated Dependencies**: Backend has its own `package-lock.json` with only essential dependencies
 - **Workspace Isolation**: `.npmrc` prevents npm from resolving to root workspace lockfile
 - **Security Compliant**: Minimal attack surface with only required packages
+- **Render Deployment**: Node.js server with Hono framework
 
 ## Dependencies
 ### Production
-- `hono: ^3.12.0` - Web framework for Cloudflare Workers
+- `hono: ^4.0.0` - Web framework for Node.js
+- `@hono/node-server: ^1.8.0` - Node.js server adapter
 - `@supabase/supabase-js: ^2.39.0` - Supabase client
 - `zod: ^3.22.0` - Schema validation
-- `@hono/zod-validator: ^0.2.0` - Hono Zod integration
+- `@hono/zod-validator: ^0.4.0` - Hono Zod integration
 
 ### Development
-- `@cloudflare/workers-types: ^4.20240208.0` - TypeScript types
 - `@types/node: ^20.11.0` - Node.js types
 - `typescript: ^5.3.0` - TypeScript compiler
-- `wrangler: ^3.28.0` - Cloudflare Workers CLI
+- `tsx: ^4.7.0` - TypeScript execution for development
 
 ## Deployment Process
-1. **Cloudflare Workers** clones repository to `/backend` directory
-2. **npm ci** uses isolated `package-lock.json` (493 packages vs 328KB root lockfile)
-3. **Build** compiles TypeScript to JavaScript
-4. **Deploy** to Cloudflare edge network
+1. **Render** clones repository to `/backend` directory
+2. **npm ci** uses isolated `package-lock.json`
+3. **Build** compiles TypeScript to JavaScript with `npm run build`
+4. **Deploy** starts Node.js server with `npm start`
 
 ## Maintenance
 - **Dependency Updates**: Run `npm update` in `/backend` directory only
@@ -33,18 +34,20 @@ This backend uses **isolated dependency management** to prevent workspace lockfi
 - **Lockfile Sync**: Regenerate with `npm install --package-lock-only`
 
 ## Benefits
-- ✅ **Fast Deployments**: Minimal dependencies (493 vs 607+ packages)
+- ✅ **Fast Deployments**: Minimal dependencies, optimized for Render
 - ✅ **Security**: No frontend dependencies in backend deployment
 - ✅ **Stability**: Frontend changes don't affect backend builds
 - ✅ **Compliance**: Aligns with All Access Artist security standards
+- ✅ **Render Integration**: Seamless Node.js deployment
 
 ## Troubleshooting
-If deployment fails:
+If Render deployment fails:
 1. Verify `package-lock.json` exists in `/backend`
 2. Check `.npmrc` configuration is present
 3. Run `npm ci` locally to test dependency resolution
 4. Ensure no workspace resolution conflicts
+5. Check Render build logs for TypeScript compilation errors
 
 ---
-**Last Updated**: August 6, 2025
-**Version**: 2.0.0 - Backend Dependency Isolation
+**Last Updated**: August 31, 2025
+**Version**: 2.1.0 - Render Deployment with Node.js

@@ -103,7 +103,7 @@ npm run start        # Start production server
 ## Version History
 
 - **v2.1.0** (8/16/25) - Enhanced release management and backend migration
-  - Migrated backend from Cloudflare Workers to Render (Node.js + Hono)
+  - Migrated backend to Render (Node.js + Hono)
   - Fixed release details page data structure and task completion
   - Added mixtape release type support with 12-item checklist
   - Implemented comprehensive CORS policy with PATCH method support
@@ -113,7 +113,7 @@ npm run start        # Start production server
 - **v2.0.0** - Proprietary release with monorepo structure
   - Reorganized codebase into frontend/backend workspaces
   - Implemented proprietary licensing
-  - Added Cloudflare Workers backend foundation
+  - Added Node.js backend foundation
   - Updated to enterprise-grade architecture
 
 ## License

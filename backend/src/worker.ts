@@ -22,6 +22,8 @@ import assets from './routes/assets.js'
 import content from './routes/content.js'
 import jobs from './routes/jobs.js'
 import admin from './routes/admin.js'
+import subscription from './routes/subscription.js'
+import webhooks from './routes/webhooks.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
 
@@ -62,6 +64,8 @@ app.route('/api/assets', assets)
 app.route('/api/content', content)
 app.route('/api/jobs', jobs)
 app.route('/api/admin', admin)
+app.route('/api/subscription', subscription)
+app.route('/api/webhooks', webhooks)
 
 // 404 handler
 app.notFound((c) => {
@@ -79,7 +83,11 @@ app.notFound((c) => {
       'GET /api/profile/referral-stats',
       'GET|PUT|DELETE /api/splitsheets/song/:songId',
       'GET /api/admin/users',
-      'GET /api/admin/stats'
+      'GET /api/admin/stats',
+      'GET /api/subscription/status',
+      'POST /api/subscription/checkout',
+      'POST /api/subscription/cancel',
+      'POST /api/webhooks/stripe'
     ]
   }, 404)
 })

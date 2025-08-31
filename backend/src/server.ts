@@ -1,7 +1,7 @@
 /**
  * All Access Artist - Backend API Server
  * Node.js Server Entry Point for Render Deployment
- * Converts Cloudflare Workers app to standard Node.js HTTP server
+ * Hono framework with Node.js server adapter
  */
 
 import { serve } from '@hono/node-server'
