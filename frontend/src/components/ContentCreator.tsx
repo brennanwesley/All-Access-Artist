@@ -42,7 +42,12 @@ export const ContentCreator = () => {
   const [selectedBaseAsset, setSelectedBaseAsset] = useState<number | null>(null);
 
   // Social media connection state
-  const { data: socialMediaUrls } = useSocialMediaUrls();
+  const { data: socialMediaUrls, isLoading, error } = useSocialMediaUrls();
+  
+  // Debug logging
+  console.log('ContentCreator: socialMediaUrls data:', socialMediaUrls);
+  console.log('ContentCreator: isLoading:', isLoading);
+  console.log('ContentCreator: error:', error);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<{ id: string; name: string } | null>(null);
 
@@ -221,6 +226,14 @@ export const ContentCreator = () => {
               const platformKey = `${platform.id}_url` as keyof typeof socialMediaUrls;
               const isConnected = socialMediaUrls?.[platformKey];
               const username = isConnected ? extractUsername(socialMediaUrls[platformKey] || "", platform.id) : "";
+              
+              // Debug logging for each platform
+              console.log(`Platform ${platform.id}:`, {
+                platformKey,
+                isConnected,
+                username,
+                rawUrl: socialMediaUrls?.[platformKey]
+              });
               
               return (
                 <div key={platform.id} className="flex flex-col p-4 rounded-lg bg-secondary/20 border border-border/50">
