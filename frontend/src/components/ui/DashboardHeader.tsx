@@ -20,11 +20,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+      <div className="relative z-10">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white drop-shadow-sm">
           Welcome back, {userName}!
         </h1>
-        <p className="text-gray-700 dark:text-gray-300 mt-1 font-medium">
+        <p className="text-gray-800 dark:text-gray-200 mt-1 font-semibold drop-shadow-sm">
           {dateTime.date} • {dateTime.time}
         </p>
       </div>
