@@ -8,8 +8,7 @@ import {
   DollarSign, 
   Settings,
   Home,
-  Users,
-  Palette
+  Users
 } from "lucide-react";
 
 interface NavigationProps {
@@ -37,7 +36,6 @@ export const Navigation = ({ activeSection: propActiveSection, onSectionChange: 
     { id: "content", label: "Content Creator", icon: Video },
     { id: "fans", label: "Fans", icon: Users },
     { id: "community", label: "Community", icon: Users },
-    { id: "create", label: "Create", icon: Palette },
     { id: "royalties", label: "Royalties", icon: DollarSign },
     { id: "settings", label: "Settings", icon: Settings },
   ];

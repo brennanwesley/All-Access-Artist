@@ -7,7 +7,6 @@ import { ReleaseCalendar } from "@/components/ReleaseCalendar";
 import { ContentCreator } from "@/components/ContentCreator";
 import { RoyaltyDashboard } from "@/components/RoyaltyDashboard";
 import { Fans } from "@/components/Fans";
-import { Create } from "@/components/Create";
 import { Community } from "@/components/Community";
 import { Settings } from "@/components/Settings";
 import { Onboarding } from "@/components/Onboarding";
@@ -57,9 +56,6 @@ const Index = () => {
       case "community":
         console.log('Index: Rendering Community');
         return <Community />;
-      case "create":
-        console.log('Index: Rendering Create');
-        return <Create />;
       case "pitch":
         console.log('Index: Rendering DSP Pitch Tool');
         return (
