@@ -43,7 +43,7 @@ export const Navigation = ({ activeSection: propActiveSection, onSectionChange: 
   ];
 
   return (
-    <nav className="bg-card/50 backdrop-blur-sm border-r border-border h-screen w-64 p-6 fixed left-0 top-0 z-40 flex flex-col">
+    <nav className="bg-card/50 backdrop-blur-sm border-r border-border h-screen w-72 p-6 fixed left-0 top-0 z-40 flex flex-col">
       <div className="mb-8">
         <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
           All Access Artist
