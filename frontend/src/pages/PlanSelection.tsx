@@ -10,13 +10,9 @@ import api from '@/lib/api'
 const PlanSelection = () => {
   const [loading, setLoading] = useState(false)
   // Hardcoded pricing - reliable and fast
-  const artistPriceId = 'price_1S2Lnh82fh30nyS6eACkYccJ'
+  const artistPriceId = 'price_1S2bEJ82fh30nyS6EQYksPx1'
 
-  const handleSelectPlan = async (planType: 'artist' | 'manager') => {
-    if (planType === 'manager') {
-      toast('Manager Plan coming soon!', { icon: '🚀' })
-      return
-    }
+  const handleSelectPlan = async () => {
 
     if (!artistPriceId) {
       toast.error('Unable to load pricing. Please refresh the page.')
