@@ -1,14 +1,13 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
-import { Music, Check, ArrowLeft, Loader2 } from 'lucide-react'
-import api from '../lib/api'
-import toast from 'react-hot-toast'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Check, Crown, Star, ArrowLeft } from 'lucide-react'
+import { toast } from 'react-hot-toast'
+import api from '@/lib/api'
 
-const PlanSelection: React.FC = () => {
-  const navigate = useNavigate()
+const PlanSelection = () => {
   const [loading, setLoading] = useState(false)
 
   const handleSelectPlan = async (planType: 'artist' | 'manager') => {
@@ -60,141 +59,120 @@ const PlanSelection: React.FC = () => {
     'White-label options'
   ]
 
+  const handleArtistPlanSelect = () => {
+    handleSelectPlan('artist')
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/')}
-                className="mr-4 p-2"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <Music className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">All Access Artist</h1>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/login')}
-              className="text-gray-700 border-gray-300 hover:bg-gray-50"
-            >
-              Sign In
+    <div className="min-h-screen bg-gradient-subtle">
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        <div className="mb-8">
+          <Link to="/">
+            <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
             </Button>
-          </div>
+          </Link>
         </div>
-      </header>
+        
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+            Choose Your Plan
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Select the perfect plan to accelerate your music career and unlock your full potential.
+          </p>
+        </div>
 
-      {/* Plan Selection */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Choose Your Plan
-            </h2>
-            <p className="text-xl text-gray-600">
-              Select the plan that best fits your music career goals
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Artist Plan */}
-            <Card className="border-2 border-blue-200 shadow-lg hover:shadow-xl transition-shadow duration-200 relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-blue-600 text-white px-4 py-1 text-sm font-semibold">
-                  Most Popular
-                </Badge>
-              </div>
-              <CardHeader className="text-center pb-6 pt-8">
-                <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
-                  Artist Plan
-                </CardTitle>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-blue-600">$9.99</span>
-                  <span className="text-gray-600 ml-2">/month</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Artist Plan */}
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-blue-500/10" />
+            <CardHeader className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Star className="h-6 w-6 text-primary" />
+                  <CardTitle className="text-2xl text-foreground">Artist Plan</CardTitle>
                 </div>
-                <CardDescription className="text-gray-600 text-base">
-                  Perfect for independent artists ready to take their career to the next level
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <ul className="space-y-3">
-                  {artistFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span className="text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button 
-                  onClick={() => handleSelectPlan('artist')}
-                  disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    'Start Artist Plan'
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+                <Badge className="bg-primary text-primary-foreground">Most Popular</Badge>
+              </div>
+              <div className="mb-4">
+                <span className="text-4xl font-bold text-foreground">$9.99</span>
+                <span className="text-muted-foreground ml-2">/month</span>
+              </div>
+              <CardDescription className="text-muted-foreground">
+                Perfect for independent artists ready to take their career to the next level.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="relative">
+              <ul className="space-y-3 mb-8">
+                {artistFeatures.map((feature, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-green-400 flex-shrink-0" />
+                    <span className="text-muted-foreground">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button 
+                onClick={handleArtistPlanSelect}
+                disabled={loading}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-semibold"
+              >
+                {loading ? 'Processing...' : 'Get Started'}
+              </Button>
+            </CardContent>
+          </Card>
 
             {/* Manager Plan */}
-            <Card className="border-2 border-gray-200 shadow-lg opacity-75 relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-gray-500 text-white px-4 py-1 text-sm font-semibold">
-                  Coming Soon
-                </Badge>
-              </div>
-              <CardHeader className="text-center pb-6 pt-8">
-                <CardTitle className="text-2xl font-bold text-gray-600 mb-2">
-                  Manager Plan
-                </CardTitle>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-500">$99.99</span>
-                  <span className="text-gray-500 ml-2">/month</span>
+          <Card className="bg-card/30 backdrop-blur-sm border-border/30 relative overflow-hidden opacity-60">
+            <div className="absolute inset-0 bg-gradient-to-br from-muted/10 to-muted/20" />
+            <CardHeader className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Crown className="h-6 w-6 text-yellow-400" />
+                  <CardTitle className="text-2xl text-foreground">Manager Plan</CardTitle>
                 </div>
-                <CardDescription className="text-gray-500 text-base">
-                  For music managers and labels managing multiple artists
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <ul className="space-y-3">
-                  {managerFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <Check className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
-                      <span className="text-gray-500">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button 
-                  disabled
-                  className="w-full bg-gray-300 text-gray-500 py-3 text-lg font-semibold rounded-lg cursor-not-allowed"
-                >
-                  Coming Soon
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                <Badge className="bg-yellow-600 text-white">Coming Soon</Badge>
+              </div>
+              <div className="mb-4">
+                <span className="text-4xl font-bold text-foreground">$99.99</span>
+                <span className="text-muted-foreground ml-2">/month</span>
+              </div>
+              <CardDescription className="text-muted-foreground">
+                Comprehensive management tools for labels and artist managers.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="relative">
+              <ul className="space-y-3 mb-8">
+                {managerFeatures.map((feature, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-green-400 flex-shrink-0" />
+                    <span className="text-muted-foreground">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button 
+                disabled
+                className="w-full bg-muted text-muted-foreground py-3 text-lg font-semibold cursor-not-allowed"
+              >
+                Coming Soon
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* Additional Info */}
-          <div className="mt-12 text-center">
-            <p className="text-gray-600 mb-4">
-              All plans include a 30-day money-back guarantee
+        {/* Additional Info */}
+        <div className="text-center mt-12">
+          <Card className="bg-card/30 backdrop-blur-sm border-border/30 p-6">
+            <p className="text-muted-foreground mb-4">
+              All plans include a 7-day free trial. Cancel anytime.
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Questions? Contact us at support@allaccessartist.com
             </p>
-          </div>
+          </Card>
         </div>
-      </section>
+      </div>
     </div>
   )
 }
