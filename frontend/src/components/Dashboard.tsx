@@ -96,9 +96,9 @@ export const Dashboard = () => {
           userName="Artist"
         />
 
-        {/* Simplified Dashboard Content */}
-        <div className="flex justify-center items-center min-h-[400px]">
-          <Card className="w-full max-w-2xl">
+        {/* Dashboard Content - Full Width */}
+        <div className="w-full">
+          <Card className="w-full bg-card/50 backdrop-blur-sm border-border/50">
             <CardContent className="p-12 text-center">
               <div className="space-y-6">
                 <div className="mx-auto w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
@@ -108,7 +108,7 @@ export const Dashboard = () => {
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     Your Artist Dashboard
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                  <p className="text-gray-600 dark:text-gray-400">
                     Welcome to your creative workspace. More features and insights coming soon to help you manage your music career.
                   </p>
                 </div>
