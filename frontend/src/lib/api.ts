@@ -333,14 +333,14 @@ class ApiClient {
 
   // Onboarding API
   async createFallbackAccount(sessionId: string): Promise<ApiResponse<any>> {
-    return this.makeRequest('/api/onboarding/create-fallback', {
+    return this.makeRequestPublic('/api/onboarding/create-fallback', {
       method: 'POST',
       body: JSON.stringify({ session_id: sessionId }),
     })
   }
 
   async completeOnboarding(onboardingData: any): Promise<ApiResponse<any>> {
-    return this.makeRequest('/api/onboarding/complete', {
+    return this.makeRequestPublic('/api/onboarding/complete', {
       method: 'POST',
       body: JSON.stringify(onboardingData),
     })

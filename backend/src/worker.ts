@@ -24,6 +24,7 @@ import jobs from './routes/jobs.js'
 import admin from './routes/admin.js'
 import subscription from './routes/subscription.js'
 import webhooks from './routes/webhooks.js'
+import onboarding from './routes/onboarding.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
 
@@ -83,6 +84,7 @@ app.route('/api/jobs', jobs)
 app.route('/api/admin', admin)
 app.route('/api/subscription', subscription)
 app.route('/api/webhooks', webhooks)
+app.route('/api/onboarding', onboarding)
 
 // 404 handler
 app.notFound((c) => {
