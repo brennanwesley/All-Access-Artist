@@ -91,22 +91,20 @@ subscription.get('/status', async (c) => {
  */
 subscription.post('/checkout', zValidator('json', CheckoutSessionSchema), async (c) => {
   try {
-    const user = c.get('user')
-    const jwtPayload = c.get('jwtPayload')
     const { priceId, successUrl, cancelUrl } = c.req.valid('json')
     
-    if (!user || !jwtPayload) {
-      return c.json({ success: false, error: { message: 'Authentication required' } }, 401)
-    }
+    // Create a minimal Supabase client for StripeService (public endpoint)
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!
+    )
+    
+    const stripeService = new StripeService(supabase)
 
-    const stripeService = new StripeService(c.get('supabase'))
-
-    // Create or get Stripe customer
-    const customerId = await stripeService.createCustomer(user.id, jwtPayload.email!)
-
-    // Create checkout session
+    // Create checkout session without customer (anonymous checkout)
     const checkoutUrl = await stripeService.createCheckoutSession(
-      customerId,
+      null, // No customer ID for public checkout
       priceId,
       successUrl,
       cancelUrl
@@ -115,8 +113,7 @@ subscription.post('/checkout', zValidator('json', CheckoutSessionSchema), async 
     return c.json({
       success: true,
       data: {
-        checkoutUrl,
-        customerId
+        checkoutUrl
       }
     })
 

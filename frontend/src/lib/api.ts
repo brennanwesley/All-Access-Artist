@@ -305,7 +305,7 @@ class ApiClient {
 
   // Subscription API
   async createCheckoutSession(checkoutData: any): Promise<ApiResponse<any>> {
-    return this.makeRequest('/api/subscription/checkout', {
+    return this.makeRequestPublic('/api/subscription/checkout', {
       method: 'POST',
       body: JSON.stringify(checkoutData),
     })

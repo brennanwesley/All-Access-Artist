@@ -107,14 +107,13 @@ export class StripeService {
    * Create Stripe Checkout session for subscription
    */
   async createCheckoutSession(
-    customerId: string, 
+    customerId: string | null, 
     priceId: string, 
     successUrl: string, 
     cancelUrl: string
   ): Promise<string> {
     try {
-      const session = await this.stripe.checkout.sessions.create({
-        customer: customerId,
+      const sessionConfig: any = {
         payment_method_types: ['card'],
         line_items: [
           {
@@ -126,9 +125,16 @@ export class StripeService {
         success_url: successUrl,
         cancel_url: cancelUrl,
         metadata: {
-          customer_id: customerId
+          customer_id: customerId || 'anonymous'
         }
-      })
+      }
+
+      // Add customer if provided
+      if (customerId) {
+        sessionConfig.customer = customerId
+      }
+
+      const session = await this.stripe.checkout.sessions.create(sessionConfig)
 
       console.log(`✅ Created checkout session: ${session.id}`)
       return session.url!
