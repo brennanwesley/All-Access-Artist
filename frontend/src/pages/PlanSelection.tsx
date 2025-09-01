@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,31 +9,8 @@ import api from '@/lib/api'
 
 const PlanSelection = () => {
   const [loading, setLoading] = useState(false)
-  const [artistPriceId, setArtistPriceId] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Fetch available products and get the Artist Plan price ID
-    const fetchProducts = async () => {
-      try {
-        const response = await api.getSubscriptionProducts()
-        if (response.data?.success && response.data?.data?.length > 0) {
-          // Find the Artist Plan product
-          const artistProduct = response.data.data.find((product: any) => 
-            product.name?.toLowerCase().includes('artist')
-          )
-          if (artistProduct?.prices?.[0]?.id) {
-            setArtistPriceId(artistProduct.prices[0].id)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch products:', error)
-        // Fallback to hardcoded price ID if API fails
-        setArtistPriceId('price_1S2Lnh82fh30nyS6eACkYccJ')
-      }
-    }
-
-    fetchProducts()
-  }, [])
+  // Hardcoded pricing - reliable and fast
+  const artistPriceId = 'price_1S2Lnh82fh30nyS6eACkYccJ'
 
   const handleSelectPlan = async (planType: 'artist' | 'manager') => {
     if (planType === 'manager') {
