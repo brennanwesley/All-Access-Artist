@@ -25,6 +25,7 @@ const CompleteOnboardingSchema = z.object({
   email: z.string().email('Valid email is required'),
   phone: z.string().optional().nullable(),
   artist_name: z.string().optional().nullable(),
+  referral_code: z.string().length(6, 'Referral code must be exactly 6 characters').regex(/^[A-Z0-9]+$/, 'Referral code must contain only uppercase letters and numbers').optional().nullable(),
   password: z.string().min(8, 'Password must be at least 8 characters')
 })
 
@@ -34,7 +35,7 @@ const CompleteOnboardingSchema = z.object({
  */
 onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async (c) => {
   try {
-    const { session_id, full_name, email, phone, artist_name, password } = c.req.valid('json')
+    const { session_id, full_name, email, phone, artist_name, referral_code, password } = c.req.valid('json')
 
     // Create Supabase admin client for database operations
     const supabase = createSupabaseAdmin()
@@ -95,6 +96,26 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
     const firstName = nameParts[0]
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null
 
+    // Handle referral code if provided
+    let referredByUserId = null
+    if (referral_code) {
+      const { data: referringUser, error: referralError } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('referral_code', referral_code)
+        .single()
+
+      if (referralError || !referringUser) {
+        return c.json({ 
+          success: false, 
+          error: { message: 'Invalid referral code. Please check and try again.' } 
+        }, 400)
+      }
+
+      referredByUserId = referringUser.id
+      console.log(`✅ Valid referral code ${referral_code} from user: ${referredByUserId}`)
+    }
+
     // Update user profile with complete information
     const { error: updateProfileError } = await supabase
       .from('user_profiles')
@@ -102,6 +123,7 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
         first_name: firstName,
         last_name: lastName,
         artist_name: artist_name,
+        referred_by: referredByUserId,
         onboarding_completed: true,
         onboarding_completed_at: new Date().toISOString(),
         onboarding_token: null, // Clear the token

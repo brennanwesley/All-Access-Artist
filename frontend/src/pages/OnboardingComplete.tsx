@@ -24,6 +24,7 @@ const OnboardingComplete = () => {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [artistName, setArtistName] = useState('')
+  const [referralCode, setReferralCode] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
@@ -79,6 +80,7 @@ const OnboardingComplete = () => {
         email: email,
         phone: phone || null,
         artist_name: artistName || null,
+        referral_code: referralCode || null,
         password: password
       })
 
@@ -206,6 +208,21 @@ const OnboardingComplete = () => {
                   value={artistName}
                   onChange={(e) => setArtistName(e.target.value)}
                   disabled={loading}
+                  className="bg-background/50 border-border/50"
+                />
+              </div>
+              
+              {/* Referral Code (Optional) */}
+              <div className="space-y-2">
+                <Label htmlFor="referralCode" className="text-foreground">Referral Code</Label>
+                <Input
+                  id="referralCode"
+                  type="text"
+                  placeholder="Enter referral code (optional)"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  disabled={loading}
+                  maxLength={6}
                   className="bg-background/50 border-border/50"
                 />
               </div>
