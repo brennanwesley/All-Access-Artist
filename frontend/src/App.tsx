@@ -6,7 +6,7 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import PlanSelection from './pages/PlanSelection'
 import OnboardingComplete from './pages/OnboardingComplete'
-import SimpleIndex from './pages/SimpleIndex'
+import Index from './pages/Index'
 import './App.css'
 
 const queryClient = new QueryClient({
@@ -29,7 +29,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/plans" element={<PlanSelection />} />
               <Route path="/onboarding/:sessionId" element={<OnboardingComplete />} />
-              <Route path="/dashboard" element={<SimpleIndex />} />
+              <Route path="/dashboard" element={<Index />} />
             </Routes>
             <Toaster position="top-right" />
           </div>
