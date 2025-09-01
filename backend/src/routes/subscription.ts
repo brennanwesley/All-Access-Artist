@@ -172,7 +172,14 @@ subscription.post('/cancel', async (c) => {
  */
 subscription.get('/products', async (c) => {
   try {
-    const stripeService = new StripeService(c.get('supabase'))
+    // Create a minimal Supabase client for StripeService (not used for this endpoint)
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!
+    )
+    
+    const stripeService = new StripeService(supabase)
     const stripe = stripeService.getStripeInstance()
 
     // Fetch products from Stripe

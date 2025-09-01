@@ -99,6 +99,7 @@ app.notFound((c) => {
       'GET /api/admin/users',
       'GET /api/admin/stats',
       'GET /api/subscription/status',
+      'GET /api/subscription/products',
       'POST /api/subscription/checkout',
       'POST /api/subscription/cancel',
       'POST /api/webhooks/stripe'
