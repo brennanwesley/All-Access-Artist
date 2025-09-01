@@ -58,6 +58,35 @@ class ApiClient {
     }
   }
 
+  private async makeRequestPublic<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      })
+
+      const data = await response.json()
+
+      return {
+        data: response.ok ? data : undefined,
+        error: response.ok ? undefined : data.error || 'Request failed',
+        status: response.status,
+      }
+    } catch (error) {
+      console.error('API request failed:', error)
+      return {
+        error: error instanceof Error ? error.message : 'Network error',
+        status: 0,
+      }
+    }
+  }
+
   // Health check (no auth required)
   async healthCheck(): Promise<ApiResponse> {
     try {
@@ -293,7 +322,7 @@ class ApiClient {
   }
 
   async getSubscriptionProducts(): Promise<ApiResponse<any>> {
-    return this.makeRequest('/api/subscription/products')
+    return this.makeRequestPublic('/api/subscription/products')
   }
 
   async setupStripeProducts(): Promise<ApiResponse<any>> {
