@@ -46,8 +46,22 @@ app.get('/health', (c) => {
   })
 })
 
-// Supabase authentication middleware for all API routes (includes JWT validation)
-app.use('/api/*', supabaseAuth)
+// Supabase authentication middleware for protected API routes only
+// Public endpoints: /api/subscription/products, /api/webhooks/stripe, /api/onboarding/*
+app.use('/api/artists/*', supabaseAuth)
+app.use('/api/releases/*', supabaseAuth)
+app.use('/api/calendar/*', supabaseAuth)
+app.use('/api/analytics/*', supabaseAuth)
+app.use('/api/lyrics/*', supabaseAuth)
+app.use('/api/tasks/*', supabaseAuth)
+app.use('/api/songs/*', supabaseAuth)
+app.use('/api/labelcopy/*', supabaseAuth)
+app.use('/api/profile/*', supabaseAuth)
+app.use('/api/splitsheets/*', supabaseAuth)
+app.use('/api/assets/*', supabaseAuth)
+app.use('/api/content/*', supabaseAuth)
+app.use('/api/jobs/*', supabaseAuth)
+app.use('/api/admin/*', supabaseAuth)
 
 // Mount route modules
 app.route('/api/artists', artists)
