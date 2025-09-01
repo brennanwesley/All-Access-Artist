@@ -139,10 +139,12 @@ const Index = () => {
 
   // Dashboard view
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="ml-64 p-8">
-        {renderActiveSection()}
+      <main className="ml-64 min-h-screen bg-gradient-subtle">
+        <div className="p-8">
+          {renderActiveSection()}
+        </div>
       </main>
     </div>
   );
