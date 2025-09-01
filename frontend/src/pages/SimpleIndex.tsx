@@ -97,15 +97,6 @@ const SimpleIndex = () => {
             </div>
           </div>
           
-          <div className="mt-8 p-4 bg-yellow-50 rounded-lg">
-            <h3 className="font-semibold text-yellow-800">JWT Token Access</h3>
-            <p className="text-sm text-yellow-700 mt-2">
-              Open browser console (F12) and run: <br/>
-              <code className="bg-yellow-100 px-2 py-1 rounded">
-                Object.keys(localStorage).filter(key =&gt; key.includes('sb-'))
-              </code>
-            </p>
-          </div>
         </div>
       </div>
     </div>
