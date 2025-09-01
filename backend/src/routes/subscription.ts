@@ -14,9 +14,8 @@ import { getSubscriptionStatus } from '../middleware/subscriptionAuth.js'
 const subscription = new Hono<{ Variables: Variables }>()
 
 // Apply auth middleware to protected subscription routes only
-// Products endpoint should be public for plan selection page
+// Products and checkout endpoints should be public for plan selection page
 subscription.use('/status', supabaseAuth)
-subscription.use('/checkout', supabaseAuth)
 subscription.use('/cancel', supabaseAuth)
 subscription.use('/setup', supabaseAuth)
 
