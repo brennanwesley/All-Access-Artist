@@ -365,6 +365,62 @@ export class StripeService {
       })
 
       if (authError) {
+        // Check if user already exists
+        if (authError.message?.includes('already been registered') || authError.status === 422) {
+          console.log(`✅ User already exists for ${customerEmail}, finding existing user...`)
+          
+          // Find existing user by email
+          const { data: existingUser, error: findError } = await this.supabase.auth.admin.listUsers()
+          const user = existingUser?.users?.find(u => u.email === customerEmail)
+          
+          if (!user) {
+            console.error(`❌ Could not find existing user for ${customerEmail}`)
+            return
+          }
+          
+          console.log(`✅ Found existing user: ${user.id} for ${customerEmail}`)
+          
+          // Check if profile already exists
+          const { data: existingProfile } = await this.supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('id', user.id)
+            .single()
+          
+          if (existingProfile) {
+            // Update existing profile with session info
+            await this.supabase
+              .from('user_profiles')
+              .update({
+                stripe_session_id: session.id,
+                stripe_customer_id: customerId,
+                onboarding_token: this.generateOnboardingToken(),
+                onboarding_token_expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', user.id)
+            
+            console.log(`✅ Updated existing profile for user: ${user.id}`)
+            return
+          }
+          
+          // Create profile for existing user
+          await this.supabase
+            .from('user_profiles')
+            .insert({
+              id: user.id,
+              stripe_customer_id: customerId,
+              stripe_session_id: session.id,
+              onboarding_token: this.generateOnboardingToken(),
+              onboarding_token_expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              subscription_status: 'pending',
+              created_at: new Date().toISOString()
+            })
+          
+          console.log(`✅ Created profile for existing user: ${user.id}`)
+          return
+        }
+        
         console.error(`❌ Failed to create user account for ${customerEmail}:`, authError)
         return
       }

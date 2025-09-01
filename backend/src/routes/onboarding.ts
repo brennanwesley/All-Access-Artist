@@ -54,6 +54,18 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
 
     if (profileError || !profile) {
       console.error('Profile not found for session:', session_id, profileError)
+      
+      // Check if this is an existing user by email
+      const { data: existingUsers } = await supabase.auth.admin.listUsers()
+      const existingUser = existingUsers?.users?.find(u => u.email === email)
+      
+      if (existingUser) {
+        return c.json({ 
+          success: false, 
+          error: { message: 'An account with this email already exists. Please sign in instead.' } 
+        }, 409)
+      }
+      
       return c.json({ 
         success: false, 
         error: { message: 'Invalid session. Please contact support.' } 
