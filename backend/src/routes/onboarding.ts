@@ -102,7 +102,6 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
         first_name: firstName,
         last_name: lastName,
         artist_name: artist_name,
-        phone: phone,
         onboarding_completed: true,
         onboarding_completed_at: new Date().toISOString(),
         onboarding_token: null, // Clear the token
