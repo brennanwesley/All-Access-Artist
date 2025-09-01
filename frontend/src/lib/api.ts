@@ -296,6 +296,27 @@ class ApiClient {
     return this.makeRequest('/api/subscription/products')
   }
 
+  async setupStripeProducts(): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/subscription/setup', {
+      method: 'POST',
+    })
+  }
+
+  // Onboarding API
+  async createFallbackAccount(sessionId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/onboarding/create-fallback', {
+      method: 'POST',
+      body: JSON.stringify({ session_id: sessionId }),
+    })
+  }
+
+  async completeOnboarding(onboardingData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/onboarding/complete', {
+      method: 'POST',
+      body: JSON.stringify(onboardingData),
+    })
+  }
+
   // Admin API
   async getAdminUsers(): Promise<ApiResponse<any[]>> {
     return this.makeRequest('/api/admin/users')

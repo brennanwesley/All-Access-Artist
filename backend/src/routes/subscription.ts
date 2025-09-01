@@ -164,37 +164,72 @@ subscription.post('/cancel', async (c) => {
 
 /**
  * GET /api/subscription/products
- * Get available subscription plans and pricing
+ * Get available subscription plans and pricing from Stripe
  */
 subscription.get('/products', async (c) => {
   try {
-    // Return hardcoded product info for now
-    // In production, you might want to fetch this from Stripe or database
-    const products = [
-      {
-        id: 'artist-plan',
-        name: 'Artist Plan',
-        description: 'Full access to All Access Artist platform for individual artists',
-        price: {
-          amount: 999, // $9.99 in cents
-          currency: 'usd',
-          interval: 'month'
-        },
-        features: [
-          'Unlimited releases',
-          'Song and lyric management',
-          'Analytics and insights',
-          'Label copy generation',
-          'Split sheet management'
-        ]
-      }
-    ]
+    const stripeService = new StripeService(c.get('supabase'))
+    const stripe = stripeService.getStripeInstance()
+
+    // Fetch products from Stripe
+    const products = await stripe.products.list({
+      active: true,
+      expand: ['data.default_price']
+    })
+
+    // Filter for Artist Plan and get its prices
+    const artistProduct = products.data.find(product => 
+      product.name?.toLowerCase().includes('artist')
+    )
+
+    if (!artistProduct) {
+      return c.json({ 
+        success: false, 
+        error: { message: 'Artist Plan product not found in Stripe' } 
+      }, 404)
+    }
+
+    // Get all prices for the Artist Plan product
+    const prices = await stripe.prices.list({
+      product: artistProduct.id,
+      active: true
+    })
+
+    // Find the recurring monthly price
+    const recurringPrice = prices.data.find(price => 
+      price.recurring?.interval === 'month'
+    )
+
+    if (!recurringPrice) {
+      return c.json({ 
+        success: false, 
+        error: { message: 'No recurring monthly price found for Artist Plan' } 
+      }, 404)
+    }
+
+    const productData = [{
+      id: artistProduct.id,
+      name: artistProduct.name,
+      description: artistProduct.description,
+      prices: [{
+        id: recurringPrice.id,
+        amount: recurringPrice.unit_amount,
+        currency: recurringPrice.currency,
+        interval: recurringPrice.recurring?.interval,
+        type: recurringPrice.type
+      }],
+      features: [
+        'Unlimited releases',
+        'Song and lyric management', 
+        'Analytics and insights',
+        'Label copy generation',
+        'Split sheet management'
+      ]
+    }]
 
     return c.json({
       success: true,
-      data: {
-        products
-      }
+      data: productData
     })
 
   } catch (error) {

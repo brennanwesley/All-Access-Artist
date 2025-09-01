@@ -399,6 +399,13 @@ export class StripeService {
   }
 
   /**
+   * Get Stripe instance for external access
+   */
+  getStripeInstance(): Stripe {
+    return this.stripe
+  }
+
+  /**
    * Generate secure onboarding token
    */
   private generateOnboardingToken(): string {

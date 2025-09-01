@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, CheckCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
+import api from '@/lib/api'
 
 const OnboardingComplete = () => {
   const navigate = useNavigate()
@@ -48,8 +49,8 @@ const OnboardingComplete = () => {
       return
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long')
       setLoading(false)
       return
     }
@@ -61,25 +62,27 @@ const OnboardingComplete = () => {
     }
 
     try {
-      // Complete onboarding by updating the user account created by webhook
-      const response = await fetch(`${import.meta.env['VITE_API_URL']}/api/onboarding/complete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          full_name: fullName,
-          email: email,
-          phone: phone || null,
-          artist_name: artistName || null,
-          password: password
-        })
+      // First, try to create fallback account in case webhook failed
+      if (sessionId) {
+        try {
+          await api.createFallbackAccount(sessionId)
+        } catch (fallbackError) {
+          // Fallback creation failed, but continue - account might already exist
+          console.log('Fallback account creation not needed or failed:', fallbackError)
+        }
+      }
+
+      // Complete onboarding by updating the user account
+      const response = await api.completeOnboarding({
+        session_id: sessionId,
+        full_name: fullName,
+        email: email,
+        phone: phone || null,
+        artist_name: artistName || null,
+        password: password
       })
 
-      const data = await response.json()
-
-      if (response.ok && data.success) {
+      if (response.data?.success) {
         // Account setup complete, now sign in
         const { error: signInError } = await signIn(email, password)
         
@@ -90,7 +93,7 @@ const OnboardingComplete = () => {
           navigate('/dashboard')
         }
       } else {
-        setError(data.error?.message || 'Failed to complete onboarding')
+        setError(response.error || 'Failed to complete onboarding')
       }
     } catch (error) {
       console.error('Error completing onboarding:', error)
@@ -210,12 +213,12 @@ const OnboardingComplete = () => {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Create a password (min 6 characters)"
+                  placeholder="Create a password (min 8 characters)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading}
-                  minLength={6}
+                  minLength={8}
                   className="bg-background/50 border-border/50"
                 />
               </div>

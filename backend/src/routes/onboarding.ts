@@ -17,7 +17,7 @@ const CompleteOnboardingSchema = z.object({
   email: z.string().email('Valid email is required'),
   phone: z.string().optional().nullable(),
   artist_name: z.string().optional().nullable(),
-  password: z.string().min(6, 'Password must be at least 6 characters')
+  password: z.string().min(8, 'Password must be at least 8 characters')
 })
 
 /**
@@ -177,6 +177,64 @@ onboarding.get('/status/:session_id', async (c) => {
     return c.json({ 
       success: false, 
       error: { message: 'Internal server error' } 
+    }, 500)
+  }
+})
+
+/**
+ * POST /api/onboarding/create-fallback
+ * Fallback account creation if webhook failed
+ */
+onboarding.post('/create-fallback', zValidator('json', z.object({
+  session_id: z.string().min(1, 'Session ID is required')
+})), async (c) => {
+  try {
+    const { session_id } = c.req.valid('json')
+    
+    // Check if account already exists
+    const { data: existingProfile } = await c.get('supabase')
+      .from('user_profiles')
+      .select('id')
+      .eq('stripe_session_id', session_id)
+      .single()
+
+    if (existingProfile) {
+      return c.json({
+        success: true,
+        data: { message: 'Account already exists', user_id: existingProfile.id }
+      })
+    }
+
+    // Import StripeService to handle fallback creation
+    const { StripeService } = await import('../services/stripeService.js')
+    const stripeService = new StripeService(c.get('supabase'))
+    
+    // Retrieve session from Stripe to get customer details
+    const stripe = stripeService.getStripeInstance()
+    const session = await stripe.checkout.sessions.retrieve(session_id)
+    
+    if (!session.customer_details?.email) {
+      return c.json({
+        success: false,
+        error: { message: 'Unable to retrieve customer details from Stripe' }
+      }, 400)
+    }
+
+    // Create account using the same logic as webhook
+    await stripeService.handleCheckoutCompleted(session as any)
+    
+    console.log(`✅ Fallback account creation completed for session: ${session_id}`)
+
+    return c.json({
+      success: true,
+      data: { message: 'Account created successfully via fallback' }
+    })
+
+  } catch (error) {
+    console.error('Error in fallback account creation:', error)
+    return c.json({ 
+      success: false, 
+      error: { message: 'Failed to create account. Please contact support.' } 
     }, 500)
   }
 })
