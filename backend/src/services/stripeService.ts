@@ -169,6 +169,10 @@ export class StripeService {
   async processWebhook(event: Stripe.Event): Promise<void> {
     try {
       switch (event.type) {
+        case 'checkout.session.completed':
+          await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
+          break
+
         case 'customer.subscription.created':
         case 'customer.subscription.updated':
           await this.handleSubscriptionUpdate(event.data.object as Stripe.Subscription)
@@ -318,5 +322,91 @@ export class StripeService {
       .eq('id', profile.id)
 
     console.log(`❌ Recorded failed payment for user: ${profile.id}`)
+  }
+
+  /**
+   * Handle checkout session completed webhook
+   * Creates user account after successful payment
+   */
+  private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+    try {
+      console.log(`✅ Processing checkout completion for session: ${session.id}`)
+      
+      const customerEmail = session.customer_details?.email
+      const customerId = session.customer as string
+      
+      if (!customerEmail) {
+        console.error(`❌ No email found in checkout session: ${session.id}`)
+        return
+      }
+
+      // Generate a temporary password and onboarding token
+      const tempPassword = this.generateTempPassword()
+      const onboardingToken = this.generateOnboardingToken()
+
+      // Create Supabase user account
+      const { data: authData, error: authError } = await this.supabase.auth.admin.createUser({
+        email: customerEmail,
+        password: tempPassword,
+        email_confirm: true, // Skip email verification
+        user_metadata: {
+          stripe_customer_id: customerId,
+          stripe_session_id: session.id,
+          onboarding_token: onboardingToken,
+          payment_completed: true,
+          created_via: 'stripe_checkout'
+        }
+      })
+
+      if (authError) {
+        console.error(`❌ Failed to create user account for ${customerEmail}:`, authError)
+        return
+      }
+
+      console.log(`✅ Created user account: ${authData.user.id} for ${customerEmail}`)
+
+      // Create user profile with Stripe data
+      await this.supabase
+        .from('user_profiles')
+        .insert({
+          id: authData.user.id,
+          stripe_customer_id: customerId,
+          stripe_session_id: session.id,
+          onboarding_token: onboardingToken,
+          onboarding_token_expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+          subscription_status: 'pending',
+          created_at: new Date().toISOString()
+        })
+
+      console.log(`✅ Created user profile for checkout session: ${session.id}`)
+
+    } catch (error) {
+      console.error(`❌ Error handling checkout completion:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * Generate temporary password for new user accounts
+   */
+  private generateTempPassword(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
+    let password = ''
+    for (let i = 0; i < 16; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return password
+  }
+
+  /**
+   * Generate secure onboarding token
+   */
+  private generateOnboardingToken(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    let token = ''
+    for (let i = 0; i < 32; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return token
   }
 }

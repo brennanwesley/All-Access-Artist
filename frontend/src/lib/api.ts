@@ -274,6 +274,28 @@ class ApiClient {
     })
   }
 
+  // Subscription API
+  async createCheckoutSession(checkoutData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/subscription/checkout', {
+      method: 'POST',
+      body: JSON.stringify(checkoutData),
+    })
+  }
+
+  async getSubscriptionStatus(): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/subscription/status')
+  }
+
+  async cancelSubscription(): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/subscription/cancel', {
+      method: 'POST',
+    })
+  }
+
+  async getSubscriptionProducts(): Promise<ApiResponse<any>> {
+    return this.makeRequest('/api/subscription/products')
+  }
+
   // Admin API
   async getAdminUsers(): Promise<ApiResponse<any[]>> {
     return this.makeRequest('/api/admin/users')

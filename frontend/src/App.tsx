@@ -2,6 +2,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './contexts/AuthContext'
+import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
+import PlanSelection from './pages/PlanSelection'
+import OnboardingComplete from './pages/OnboardingComplete'
 import SimpleIndex from './pages/SimpleIndex'
 import './App.css'
 
@@ -21,7 +25,11 @@ function App() {
         <Router>
           <div className="App">
             <Routes>
-              <Route path="/" element={<SimpleIndex />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/plans" element={<PlanSelection />} />
+              <Route path="/onboarding/:sessionId" element={<OnboardingComplete />} />
+              <Route path="/dashboard" element={<SimpleIndex />} />
             </Routes>
             <Toaster position="top-right" />
           </div>
