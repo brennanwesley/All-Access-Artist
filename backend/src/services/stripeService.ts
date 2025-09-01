@@ -328,7 +328,7 @@ export class StripeService {
    * Handle checkout session completed webhook
    * Creates user account after successful payment
    */
-  private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+  async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
     try {
       console.log(`✅ Processing checkout completion for session: ${session.id}`)
       
