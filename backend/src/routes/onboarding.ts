@@ -6,9 +6,17 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
+import { createClient } from '@supabase/supabase-js'
 import { Variables } from '../types/bindings.js'
 
 const onboarding = new Hono<{ Variables: Variables }>()
+
+// Helper function to create Supabase admin client for onboarding operations
+const createSupabaseAdmin = () => {
+  const supabaseUrl = process.env.SUPABASE_URL!
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
 
 // Validation schema for onboarding completion
 const CompleteOnboardingSchema = z.object({
@@ -28,8 +36,11 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
   try {
     const { session_id, full_name, email, phone, artist_name, password } = c.req.valid('json')
 
+    // Create Supabase admin client for database operations
+    const supabase = createSupabaseAdmin()
+
     // Find user by session ID and onboarding token
-    const { data: profile, error: profileError } = await c.get('supabase')
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select(`
         id,
@@ -59,23 +70,20 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
       }, 400)
     }
 
-    // Update user auth account with new password and email
-    const { error: updateAuthError } = await c.get('supabase').auth.admin.updateUserById(
-      profile.id,
-      {
-        email: email,
-        password: password,
-        user_metadata: {
-          full_name: full_name,
-          artist_name: artist_name,
-          onboarding_completed: true,
-          completed_at: new Date().toISOString()
-        }
+    // Update user account with new password and profile info
+    const { error: updateError } = await supabase.auth.admin.updateUserById(profile.id, {
+      email: email,
+      password: password,
+      user_metadata: {
+        full_name: full_name,
+        artist_name: artist_name,
+        onboarding_completed: true,
+        completed_at: new Date().toISOString()
       }
-    )
+    })
 
-    if (updateAuthError) {
-      console.error('Failed to update auth user:', updateAuthError)
+    if (updateError) {
+      console.error('Failed to update auth user:', updateError)
       return c.json({ 
         success: false, 
         error: { message: 'Failed to update account. Please try again.' } 
@@ -88,7 +96,7 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null
 
     // Update user profile with complete information
-    const { error: updateProfileError } = await c.get('supabase')
+    const { error: updateProfileError } = await supabase
       .from('user_profiles')
       .update({
         first_name: firstName,
@@ -191,8 +199,11 @@ onboarding.post('/create-fallback', zValidator('json', z.object({
   try {
     const { session_id } = c.req.valid('json')
     
+    // Create Supabase admin client for database operations
+    const supabase = createSupabaseAdmin()
+    
     // Check if account already exists
-    const { data: existingProfile } = await c.get('supabase')
+    const { data: existingProfile } = await supabase
       .from('user_profiles')
       .select('id')
       .eq('stripe_session_id', session_id)
@@ -207,7 +218,7 @@ onboarding.post('/create-fallback', zValidator('json', z.object({
 
     // Import StripeService to handle fallback creation
     const { StripeService } = await import('../services/stripeService.js')
-    const stripeService = new StripeService(c.get('supabase'))
+    const stripeService = new StripeService(supabase)
     
     // Retrieve session from Stripe to get customer details
     const stripe = stripeService.getStripeInstance()

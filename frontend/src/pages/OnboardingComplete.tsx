@@ -93,7 +93,10 @@ const OnboardingComplete = () => {
           navigate('/dashboard')
         }
       } else {
-        setError(response.error || 'Failed to complete onboarding')
+        const errorMessage = typeof response.error === 'string' 
+          ? response.error 
+          : response.error?.message || 'Failed to complete onboarding'
+        setError(errorMessage)
       }
     } catch (error) {
       console.error('Error completing onboarding:', error)
