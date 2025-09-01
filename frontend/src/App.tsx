@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { NavigationProvider } from "@/contexts/NavigationContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "@/pages/Index";
 import ReleaseDetail from "@/pages/ReleaseDetail";
@@ -21,24 +22,26 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <div className="App">
-            <Routes>
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              } />
-              <Route path="/releases/:id" element={
-                <ProtectedRoute>
-                  <ReleaseDetail />
-                </ProtectedRoute>
-              } />
-            </Routes>
-            <Toaster position="top-right" />
-            <ShadcnToaster />
-          </div>
-        </Router>
+        <NavigationProvider>
+          <Router>
+            <div className="App">
+              <Routes>
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/releases/:id" element={
+                  <ProtectedRoute>
+                    <ReleaseDetail />
+                  </ProtectedRoute>
+                } />
+              </Routes>
+              <Toaster position="top-right" />
+              <ShadcnToaster />
+            </div>
+          </Router>
+        </NavigationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
