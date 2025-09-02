@@ -122,12 +122,12 @@ splitsheets.put('/song/:songId', async (c) => {
       }
     }
     
-    // Check if split sheet already exists
+    // Check if split sheet already exists using the actual song title
     const { data: existingData } = await supabase
       .from('split_sheets')
       .select('id')
       .eq('user_id', user.id)
-      .eq('song_title', songId)
+      .eq('song_title', splitSheetData.song_title)
       .single()
     
     let result
@@ -151,7 +151,7 @@ splitsheets.put('/song/:songId', async (c) => {
         .from('split_sheets')
         .insert({
           user_id: user.id,
-          song_title: songId,
+          song_title: splitSheetData.song_title,
           ...splitSheetData
         })
         .select()
@@ -189,11 +189,23 @@ splitsheets.delete('/song/:songId', async (c) => {
     
     console.log('SplitSheet: Deleting split sheet for song', songId, 'user', user.id)
     
+    // First get the song title from the songs table
+    const { data: songData, error: songError } = await supabase
+      .from('songs')
+      .select('song_title')
+      .eq('id', songId)
+      .single()
+    
+    if (songError) {
+      console.error('SplitSheet: Error getting song title for deletion:', songError)
+      return c.json({ success: false, error: 'Song not found' }, 404)
+    }
+
     const { error } = await supabase
       .from('split_sheets')
       .delete()
       .eq('user_id', user.id)
-      .eq('song_title', songId)
+      .eq('song_title', songData.song_title)
     
     if (error) {
       console.error('SplitSheet: Database error deleting split sheet:', error)

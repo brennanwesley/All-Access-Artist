@@ -12,7 +12,7 @@ import { ReleaseDetails, Song } from "@/hooks/api/useReleaseDetails";
 import { useAuth } from "@/contexts/AuthContext";
 import { SplitSheetTemplate } from "@/components/split-sheet";
 
-type ActiveTemplate = "main" | "labelCopy" | "splitSheet" | null;
+type ActiveTemplate = "main" | "labelCopy" | "splitSheet" | "lyricSheet" | null;
 
 interface MetadataPrepProps {
   releaseId?: string;
@@ -473,7 +473,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
       const releasePayload = {
         title: releaseData.releaseTitle,
         release_type: releaseData.releaseType,
-        release_date: releaseData.releaseDate ? new Date(releaseData.releaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0], // Convert to YYYY-MM-DD format
+        release_date: releaseData.releaseDate || new Date().toISOString().split('T')[0], // Keep as YYYY-MM-DD format
         copyright_year: parseInt(releaseData.copyright) || new Date().getFullYear(),
         upc: releaseData.upc,
         genre: releaseData.genre,

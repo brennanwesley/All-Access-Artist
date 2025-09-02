@@ -64,7 +64,7 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
       const releaseData = {
         title: data.title,
         user_id: user.id, // Use user ID directly
-        release_date: new Date(data.release_date).toISOString(),
+        release_date: data.release_date, // Keep as YYYY-MM-DD format from date input
         release_type: data.release_type,
         status: data.status,
         ...(data.description && { description: data.description }),
