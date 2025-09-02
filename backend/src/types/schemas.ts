@@ -88,7 +88,7 @@ export const CreateSongSchema = z.object({
   mastering_engineer: z.string().max(200, 'Mastering engineer name too long').optional(),
   remixer: z.string().max(200, 'Remixer name too long').optional(),
   // Track-level ISRC and language fields
-  isrc: z.string().max(12, 'ISRC code too long').optional(),
+  isrc: z.string().max(15, 'ISRC code too long').optional(),
   language_lyrics: z.string().max(10, 'Language code too long').default('en'),
   // Song-level songwriter and producer fields
   songwriters: z.string().max(500, 'Songwriters list too long').optional(),
@@ -113,7 +113,7 @@ export const CreateLabelCopySchema = z.object({
   tracks_metadata: z.array(z.object({
     track_number: z.number().int().min(1, 'Track number must be positive'),
     duration_seconds: z.number().int().min(1, 'Duration must be positive').optional(),
-    isrc: z.string().max(12, 'ISRC code too long').optional(),
+    isrc: z.string().max(15, 'ISRC code too long').optional(),
     version_subtitle: z.string().max(200, 'Version subtitle too long').optional(),
     featured_artists: z.string().max(300, 'Featured artists too long').optional(),
     explicit_content: z.boolean().default(false),
