@@ -152,6 +152,27 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
       }, 500)
     }
 
+    // Create artist_profiles record for artist accounts
+    if (artist_name) {
+      const { error: artistProfileError } = await supabase
+        .from('artist_profiles')
+        .insert({
+          user_id: profile.id,
+          artist_name: artist_name,
+          real_name: `${firstName}${lastName ? ' ' + lastName : ''}`,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (artistProfileError) {
+        console.error('Failed to create artist profile:', artistProfileError)
+        // Don't fail onboarding if artist profile creation fails
+        console.log('⚠️ Onboarding completed but artist profile creation failed')
+      } else {
+        console.log(`✅ Created artist profile for user: ${profile.id}`)
+      }
+    }
+
     console.log(`✅ Onboarding completed for user: ${profile.id}`)
 
     return c.json({

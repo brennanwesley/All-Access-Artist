@@ -101,17 +101,63 @@ export class ArtistsService {
     spotify_url: string
     apple_music_url: string
   }>) {
-    const { data, error } = await this.supabase
+    // First, try to update existing artist profile
+    const { data: updateData, error: updateError } = await this.supabase
       .from('artist_profiles')
-      .update(socialMediaData)
+      .update({
+        ...socialMediaData,
+        updated_at: new Date().toISOString()
+      })
       .eq('user_id', userId)
       .select()
       .single()
 
-    if (error) {
-      throw new Error(`Failed to update social media URLs: ${error.message}`)
+    // If update succeeds, return the data
+    if (!updateError && updateData) {
+      return updateData
     }
 
-    return data
+    // If no rows found, create artist profile first
+    if (updateError?.code === 'PGRST116') {
+      console.log(`No artist profile found for user ${userId}, creating one...`)
+      
+      // Get user info from user_profiles to create artist profile
+      const { data: userProfile, error: userError } = await this.supabase
+        .from('user_profiles')
+        .select('first_name, last_name, artist_name')
+        .eq('id', userId)
+        .single()
+
+      if (userError || !userProfile) {
+        throw new Error(`Failed to get user profile for artist creation: ${userError?.message}`)
+      }
+
+      const artistName = userProfile.artist_name || `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim()
+      const realName = `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim()
+
+      // Create artist profile with social media data
+      const { data: insertData, error: insertError } = await this.supabase
+        .from('artist_profiles')
+        .insert({
+          user_id: userId,
+          artist_name: artistName,
+          real_name: realName,
+          ...socialMediaData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        throw new Error(`Failed to create artist profile: ${insertError.message}`)
+      }
+
+      console.log(`✅ Created artist profile for user: ${userId}`)
+      return insertData
+    }
+
+    // Other errors
+    throw new Error(`Failed to update social media URLs: ${updateError?.message || 'Unknown error'}`)
   }
 }
