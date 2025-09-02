@@ -29,7 +29,9 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
   const [activeSection, setActiveSection] = useState<string>('dashboard')
 
   // Detect if we're on a detail page (any route with parameters)
-  const isOnDetailPage = location.pathname.includes('/releases/')
+  const isOnDetailPage = location.pathname.includes('/releases/') || 
+                        location.pathname.includes('/songs/') ||
+                        location.pathname.includes('/metadata/')
 
   // Define which sections can be navigated to directly vs require main app
   const canNavigateDirectly = useCallback((_section: string) => {
@@ -44,12 +46,14 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
     console.log('NavigationContext: Current activeSection before change:', activeSection)
     
     // Check if we're currently on a detail page at the time of this call
-    const currentlyOnDetailPage = location.pathname.includes('/releases/')
+    const currentlyOnDetailPage = location.pathname.includes('/releases/') || 
+                                 location.pathname.includes('/songs/') ||
+                                 location.pathname.includes('/metadata/')
     
     if (currentlyOnDetailPage) {
       // From detail page: navigate to main app with section state
       console.log('NavigationContext: Navigating from detail page to main app with section:', section)
-      navigate('/', { state: { activeSection: section }, replace: true })
+      navigate('/dashboard', { state: { activeSection: section }, replace: true })
     } else {
       // From main app: just change section
       console.log('NavigationContext: Setting activeSection to:', section)

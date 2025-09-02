@@ -32,33 +32,35 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Releases
-          </Button>
-          <div>
-            <Skeleton className="h-8 w-64 mb-2" />
-            <Skeleton className="h-4 w-48" />
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+        <div className="space-y-8 w-full max-w-4xl px-8">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={onBack}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Releases
+            </Button>
+            <div>
+              <Skeleton className="h-8 w-64 mb-2" />
+              <Skeleton className="h-4 w-48" />
+            </div>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} className="bg-card/50 backdrop-blur-sm border-border/50">
+                <CardContent className="p-6">
+                  <Skeleton className="h-20 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <CardContent className="p-6">
+              <Skeleton className="h-64 w-full" />
+            </CardContent>
+          </Card>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="bg-card/50 backdrop-blur-sm border-border/50">
-              <CardContent className="p-6">
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardContent className="p-6">
-            <Skeleton className="h-64 w-full" />
-          </CardContent>
-        </Card>
       </div>
-    )
+    );
   }
 
   // Error state
