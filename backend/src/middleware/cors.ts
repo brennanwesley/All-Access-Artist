@@ -11,8 +11,13 @@ const isAllowedOrigin = (origin: string): boolean => {
     return true
   }
   
-  // Allow production Vercel domain
+  // Allow production domains
   if (origin === 'https://all-access-artist.vercel.app') {
+    return true
+  }
+  
+  // Allow custom domain (with and without www)
+  if (origin === 'https://allaccessartist.com' || origin === 'https://www.allaccessartist.com') {
     return true
   }
   
