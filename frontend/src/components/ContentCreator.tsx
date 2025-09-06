@@ -19,7 +19,8 @@ import {
   Wand2
 } from "lucide-react";
 import { XIcon } from "@/components/ui/x-icon";
-import { useState } from "react";
+//import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
