@@ -187,7 +187,23 @@ export const ContentCreator = () => {
     setIsModalOpen(true);
   };
 
+ //new - Fire server endpoint that forwards to n8n when a platform is connected
+  const handleSocialConnected = async (platformId: string, usernameOrUrl: string) => {
+    try {
+      await fetch('/api/social/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: platformId,
+          usernameOrUrl,
+        }),
+      });
+    } catch (e) {
+      console.error('Webhook call failed', e);
+    }
+  };
 
+  
   const getPillarDistribution = (): Record<string, number> => {
     // For MVP, show static distribution - will connect to real data later
     return {
@@ -589,6 +605,7 @@ export const ContentCreator = () => {
 
       {/* Social Connection Modal */}
       <SocialConnectionModal
+        onConnected={handleSocialConnected} //new
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         platform={selectedPlatform}
