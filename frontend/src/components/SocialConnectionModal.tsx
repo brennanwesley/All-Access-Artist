@@ -21,7 +21,8 @@ export const SocialConnectionModal: React.FC<SocialConnectionModalProps> = ({
   isOpen,
   onClose,
   platform,
-  currentUrl = ""
+  currentUrl = "", //new added comma
+  onConnected // new
 }) => {
   const [inputValue, setInputValue] = useState(currentUrl);
   const updatePlatform = useUpdateSinglePlatform();
@@ -88,6 +89,13 @@ export const SocialConnectionModal: React.FC<SocialConnectionModalProps> = ({
         platform: platformKey,
         url: normalizedUrl
       });
+
+       // Fire the webhook via backend after we successfully saved  //new
+      try {
+        await onConnected?.(platform.id, normalizedUrl);
+      } catch (err) {
+        console.error('onConnected webhook failed', err);
+      }
       
       onClose();
       setInputValue("");
