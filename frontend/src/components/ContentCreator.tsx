@@ -189,21 +189,27 @@ export const ContentCreator = () => {
   };
 
  //new - Fire server endpoint that forwards to n8n when a platform is connected
+// HOTFIX: call the backend directly (absolute URL)
   const handleSocialConnected = async (platformId: string, usernameOrUrl: string) => {
     try {
-      await fetch('/api/social/connect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          platform: platformId,
-          usernameOrUrl,
-        }),
-      });
+      const res = await fetch(
+        'https://all-access-artist.onrender.com/api/social/connect',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          // keep this if your /api/social/* route is auth-protected; otherwise it's harmless
+          credentials: 'include',
+          body: JSON.stringify({ platform: platformId, usernameOrUrl }),
+        }
+      );
+      if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        console.error('social/connect failed', res.status, detail);
+      }
     } catch (e) {
       console.error('Webhook call failed', e);
     }
   };
-
   
   const getPillarDistribution = (): Record<string, number> => {
     // For MVP, show static distribution - will connect to real data later
