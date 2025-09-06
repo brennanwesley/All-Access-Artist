@@ -2,6 +2,9 @@ import { Hono } from 'hono';
 
 const social = new Hono();
 
+// NEW: handle CORS preflight for this endpoint
+social.options('/connect', (c) => c.text('', 204))
+
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL!;   // e.g. https://n8n.example.com/webhook/social-connect
 const N8N_TOKEN = process.env.N8N_WEBHOOK_TOKEN;        // optional
 
