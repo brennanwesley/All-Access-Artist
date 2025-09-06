@@ -52,6 +52,7 @@ app.get('/health', (c) => {
 
 // Supabase authentication middleware for protected API routes only
 // Public endpoints: /api/subscription/products, /api/webhooks/stripe, /api/onboarding/*
+app.options('/api/social/*', (c) => c.text('', 204)); //new 
 app.use('/api/artists/*', supabaseAuth)
 app.use('/api/releases/*', supabaseAuth)
 app.use('/api/calendar/*', supabaseAuth)
