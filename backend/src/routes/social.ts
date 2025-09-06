@@ -34,22 +34,24 @@ function setCors(c: any) {
 
 async function handler(c: any) {
   const method = c.req.method
-  // helpful server-side log
-  console.log(`[social] ${method} ${new URL(c.req.url).pathname}`)
+  const pathname = (() => {
+    try { return new URL(c.req.url).pathname } catch { return '/api/social/connect' }
+  })()
+  console.log(`[social] ${method} ${pathname}`)
 
-  // CORS preflight
+  // Preflight
   if (method === 'OPTIONS') {
     setCors(c)
     return c.body(null, 204)
   }
 
-  // quick HEAD success for monitors/CDN
+  // HEAD (some proxies/monitors use it)
   if (method === 'HEAD') {
     setCors(c)
     return c.body(null, 204)
   }
 
-  // Allow GET as a simple connectivity test (no n8n call)
+  // Simple GET to verify the route is live
   if (method === 'GET') {
     setCors(c)
     return c.json({ ok: true, info: 'POST here to forward to n8n' })
@@ -62,11 +64,10 @@ async function handler(c: any) {
       return c.json({ error: 'N8N_WEBHOOK_URL is not configured on the server' }, 500)
     }
 
-    const { platform, usernameOrUrl, userId } = await c.req.json<{
-      platform: string
-      usernameOrUrl: string
-      userId?: string
-    }>()
+    const body = await c.req.json().catch(() => null) as any
+    const platform = body?.platform as string | undefined
+    const usernameOrUrl = body?.usernameOrUrl as string | undefined
+    const userId = body?.userId as string | undefined
 
     if (!platform || !usernameOrUrl) {
       setCors(c)
@@ -104,7 +105,7 @@ async function handler(c: any) {
   }
 }
 
-// Accept both /connect and /connect/ and all common methods
+// Accept both /connect and /connect/
 for (const path of ['/connect', '/connect/']) {
   social.on(['OPTIONS', 'HEAD', 'GET', 'POST'], path, handler)
 }
