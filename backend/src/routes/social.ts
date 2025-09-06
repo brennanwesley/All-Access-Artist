@@ -2,7 +2,6 @@ import { Hono } from 'hono'
 
 const social = new Hono()
 
-// Env (configured in your backend environment)
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL
 const N8N_TOKEN = process.env.N8N_WEBHOOK_TOKEN
 
@@ -24,22 +23,42 @@ function normalizeUsername(input: string, platform: string) {
   }
 }
 
-// Accept both preflight (OPTIONS) and POST for /connect
-social.on(['OPTIONS', 'POST'], '/connect', async (c) => {
-  // --- CORS preflight ---
-  if (c.req.method === 'OPTIONS') {
-    const origin = c.req.header('Origin') ?? '*'
-    c.header('Access-Control-Allow-Origin', origin)
-    c.header('Vary', 'Origin')
-    c.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
-    c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-    c.header('Access-Control-Allow-Credentials', 'true')
-    return c.body(null, 204) // 204 must have no body
+function setCors(c: any) {
+  const origin = c.req.header('Origin') ?? '*'
+  c.header('Access-Control-Allow-Origin', origin)
+  c.header('Vary', 'Origin')
+  c.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD')
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  c.header('Access-Control-Allow-Credentials', 'true')
+}
+
+async function handler(c: any) {
+  const method = c.req.method
+  // helpful server-side log
+  console.log(`[social] ${method} ${new URL(c.req.url).pathname}`)
+
+  // CORS preflight
+  if (method === 'OPTIONS') {
+    setCors(c)
+    return c.body(null, 204)
   }
 
-  // --- POST /connect ---
+  // quick HEAD success for monitors/CDN
+  if (method === 'HEAD') {
+    setCors(c)
+    return c.body(null, 204)
+  }
+
+  // Allow GET as a simple connectivity test (no n8n call)
+  if (method === 'GET') {
+    setCors(c)
+    return c.json({ ok: true, info: 'POST here to forward to n8n' })
+  }
+
+  // POST → forward to n8n
   try {
     if (!N8N_WEBHOOK_URL) {
+      setCors(c)
       return c.json({ error: 'N8N_WEBHOOK_URL is not configured on the server' }, 500)
     }
 
@@ -50,6 +69,7 @@ social.on(['OPTIONS', 'POST'], '/connect', async (c) => {
     }>()
 
     if (!platform || !usernameOrUrl) {
+      setCors(c)
       return c.json({ error: 'platform and usernameOrUrl required' }, 400)
     }
 
@@ -72,20 +92,21 @@ social.on(['OPTIONS', 'POST'], '/connect', async (c) => {
 
     if (!resp.ok) {
       const detail = await resp.text()
+      setCors(c)
       return c.json({ error: 'n8n webhook failed', detail }, 502)
     }
 
-    // Helpful when credentials mode is used
-    const origin = c.req.header('Origin')
-    if (origin) {
-      c.header('Access-Control-Allow-Origin', origin)
-      c.header('Vary', 'Origin')
-    }
-
+    setCors(c)
     return c.json({ ok: true, username })
   } catch (e: any) {
+    setCors(c)
     return c.json({ error: 'server error', detail: e?.message }, 500)
   }
-})
+}
+
+// Accept both /connect and /connect/ and all common methods
+for (const path of ['/connect', '/connect/']) {
+  social.on(['OPTIONS', 'HEAD', 'GET', 'POST'], path, handler)
+}
 
 export default social
