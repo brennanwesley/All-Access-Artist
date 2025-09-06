@@ -18,6 +18,7 @@ This document tracks the current status of the All Access Artist platform follow
 - **Webhook Handler**: Secure Stripe event processing with signature verification at `/api/webhooks/stripe`
 - **Access Control**: Admin/test user hardcoding with read-only mode for expired subscriptions
 - **Security**: No payment data stored locally - Stripe Checkout handles PCI compliance
+- **Testing Environment**: Configured with Stripe test keys for development and testing purposes
 
 **42. Subscription Access Control Matrix**
 - **Admin User** (`brennan.tharaldson@gmail.com`): Full access always
