@@ -28,6 +28,9 @@ import onboarding from './routes/onboarding.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
 
+// NEW: import the social route
+import social from './routes/social.js'
+
 // Initialize Hono app with proper typing
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -67,6 +70,9 @@ app.use('/api/content/*', supabaseAuth)
 app.use('/api/jobs/*', supabaseAuth)
 app.use('/api/admin/*', supabaseAuth)
 
+// NEW: protect social routes too (remove this line if you want it public)
+app.use('/api/social/*', supabaseAuth)
+
 // Mount route modules
 app.route('/api/artists', artists)
 app.route('/api/releases', releases)
@@ -85,6 +91,9 @@ app.route('/api/admin', admin)
 app.route('/api/subscription', subscription)
 app.route('/api/webhooks', webhooks)
 app.route('/api/onboarding', onboarding)
+
+// NEW: mount the social routes (exposes POST /api/social/connect)
+app.route('/api/social', social)
 
 // 404 handler
 app.notFound((c) => {
