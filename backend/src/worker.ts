@@ -52,7 +52,7 @@ app.get('/health', (c) => {
 
 // Supabase authentication middleware for protected API routes only
 // Public endpoints: /api/subscription/products, /api/webhooks/stripe, /api/onboarding/*
-app.options('/api/social/*', (c) => c.text('', 204)); //new 
+
 app.use('/api/artists/*', supabaseAuth)
 app.use('/api/releases/*', supabaseAuth)
 app.use('/api/calendar/*', supabaseAuth)
@@ -70,6 +70,20 @@ app.use('/api/assets/*', supabaseAuth)
 app.use('/api/content/*', supabaseAuth)
 app.use('/api/jobs/*', supabaseAuth)
 app.use('/api/admin/*', supabaseAuth)
+
+//NEW
+// Allow CORS preflight for social webhook BEFORE auth
+app.options('/api/social/*', (c) => {
+  // helpful if your corsMiddleware is strict or you’re testing
+  const origin = c.req.header('Origin') ?? '*';
+  c.header('Access-Control-Allow-Origin', origin);
+  c.header('Vary', 'Origin');
+  c.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  c.header('Access-Control-Allow-Credentials', 'true');
+  return c.text('', 204);
+});
+
 
 // NEW: protect social routes too (remove this line if you want it public)
 app.use('/api/social/*', supabaseAuth)
