@@ -1,7 +1,6 @@
-import { Router } from "express";
-import fetch from "node-fetch";
+import { Hono } from 'hono';
 
-const router = Router();
+const social = new Hono();
 
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL!;   // e.g. https://n8n.example.com/webhook/social-connect
 const N8N_TOKEN = process.env.N8N_WEBHOOK_TOKEN;        // optional
@@ -9,34 +8,35 @@ const N8N_TOKEN = process.env.N8N_WEBHOOK_TOKEN;        // optional
 function normalizeUsername(input: string, platform: string) {
   try {
     const asUrl = new URL(input);
-    const path = asUrl.pathname.replace(/\/+$/, ""); // trim trailing slash
+    const path = asUrl.pathname.replace(/\/+$/, ''); // trim trailing slash
     switch (platform) {
-      case "tiktok":
-      case "youtube":
-        return path.replace(/^\/@?/, "@");
-      case "instagram":
-      case "twitter":
+      case 'tiktok':
+      case 'youtube':
+        return path.replace(/^\/@?/, '@');
+      case 'instagram':
+      case 'twitter':
       default:
-        return path.replace(/^\//, "@");
+        return path.replace(/^\//, '@');
     }
   } catch {
-    return input.startsWith("@") ? input : `@${input}`;
+    return input.startsWith('@') ? input : `@${input}`;
   }
 }
 
-router.post("/social/connect", async (req, res) => {
+social.post('/api/social/connect', async (c) => {
   try {
-    const { platform, usernameOrUrl, userId } = req.body || {};
+    const { platform, usernameOrUrl, userId } = await c.req.json<{ platform: string; usernameOrUrl: string; userId?: string }>();
+
     if (!platform || !usernameOrUrl) {
-      return res.status(400).json({ error: "platform and usernameOrUrl required" });
+      return c.json({ error: 'platform and usernameOrUrl required' }, 400);
     }
 
     const username = normalizeUsername(usernameOrUrl, platform);
 
     const resp = await fetch(N8N_WEBHOOK_URL, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...(N8N_TOKEN ? { Authorization: `Bearer ${N8N_TOKEN}` } : {}),
       },
       body: JSON.stringify({
@@ -50,13 +50,13 @@ router.post("/social/connect", async (req, res) => {
 
     if (!resp.ok) {
       const detail = await resp.text();
-      return res.status(502).json({ error: "n8n webhook failed", detail });
+      return c.json({ error: 'n8n webhook failed', detail }, 502);
     }
 
-    return res.json({ ok: true, username });
+    return c.json({ ok: true, username });
   } catch (e: any) {
-    return res.status(500).json({ error: "server error", detail: e?.message });
+    return c.json({ error: 'server error', detail: e?.message }, 500);
   }
 });
 
-export default router;
+export default social;
