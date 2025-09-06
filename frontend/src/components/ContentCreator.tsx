@@ -45,6 +45,17 @@ export const ContentCreator = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<{ id: string; name: string } | null>(null);
 
+   //new - Optional safety net: fire once when Instagram URL appears
+  useEffect(() => {
+    const ig = (socialMediaUrls as any)?.instagram_url as string | undefined;
+    if (!ig) return;
+    if (typeof window !== 'undefined' && window.sessionStorage.getItem('igWebhookFired') === '1') return;
+    handleSocialConnected('instagram', ig)
+      .finally(() => {
+        try { window.sessionStorage.setItem('igWebhookFired', '1'); } catch {}
+      });
+  }, [socialMediaUrls?.instagram_url]);
+
   // Creation tools from Create.tsx
   const creationTools = [
     {
