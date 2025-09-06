@@ -13,6 +13,8 @@ interface SocialConnectionModalProps {
     id: string;
   } | null;
   currentUrl?: string;
+  onConnected?: (platformId: string, usernameOrUrl: string) => Promise<void> | void; //new
+
 }
 
 export const SocialConnectionModal: React.FC<SocialConnectionModalProps> = ({
