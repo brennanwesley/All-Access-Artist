@@ -6,28 +6,43 @@ import { Music, TrendingUp, Users, Zap, Star, BarChart3 } from 'lucide-react'
 const LandingPage = () => {
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      {/* Header */}
+    <div className="min-h-screen" style={{ background: 'var(--gradient-purple-subtle)' }}>
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-blue-900/30" />
+        <div className="absolute inset-0" style={{ background: 'var(--gradient-purple-hero)' }} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
-              All Access Artist
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              The complete platform for independent artists to manage releases, 
-              grow their audience, and maximize their music career potential.
-            </p>
+            <div 
+              className="inline-block p-8 rounded-2xl backdrop-blur-xl border border-white/10 mb-8"
+              style={{ 
+                background: 'var(--glass-purple-header)',
+                boxShadow: 'var(--shadow-purple-floating)'
+              }}
+            >
+              <h1 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
+                All Access Artist
+              </h1>
+              <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+                The complete platform for independent artists to manage releases, 
+                grow their audience, and maximize their music career potential.
+              </p>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/plans">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3">
+                <Button 
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  style={{ boxShadow: 'var(--shadow-purple-glow)' }}
+                >
                   Get Started
                 </Button>
               </Link>
               <Link to="/login">
-                <Button size="lg" variant="outline" className="border-border/50 text-foreground hover:bg-card/50 px-8 py-3">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white/20 text-foreground hover:bg-white/10 px-8 py-3 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                >
                   Sign In
                 </Button>
               </Link>
@@ -50,9 +65,15 @@ const LandingPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <Card 
+              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              style={{ 
+                background: 'var(--glass-purple-card)',
+                boxShadow: 'var(--shadow-purple-glow)'
+              }}
+            >
               <CardHeader>
-                <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-primary/30 rounded-lg flex items-center justify-center mb-4 backdrop-blur-sm">
                   <Music className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle>Release Management</CardTitle>
@@ -62,9 +83,15 @@ const LandingPage = () => {
               </CardHeader>
             </Card>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <Card 
+              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              style={{ 
+                background: 'var(--glass-purple-card)',
+                boxShadow: 'var(--shadow-purple-glow)'
+              }}
+            >
               <CardHeader>
-                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-blue-500/30 rounded-lg flex items-center justify-center mb-4 backdrop-blur-sm">
                   <TrendingUp className="h-6 w-6 text-blue-400" />
                 </div>
                 <CardTitle>Analytics & Insights</CardTitle>
@@ -74,9 +101,15 @@ const LandingPage = () => {
               </CardHeader>
             </Card>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <Card 
+              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              style={{ 
+                background: 'var(--glass-purple-card)',
+                boxShadow: 'var(--shadow-purple-glow)'
+              }}
+            >
               <CardHeader>
-                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-green-500/30 rounded-lg flex items-center justify-center mb-4 backdrop-blur-sm">
                   <Users className="h-6 w-6 text-green-400" />
                 </div>
                 <CardTitle>Fan Engagement</CardTitle>
@@ -86,9 +119,15 @@ const LandingPage = () => {
               </CardHeader>
             </Card>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <Card 
+              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              style={{ 
+                background: 'var(--glass-purple-card)',
+                boxShadow: 'var(--shadow-purple-glow)'
+              }}
+            >
               <CardHeader>
-                <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-yellow-500/30 rounded-lg flex items-center justify-center mb-4 backdrop-blur-sm">
                   <Zap className="h-6 w-6 text-yellow-400" />
                 </div>
                 <CardTitle>Content Creation</CardTitle>
@@ -98,9 +137,15 @@ const LandingPage = () => {
               </CardHeader>
             </Card>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <Card 
+              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              style={{ 
+                background: 'var(--glass-purple-card)',
+                boxShadow: 'var(--shadow-purple-glow)'
+              }}
+            >
               <CardHeader>
-                <div className="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-red-500/30 rounded-lg flex items-center justify-center mb-4 backdrop-blur-sm">
                   <Star className="h-6 w-6 text-red-400" />
                 </div>
                 <CardTitle>Label Copy Generation</CardTitle>
@@ -110,9 +155,15 @@ const LandingPage = () => {
               </CardHeader>
             </Card>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <Card 
+              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              style={{ 
+                background: 'var(--glass-purple-card)',
+                boxShadow: 'var(--shadow-purple-glow)'
+              }}
+            >
               <CardHeader>
-                <div className="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-indigo-500/30 rounded-lg flex items-center justify-center mb-4 backdrop-blur-sm">
                   <BarChart3 className="h-6 w-6 text-indigo-400" />
                 </div>
                 <CardTitle>Revenue Tracking</CardTitle>
@@ -127,7 +178,13 @@ const LandingPage = () => {
 
       {/* CTA Section */}
       <div className="py-24">
-        <Card className="max-w-4xl mx-auto bg-card/50 backdrop-blur-sm border-border/50">
+        <Card 
+          className="max-w-4xl mx-auto backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300"
+          style={{ 
+            background: 'var(--glass-purple-cta)',
+            boxShadow: 'var(--shadow-purple-deep)'
+          }}
+        >
           <CardContent className="text-center p-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
               Ready to Take Your Music Career to the Next Level?
@@ -137,7 +194,11 @@ const LandingPage = () => {
               to grow their careers and connect with fans worldwide.
             </p>
             <Link to="/plans">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3">
+              <Button 
+                size="lg" 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                style={{ boxShadow: 'var(--shadow-purple-glow)' }}
+              >
                 Start Your Journey Today
               </Button>
             </Link>

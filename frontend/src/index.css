@@ -41,8 +41,22 @@ All colors MUST be HSL.
     --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
     --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(240 8% 8%));
     
+    /* Enhanced Purple Gradients for Landing Page */
+    --gradient-purple-primary: linear-gradient(135deg, hsl(263 70% 15%), hsl(280 60% 20%), hsl(263 70% 25%));
+    --gradient-purple-subtle: linear-gradient(180deg, hsl(263 70% 12%), hsl(280 50% 18%), hsl(263 60% 22%));
+    --gradient-purple-deep: linear-gradient(45deg, hsl(263 80% 8%), hsl(280 70% 15%), hsl(263 70% 20%));
+    --gradient-purple-hero: linear-gradient(135deg, hsl(263 70% 18% / 0.9), hsl(280 60% 25% / 0.8), hsl(270 80% 30% / 0.7));
+    
+    /* Enhanced Glassmorphism Effects */
+    --glass-purple-card: linear-gradient(135deg, hsl(263 70% 15% / 0.4), hsl(280 60% 20% / 0.2));
+    --glass-purple-header: linear-gradient(135deg, hsl(263 70% 20% / 0.6), hsl(280 60% 25% / 0.4));
+    --glass-purple-cta: linear-gradient(135deg, hsl(263 70% 25% / 0.5), hsl(280 60% 30% / 0.3));
+    
     --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
     --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.4);
+    --shadow-purple-glow: 0 8px 32px hsl(263 70% 10% / 0.3);
+    --shadow-purple-deep: 0 12px 40px hsl(263 70% 5% / 0.4);
+    --shadow-purple-floating: 0 16px 48px hsl(263 70% 8% / 0.5), inset 0 1px 0 hsl(280 60% 80% / 0.1);
 
     --radius: 0.75rem;
 
