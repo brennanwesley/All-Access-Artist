@@ -19,7 +19,8 @@ import {
   Wand2
 } from "lucide-react";
 import { XIcon } from "@/components/ui/x-icon";
-import { useState } from "react";
+//import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +45,17 @@ export const ContentCreator = () => {
   const { data: socialMediaUrls } = useSocialMediaUrls();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<{ id: string; name: string } | null>(null);
+
+   //new - Optional safety net: fire once when Instagram URL appears
+  useEffect(() => {
+    const ig = (socialMediaUrls as any)?.instagram_url as string | undefined;
+    if (!ig) return;
+    if (typeof window !== 'undefined' && window.sessionStorage.getItem('igWebhookFired') === '1') return;
+    handleSocialConnected('instagram', ig)
+      .finally(() => {
+        try { window.sessionStorage.setItem('igWebhookFired', '1'); } catch {}
+      });
+  }, [socialMediaUrls?.instagram_url]);
 
   // Creation tools from Create.tsx
   const creationTools = [
@@ -176,7 +188,29 @@ export const ContentCreator = () => {
     setIsModalOpen(true);
   };
 
-
+ //new - Fire server endpoint that forwards to n8n when a platform is connected
+// HOTFIX: call the backend directly (absolute URL)
+  const handleSocialConnected = async (platformId: string, usernameOrUrl: string) => {
+    try {
+      const res = await fetch(
+        'https://all-access-artist.onrender.com/api/social/connect',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          // keep this if your /api/social/* route is auth-protected; otherwise it's harmless
+          credentials: 'include',
+          body: JSON.stringify({ platform: platformId, usernameOrUrl }),
+        }
+      );
+      if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        console.error('social/connect failed', res.status, detail);
+      }
+    } catch (e) {
+      console.error('Webhook call failed', e);
+    }
+  };
+  
   const getPillarDistribution = (): Record<string, number> => {
     // For MVP, show static distribution - will connect to real data later
     return {
@@ -578,6 +612,7 @@ export const ContentCreator = () => {
 
       {/* Social Connection Modal */}
       <SocialConnectionModal
+        onConnected={handleSocialConnected} //new
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         platform={selectedPlatform}

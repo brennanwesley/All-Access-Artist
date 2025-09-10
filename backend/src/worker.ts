@@ -28,6 +28,9 @@ import onboarding from './routes/onboarding.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
 
+// NEW: social webhook route
+import social from './routes/social.js'
+
 // Initialize Hono app with proper typing
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -47,8 +50,42 @@ app.get('/health', (c) => {
   })
 })
 
-// Supabase authentication middleware for protected API routes only
-// Public endpoints: /api/subscription/products, /api/webhooks/stripe, /api/onboarding/*
+// --- AUTH / CORS SETUP ---
+
+// NEW: Allow CORS preflight for social webhook BEFORE auth
+app.options('/api/social/*', (c) => {
+  const origin = c.req.header('Origin') ?? '*'
+  c.header('Access-Control-Allow-Origin', origin)
+  c.header('Vary', 'Origin')
+  c.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD')
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  c.header('Access-Control-Allow-Credentials', 'true')
+  return c.body(null, 204)
+})
+
+// CHANGED: Bypass auth ONLY for /api/social/connect (and its trailing slash).
+// All other /api/social/* routes remain protected.
+app.use('/api/social/*', async (c, next) => {
+  const url = new URL(c.req.url)
+  const path = url.pathname
+  const isConnect =
+    path === '/api/social/connect' || path === '/api/social/connect/'
+
+  if (c.req.method === 'OPTIONS') {
+    // preflight already handled above, but let it through just in case
+    return next()
+  }
+
+  if (isConnect) {
+    // Public endpoint: no auth required
+    return next()
+  }
+
+  // Everything else under /api/social/* still requires auth
+  return supabaseAuth(c, next)
+})
+
+// Supabase authentication middleware for other protected API routes
 app.use('/api/artists/*', supabaseAuth)
 app.use('/api/releases/*', supabaseAuth)
 app.use('/api/calendar/*', supabaseAuth)
@@ -86,6 +123,9 @@ app.route('/api/subscription', subscription)
 app.route('/api/webhooks', webhooks)
 app.route('/api/onboarding', onboarding)
 
+// NEW: mount the social routes (exposes /api/social/connect with GET/POST/OPTIONS/HEAD)
+app.route('/api/social', social)
+
 // 404 handler
 app.notFound((c) => {
   return c.json({ 
@@ -107,7 +147,8 @@ app.notFound((c) => {
       'GET /api/subscription/products',
       'POST /api/subscription/checkout',
       'POST /api/subscription/cancel',
-      'POST /api/webhooks/stripe'
+      'POST /api/webhooks/stripe',
+      'GET|POST /api/social/connect'
     ]
   }, 404)
 })
