@@ -8,6 +8,7 @@ import { Hono } from 'hono'
 import { corsMiddleware } from './middleware/cors.js'
 import { rateLimitMiddleware } from './middleware/rateLimit.js'
 import { supabaseAuth } from './middleware/auth.js'
+import { subscriptionAuth } from './middleware/subscriptionAuth.js'
 import artists from './routes/artists.js'
 import releases from './routes/releases.js'
 import calendar from './routes/calendar.js'
@@ -85,24 +86,30 @@ app.use('/api/social/*', async (c, next) => {
   return supabaseAuth(c, next)
 })
 
-// Supabase authentication middleware for other protected API routes
-app.use('/api/artists/*', supabaseAuth)
-app.use('/api/releases/*', supabaseAuth)
-app.use('/api/calendar/*', supabaseAuth)
+// Supabase authentication middleware for protected API routes
+// Auth-only routes (no subscription required)
+app.use('/api/profile/*', supabaseAuth)
+app.use('/api/admin/*', supabaseAuth)
+
+// Subscription routes handle their own auth internally
 subscription.use('/status', supabaseAuth)
 subscription.use('/cancel', supabaseAuth)
 subscription.use('/setup', supabaseAuth)
-app.use('/api/analytics/*', supabaseAuth)
-app.use('/api/lyrics/*', supabaseAuth)
-app.use('/api/tasks/*', supabaseAuth)
-app.use('/api/songs/*', supabaseAuth)
-app.use('/api/labelcopy/*', supabaseAuth)
-app.use('/api/profile/*', supabaseAuth)
-app.use('/api/splitsheets/*', supabaseAuth)
-app.use('/api/assets/*', supabaseAuth)
-app.use('/api/content/*', supabaseAuth)
-app.use('/api/jobs/*', supabaseAuth)
-app.use('/api/admin/*', supabaseAuth)
+
+// Core product routes: Auth + Subscription enforcement
+// subscriptionAuth allows reads for expired users, blocks mutations
+app.use('/api/artists/*', supabaseAuth, subscriptionAuth)
+app.use('/api/releases/*', supabaseAuth, subscriptionAuth)
+app.use('/api/calendar/*', supabaseAuth, subscriptionAuth)
+app.use('/api/analytics/*', supabaseAuth, subscriptionAuth)
+app.use('/api/lyrics/*', supabaseAuth, subscriptionAuth)
+app.use('/api/tasks/*', supabaseAuth, subscriptionAuth)
+app.use('/api/songs/*', supabaseAuth, subscriptionAuth)
+app.use('/api/labelcopy/*', supabaseAuth, subscriptionAuth)
+app.use('/api/splitsheets/*', supabaseAuth, subscriptionAuth)
+app.use('/api/assets/*', supabaseAuth, subscriptionAuth)
+app.use('/api/content/*', supabaseAuth, subscriptionAuth)
+app.use('/api/jobs/*', supabaseAuth, subscriptionAuth)
 
 // Mount route modules
 app.route('/api/artists', artists)

@@ -64,6 +64,13 @@ subscription.get('/status', async (c) => {
       return c.json({ success: false, error: { message: 'Failed to fetch subscription details' } }, 500)
     }
 
+    // Get account_type for admin check
+    const { data: userProfile } = await c.get('supabase')
+      .from('user_profiles')
+      .select('account_type')
+      .eq('id', user.id)
+      .single()
+
     return c.json({
       success: true,
       data: {
@@ -72,8 +79,7 @@ subscription.get('/status', async (c) => {
         user: {
           id: user.id,
           email: jwtPayload.email,
-          isAdmin: jwtPayload.email === 'brennan.tharaldson@gmail.com',
-          isTestUser: jwtPayload.email === 'feedbacklooploop@gmail.com'
+          isAdmin: userProfile?.account_type === 'admin'
         }
       }
     })
@@ -251,10 +257,17 @@ subscription.get('/products', async (c) => {
  */
 subscription.post('/setup', async (c) => {
   try {
-    const jwtPayload = c.get('jwtPayload')
+    const user = c.get('user')
+    
+    // Check admin status from database
+    const { data: profile } = await c.get('supabase')
+      .from('user_profiles')
+      .select('account_type')
+      .eq('id', user.id)
+      .single()
     
     // Only admin can run setup
-    if (jwtPayload?.email !== 'brennan.tharaldson@gmail.com') {
+    if (profile?.account_type !== 'admin') {
       return c.json({ success: false, error: { message: 'Admin access required' } }, 403)
     }
 
