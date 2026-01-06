@@ -1,28 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
+import type { AdminUser, AdminStats, BackendResponse } from '../../types/api'
 
-// Types for admin data
-export interface AdminUser {
-  id: string
-  first_name: string | null
-  last_name: string | null
-  email: string
-  account_type: 'admin' | 'artist' | 'manager' | 'label'
-  created_at: string
-  phone_verified: boolean | null
-}
-
-export interface AdminStats {
-  total_users: number
-  admin_users: number
-  artist_users: number
-  manager_users: number
-  label_users: number
-  total_releases: number
-  total_tasks: number
-  last_updated: string
-}
+// Re-export types for backward compatibility
+export type { AdminUser, AdminStats }
 
 // Query hook for fetching all users (admin only)
 export const useAdminUsers = () => {
@@ -36,8 +18,11 @@ export const useAdminUsers = () => {
         throw new Error(response.error || 'Failed to fetch admin users')
       }
       // Extract data from backend response format: { success: true, data: [...] }
-      const backendResponse = response.data as any
-      return backendResponse?.data as AdminUser[]
+      const backendResponse = response.data as BackendResponse<AdminUser[]> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      return []
     },
     enabled: !!user, // Only run query if user is authenticated
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -57,8 +42,11 @@ export const useAdminStats = () => {
         throw new Error(response.error || 'Failed to fetch admin stats')
       }
       // Extract data from backend response format: { success: true, data: {...} }
-      const backendResponse = response.data as any
-      return backendResponse?.data as AdminStats
+      const backendResponse = response.data as BackendResponse<AdminStats> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      throw new Error('Invalid response from server')
     },
     enabled: !!user, // Only run query if user is authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes

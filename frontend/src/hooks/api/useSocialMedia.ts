@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { toast } from 'sonner'
+import type { Artist, BackendResponse } from '../../types/api'
 
 // Types for social media data
 export interface SocialMediaUrls {
@@ -11,19 +12,6 @@ export interface SocialMediaUrls {
   youtube_url?: string | undefined
   spotify_url?: string | undefined
   apple_music_url?: string | undefined
-}
-
-interface ArtistProfile {
-  id: string
-  user_id: string
-  artist_name: string
-  instagram_url?: string
-  tiktok_url?: string
-  twitter_url?: string
-  youtube_url?: string
-  spotify_url?: string
-  apple_music_url?: string
-  [key: string]: any
 }
 
 // Hook to get current user's social media URLs from artist profile
@@ -42,11 +30,12 @@ export const useSocialMediaUrls = () => {
       
       
       // Handle different response structures
-      let artists: ArtistProfile[]
-      if (Array.isArray(response.data)) {
-        artists = response.data as ArtistProfile[]
-      } else if (response.data && typeof response.data === 'object' && 'data' in response.data) {
-        artists = (response.data as any).data as ArtistProfile[]
+      let artists: Artist[]
+      const backendResponse = response.data as BackendResponse<Artist[]> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        artists = backendResponse.data
+      } else if (Array.isArray(response.data)) {
+        artists = response.data as Artist[]
       } else {
         console.error('Unexpected response structure:', response.data)
         return null
@@ -88,7 +77,7 @@ export const useUpdateSocialMedia = () => {
       if (response.status !== 200) {
         throw new Error(response.error || 'Failed to update social media URLs')
       }
-      return response.data as ArtistProfile
+      return response.data
     },
     onSuccess: () => {
       // Invalidate related caches
@@ -117,7 +106,7 @@ export const useUpdateSinglePlatform = () => {
       if (response.status !== 200) {
         throw new Error(response.error || 'Failed to update social media URL')
       }
-      return response.data as ArtistProfile
+      return response.data
     },
     onSuccess: () => {
       // Invalidate related caches

@@ -1,64 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api'
+import type {
+  UserProfile,
+  UpdateProfileData,
+  ReferralStats,
+  ReferralValidation,
+  ReferralApplication,
+  BackendResponse
+} from '../../types/api'
 
-// Types for profile data
-export interface UserProfile {
-  id: string
-  first_name: string
-  last_name: string
-  email: string
-  phone?: string
-  phone_verified: boolean
-  account_type?: 'admin' | 'artist' | 'manager' | 'label'
-  billing_address?: {
-    street?: string
-    city?: string
-    state?: string
-    zip?: string
-  }
-  payment_method_last4?: string
-  referral_code: string
-  referral_credits: number
-  created_at: string
-  updated_at: string
-}
-
-export interface UpdateProfileData {
-  first_name: string
-  last_name: string
-  billing_address?: {
-    street?: string | undefined
-    city?: string | undefined
-    state?: string | undefined
-    zip?: string | undefined
-  }
-}
-
-export interface ReferralStats {
-  total_referrals: number
-  total_credits: number
-  pending_credits: number
-}
-
-export interface ReferralValidation {
-  valid: boolean
-  referrer?: {
-    id: string
-    first_name: string
-    last_name: string
-  }
-  message: string
-}
-
-export interface ReferralApplication {
-  success: boolean
-  referrer: {
-    id: string
-    first_name: string
-    last_name: string
-  }
-  credits_awarded: number
-}
+// Re-export types for backward compatibility
+export type { UserProfile, UpdateProfileData, ReferralStats, ReferralValidation, ReferralApplication }
 
 // Query hook for fetching user profile
 export const useProfile = () => {
@@ -70,8 +22,11 @@ export const useProfile = () => {
         throw new Error(response.error || 'Failed to fetch profile')
       }
       // Extract data from backend response format: { success: true, data: {...} }
-      const backendResponse = response.data as any
-      return backendResponse?.data as UserProfile
+      const backendResponse = response.data as BackendResponse<UserProfile> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      throw new Error('Invalid response from server')
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
     retry: 2,
@@ -86,25 +41,7 @@ export const useUpdateProfile = () => {
     mutationFn: async (profileData: UpdateProfileData) => {
       const response = await apiClient.updateProfile(profileData)
       if (response.status !== 200) {
-        // Parse error message properly
-        let errorMessage = 'Failed to update profile'
-        
-        if (response.error) {
-          if (typeof response.error === 'string') {
-            errorMessage = response.error
-          } else if (typeof response.error === 'object') {
-            // Handle validation errors from backend
-            const errorObj = response.error as any
-            if (errorObj.message) {
-              errorMessage = errorObj.message
-            } else if (errorObj.issues && Array.isArray(errorObj.issues)) {
-              // Handle Zod validation errors
-              errorMessage = errorObj.issues.map((issue: any) => issue.message).join(', ')
-            } else {
-              errorMessage = JSON.stringify(response.error)
-            }
-          }
-        }
+        let errorMessage = response.error || 'Failed to update profile'
         
         // Add context based on status code
         if (response.status === 400) {
@@ -119,8 +56,11 @@ export const useUpdateProfile = () => {
         
         throw new Error(errorMessage)
       }
-      const backendResponse = response.data as any
-      return backendResponse?.data as UserProfile
+      const backendResponse = response.data as BackendResponse<UserProfile> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      throw new Error('Invalid response from server')
     },
     onSuccess: () => {
       // Invalidate and refetch profile data
@@ -138,8 +78,11 @@ export const useReferralStats = () => {
       if (response.status !== 200) {
         throw new Error(response.error || 'Failed to fetch referral stats')
       }
-      const backendResponse = response.data as any
-      return backendResponse?.data as ReferralStats
+      const backendResponse = response.data as BackendResponse<ReferralStats> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      throw new Error('Invalid response from server')
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
@@ -152,23 +95,13 @@ export const useValidateReferralCode = () => {
     mutationFn: async (referralCode: string) => {
       const response = await apiClient.validateReferralCode(referralCode)
       if (response.status !== 200) {
-        let errorMessage = 'Failed to validate referral code'
-        
-        if (response.error) {
-          if (typeof response.error === 'string') {
-            errorMessage = response.error
-          } else if (typeof response.error === 'object') {
-            const errorObj = response.error as any
-            if (errorObj.message) {
-              errorMessage = errorObj.message
-            }
-          }
-        }
-        
-        throw new Error(errorMessage)
+        throw new Error(response.error || 'Failed to validate referral code')
       }
-      const backendResponse = response.data as any
-      return backendResponse?.data as ReferralValidation
+      const backendResponse = response.data as BackendResponse<ReferralValidation> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      throw new Error('Invalid response from server')
     },
   })
 }
@@ -181,18 +114,7 @@ export const useApplyReferralCode = () => {
     mutationFn: async (referralCode: string) => {
       const response = await apiClient.applyReferralCode(referralCode)
       if (response.status !== 200) {
-        let errorMessage = 'Failed to apply referral code'
-        
-        if (response.error) {
-          if (typeof response.error === 'string') {
-            errorMessage = response.error
-          } else if (typeof response.error === 'object') {
-            const errorObj = response.error as any
-            if (errorObj.message) {
-              errorMessage = errorObj.message
-            }
-          }
-        }
+        let errorMessage = response.error || 'Failed to apply referral code'
         
         // Add context based on status code
         if (response.status === 400) {
@@ -205,8 +127,11 @@ export const useApplyReferralCode = () => {
         
         throw new Error(errorMessage)
       }
-      const backendResponse = response.data as any
-      return backendResponse?.data as ReferralApplication
+      const backendResponse = response.data as BackendResponse<ReferralApplication> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      throw new Error('Invalid response from server')
     },
     onSuccess: () => {
       // Invalidate and refetch profile and referral stats

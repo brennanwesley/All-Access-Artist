@@ -1,16 +1,52 @@
 import { supabase } from './supabase'
+import type {
+  ApiResponse,
+  BackendResponse,
+  Release,
+  ReleaseDetails,
+  CreateReleaseData,
+  UpdateReleaseData,
+  Artist,
+  CreateArtistData,
+  UpdateSocialMediaData,
+  Task,
+  UpdateTaskData,
+  UserProfile,
+  UpdateProfileData,
+  ReferralStats,
+  ReferralValidation,
+  ReferralApplication,
+  AnalyticsData,
+  CreateAnalyticsData,
+  CalendarEvent,
+  CreateCalendarEventData,
+  Song,
+  CreateSongData,
+  UpdateSongData,
+  LyricSheet,
+  CreateLyricSheetData,
+  UpdateLyricSheetData,
+  LyricSection,
+  CreateLyricSectionData,
+  UpdateLyricSectionData,
+  SplitSheet,
+  CreateSplitSheetData,
+  SubscriptionStatus,
+  SubscriptionProduct,
+  CheckoutSessionData,
+  CheckoutSessionResponse,
+  AdminUser,
+  AdminStats,
+  OnboardingData,
+  FallbackAccountResponse,
+  HealthCheckResponse
+} from '../types/api'
 
 // API base URL from environment variables with fallback
 const API_BASE_URL = import.meta.env['VITE_API_URL'] || 'https://all-access-artist.onrender.com'
 
 if (!import.meta.env['VITE_API_URL']) {
   console.warn('VITE_API_URL environment variable not set. Using fallback URL.')
-}
-
-interface ApiResponse<T = any> {
-  data?: T
-  error?: string
-  status: number
 }
 
 class ApiClient {
@@ -88,7 +124,7 @@ class ApiClient {
   }
 
   // Health check (no auth required)
-  async healthCheck(): Promise<ApiResponse> {
+  async healthCheck(): Promise<ApiResponse<BackendResponse<HealthCheckResponse>>> {
     try {
       const response = await fetch(`${API_BASE_URL}/health`)
       const data = await response.json()
@@ -96,8 +132,8 @@ class ApiClient {
         data: response.ok ? data : undefined,
         error: response.ok ? undefined : 'Health check failed',
         status: response.status,
-      } as ApiResponse
-    } catch (error) {
+      }
+    } catch {
       return {
         error: 'Network error',
         status: 0,
@@ -106,22 +142,22 @@ class ApiClient {
   }
 
   // Artists API
-  async getArtists(): Promise<ApiResponse<any[]>> {
+  async getArtists(): Promise<ApiResponse<BackendResponse<Artist[]>>> {
     return this.makeRequest('/api/artists')
   }
 
-  async getArtist(id: string): Promise<ApiResponse<any>> {
+  async getArtist(id: string): Promise<ApiResponse<BackendResponse<Artist>>> {
     return this.makeRequest(`/api/artists/${id}`)
   }
 
-  async createArtist(artistData: any): Promise<ApiResponse<any>> {
+  async createArtist(artistData: CreateArtistData): Promise<ApiResponse<BackendResponse<Artist>>> {
     return this.makeRequest('/api/artists', {
       method: 'POST',
       body: JSON.stringify(artistData),
     })
   }
 
-  async updateSocialMediaUrls(socialMediaData: any): Promise<ApiResponse<any>> {
+  async updateSocialMediaUrls(socialMediaData: UpdateSocialMediaData): Promise<ApiResponse<BackendResponse<Artist>>> {
     return this.makeRequest('/api/artists/social-media', {
       method: 'PATCH',
       body: JSON.stringify(socialMediaData),
@@ -129,40 +165,40 @@ class ApiClient {
   }
 
   // Releases API
-  async getReleases(): Promise<ApiResponse<any[]>> {
+  async getReleases(): Promise<ApiResponse<BackendResponse<Release[]>>> {
     return this.makeRequest('/api/releases')
   }
 
-  async getRelease(id: string): Promise<ApiResponse<any>> {
+  async getRelease(id: string): Promise<ApiResponse<BackendResponse<Release>>> {
     return this.makeRequest(`/api/releases/${id}`)
   }
 
-  async createRelease(releaseData: any): Promise<ApiResponse<any>> {
+  async createRelease(releaseData: CreateReleaseData): Promise<ApiResponse<BackendResponse<Release>>> {
     return this.makeRequest('/api/releases', {
       method: 'POST',
       body: JSON.stringify(releaseData),
     })
   }
 
-  async updateRelease(releaseId: string, releaseData: any): Promise<ApiResponse<any>> {
+  async updateRelease(releaseId: string, releaseData: UpdateReleaseData): Promise<ApiResponse<BackendResponse<Release>>> {
     return this.makeRequest(`/api/releases/${releaseId}`, {
       method: 'PATCH',
       body: JSON.stringify(releaseData),
     })
   }
 
-  async getReleaseDetails(id: string): Promise<ApiResponse<any>> {
+  async getReleaseDetails(id: string): Promise<ApiResponse<BackendResponse<ReleaseDetails>>> {
     return this.makeRequest(`/api/releases/${id}`)
   }
 
-  async generateTasksForRelease(releaseId: string): Promise<ApiResponse<any>> {
+  async generateTasksForRelease(releaseId: string): Promise<ApiResponse<BackendResponse<Task[]>>> {
     return this.makeRequest(`/api/releases/${releaseId}/generate-tasks`, {
       method: 'POST',
     })
   }
 
   // Tasks API
-  async updateTask(taskId: string, taskData: any): Promise<ApiResponse<any>> {
+  async updateTask(taskId: string, taskData: UpdateTaskData): Promise<ApiResponse<BackendResponse<Task>>> {
     return this.makeRequest(`/api/tasks/${taskId}`, {
       method: 'PATCH',
       body: JSON.stringify(taskData),
@@ -170,12 +206,12 @@ class ApiClient {
   }
 
   // Analytics API
-  async getAnalytics(userId?: string): Promise<ApiResponse<any[]>> {
+  async getAnalytics(userId?: string): Promise<ApiResponse<BackendResponse<AnalyticsData[]>>> {
     const endpoint = userId ? `/api/analytics?user_id=${userId}` : '/api/analytics'
     return this.makeRequest(endpoint)
   }
 
-  async createAnalytics(analyticsData: any): Promise<ApiResponse<any>> {
+  async createAnalytics(analyticsData: CreateAnalyticsData): Promise<ApiResponse<BackendResponse<AnalyticsData>>> {
     return this.makeRequest('/api/analytics', {
       method: 'POST',
       body: JSON.stringify(analyticsData),
@@ -183,12 +219,12 @@ class ApiClient {
   }
 
   // Calendar API
-  async getCalendar(userId?: string): Promise<ApiResponse<any[]>> {
+  async getCalendar(userId?: string): Promise<ApiResponse<BackendResponse<CalendarEvent[]>>> {
     const endpoint = userId ? `/api/calendar?user_id=${userId}` : '/api/calendar'
     return this.makeRequest(endpoint)
   }
 
-  async createCalendarEvent(eventData: any): Promise<ApiResponse<any>> {
+  async createCalendarEvent(eventData: CreateCalendarEventData): Promise<ApiResponse<BackendResponse<CalendarEvent>>> {
     return this.makeRequest('/api/calendar', {
       method: 'POST',
       body: JSON.stringify(eventData),
@@ -196,150 +232,150 @@ class ApiClient {
   }
 
   // Songs API
-  async addSong(releaseId: string, songData: any): Promise<ApiResponse<any>> {
+  async addSong(releaseId: string, songData: CreateSongData): Promise<ApiResponse<BackendResponse<Song>>> {
     return this.makeRequest(`/api/releases/${releaseId}/songs`, {
       method: 'POST',
       body: JSON.stringify(songData),
     })
   }
 
-  async updateSong(songId: string, songData: any): Promise<ApiResponse<any>> {
+  async updateSong(songId: string, songData: UpdateSongData): Promise<ApiResponse<BackendResponse<Song>>> {
     return this.makeRequest(`/api/songs/${songId}`, {
       method: 'PATCH',
       body: JSON.stringify(songData),
     })
   }
 
-  async deleteSong(songId: string): Promise<ApiResponse<any>> {
+  async deleteSong(songId: string): Promise<ApiResponse<BackendResponse<{ deleted: boolean }>>> {
     return this.makeRequest(`/api/songs/${songId}`, {
       method: 'DELETE',
     })
   }
 
   // Lyric Sheets API
-  async getLyricSheet(songId: string): Promise<ApiResponse<any>> {
+  async getLyricSheet(songId: string): Promise<ApiResponse<BackendResponse<LyricSheet>>> {
     return this.makeRequest(`/api/lyrics/${songId}`)
   }
 
-  async createLyricSheet(songId: string, lyricData: any): Promise<ApiResponse<any>> {
+  async createLyricSheet(songId: string, lyricData: CreateLyricSheetData): Promise<ApiResponse<BackendResponse<LyricSheet>>> {
     return this.makeRequest(`/api/lyrics/${songId}`, {
       method: 'POST',
       body: JSON.stringify(lyricData),
     })
   }
 
-  async updateLyricSheet(songId: string, lyricData: any): Promise<ApiResponse<any>> {
+  async updateLyricSheet(songId: string, lyricData: UpdateLyricSheetData): Promise<ApiResponse<BackendResponse<LyricSheet>>> {
     return this.makeRequest(`/api/lyrics/${songId}`, {
       method: 'PATCH',
       body: JSON.stringify(lyricData),
     })
   }
 
-  async addLyricSection(songId: string, sectionData: any): Promise<ApiResponse<any>> {
+  async addLyricSection(songId: string, sectionData: CreateLyricSectionData): Promise<ApiResponse<BackendResponse<LyricSection>>> {
     return this.makeRequest(`/api/lyrics/${songId}/sections`, {
       method: 'POST',
       body: JSON.stringify(sectionData),
     })
   }
 
-  async updateLyricSection(sectionId: string, sectionData: any): Promise<ApiResponse<any>> {
+  async updateLyricSection(sectionId: string, sectionData: UpdateLyricSectionData): Promise<ApiResponse<BackendResponse<LyricSection>>> {
     return this.makeRequest(`/api/lyrics/sections/${sectionId}`, {
       method: 'PATCH',
       body: JSON.stringify(sectionData),
     })
   }
 
-  async deleteLyricSection(sectionId: string): Promise<ApiResponse<any>> {
+  async deleteLyricSection(sectionId: string): Promise<ApiResponse<BackendResponse<{ deleted: boolean }>>> {
     return this.makeRequest(`/api/lyrics/sections/${sectionId}`, {
       method: 'DELETE',
     })
   }
 
   // Profile API
-  async getProfile(): Promise<ApiResponse<any>> {
+  async getProfile(): Promise<ApiResponse<BackendResponse<UserProfile>>> {
     return this.makeRequest('/api/profile')
   }
 
-  async updateProfile(profileData: any): Promise<ApiResponse<any>> {
+  async updateProfile(profileData: UpdateProfileData): Promise<ApiResponse<BackendResponse<UserProfile>>> {
     return this.makeRequest('/api/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
     })
   }
 
-  async validateReferralCode(referralCode: string): Promise<ApiResponse<any>> {
+  async validateReferralCode(referralCode: string): Promise<ApiResponse<BackendResponse<ReferralValidation>>> {
     return this.makeRequest('/api/profile/validate-referral', {
       method: 'POST',
       body: JSON.stringify({ referral_code: referralCode }),
     })
   }
 
-  async applyReferralCode(referralCode: string): Promise<ApiResponse<any>> {
+  async applyReferralCode(referralCode: string): Promise<ApiResponse<BackendResponse<ReferralApplication>>> {
     return this.makeRequest('/api/profile/referral', {
       method: 'POST',
       body: JSON.stringify({ referral_code: referralCode }),
     })
   }
 
-  async getReferralStats(): Promise<ApiResponse<any>> {
+  async getReferralStats(): Promise<ApiResponse<BackendResponse<ReferralStats>>> {
     return this.makeRequest('/api/profile/referral-stats')
   }
 
   // Split Sheets API
-  async getSplitSheet(songId: string): Promise<ApiResponse<any>> {
+  async getSplitSheet(songId: string): Promise<ApiResponse<BackendResponse<SplitSheet>>> {
     return this.makeRequest(`/api/splitsheets/song/${songId}`)
   }
 
-  async saveSplitSheet(songId: string, splitSheetData: any): Promise<ApiResponse<any>> {
+  async saveSplitSheet(songId: string, splitSheetData: CreateSplitSheetData): Promise<ApiResponse<BackendResponse<SplitSheet>>> {
     return this.makeRequest(`/api/splitsheets/song/${songId}`, {
       method: 'PUT',
       body: JSON.stringify(splitSheetData),
     })
   }
 
-  async deleteSplitSheet(songId: string): Promise<ApiResponse<any>> {
+  async deleteSplitSheet(songId: string): Promise<ApiResponse<BackendResponse<{ deleted: boolean }>>> {
     return this.makeRequest(`/api/splitsheets/song/${songId}`, {
       method: 'DELETE',
     })
   }
 
   // Subscription API
-  async createCheckoutSession(checkoutData: any): Promise<ApiResponse<any>> {
+  async createCheckoutSession(checkoutData: CheckoutSessionData): Promise<ApiResponse<BackendResponse<CheckoutSessionResponse>>> {
     return this.makeRequestPublic('/api/subscription/checkout', {
       method: 'POST',
       body: JSON.stringify(checkoutData),
     })
   }
 
-  async getSubscriptionStatus(): Promise<ApiResponse<any>> {
+  async getSubscriptionStatus(): Promise<ApiResponse<BackendResponse<SubscriptionStatus>>> {
     return this.makeRequest('/api/subscription/status')
   }
 
-  async cancelSubscription(): Promise<ApiResponse<any>> {
+  async cancelSubscription(): Promise<ApiResponse<BackendResponse<{ cancelled: boolean }>>> {
     return this.makeRequest('/api/subscription/cancel', {
       method: 'POST',
     })
   }
 
-  async getSubscriptionProducts(): Promise<ApiResponse<any>> {
+  async getSubscriptionProducts(): Promise<ApiResponse<BackendResponse<SubscriptionProduct[]>>> {
     return this.makeRequestPublic('/api/subscription/products')
   }
 
-  async setupStripeProducts(): Promise<ApiResponse<any>> {
+  async setupStripeProducts(): Promise<ApiResponse<BackendResponse<{ setup: boolean }>>> {
     return this.makeRequest('/api/subscription/setup', {
       method: 'POST',
     })
   }
 
   // Onboarding API
-  async createFallbackAccount(sessionId: string): Promise<ApiResponse<any>> {
+  async createFallbackAccount(sessionId: string): Promise<ApiResponse<BackendResponse<FallbackAccountResponse>>> {
     return this.makeRequestPublic('/api/onboarding/create-fallback', {
       method: 'POST',
       body: JSON.stringify({ session_id: sessionId }),
     })
   }
 
-  async completeOnboarding(onboardingData: any): Promise<ApiResponse<any>> {
+  async completeOnboarding(onboardingData: OnboardingData): Promise<ApiResponse<BackendResponse<UserProfile>>> {
     return this.makeRequestPublic('/api/onboarding/complete', {
       method: 'POST',
       body: JSON.stringify(onboardingData),
@@ -347,11 +383,11 @@ class ApiClient {
   }
 
   // Admin API
-  async getAdminUsers(): Promise<ApiResponse<any[]>> {
+  async getAdminUsers(): Promise<ApiResponse<BackendResponse<AdminUser[]>>> {
     return this.makeRequest('/api/admin/users')
   }
 
-  async getAdminStats(): Promise<ApiResponse<any>> {
+  async getAdminStats(): Promise<ApiResponse<BackendResponse<AdminStats>>> {
     return this.makeRequest('/api/admin/stats')
   }
 }
