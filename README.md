@@ -1,4 +1,8 @@
-# Welcome to your Lovable project
+# All Access Artist
+
+[![CI](https://github.com/brennanwesley/All-Access-Artist/actions/workflows/ci.yml/badge.svg)](https://github.com/brennanwesley/All-Access-Artist/actions/workflows/ci.yml)
+
+Music Industry Management Platform - Artist Release Management, Label Copy, Split Sheets, and more.
 
 ## Project info
 

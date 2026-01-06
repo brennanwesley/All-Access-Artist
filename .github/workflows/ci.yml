@@ -1,0 +1,87 @@
+# GitHub Actions CI Workflow
+# All Access Artist - Continuous Integration
+#
+# This workflow runs on every push and pull request to main/development branches.
+# It ensures code quality by running tests before deployment can proceed.
+#
+# What this does:
+# 1. Checks out the code
+# 2. Sets up Node.js environment
+# 3. Installs dependencies
+# 4. Runs the test suite
+# 5. Fails the workflow if any tests fail (blocking deployment)
+#
+# To view results: Go to GitHub repo → Actions tab
+
+name: CI
+
+# When to run this workflow
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+# Jobs to run
+jobs:
+  # Backend Tests
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    # Set working directory for all steps
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js (matches our backend version)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './backend/package-lock.json'
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 4: Run TypeScript compilation check
+      - name: TypeScript build check
+        run: npm run build
+
+      # Step 5: Run tests
+      # This is the critical step - if tests fail, the workflow fails
+      - name: Run tests
+        run: npm test
+
+  # Frontend Build Check (ensures frontend still compiles)
+  build-frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
