@@ -29,9 +29,7 @@
     "frontend/**/*.{ts,tsx}": [
       "eslint --fix --max-warnings=0"
     ],
-    "backend/**/*.ts": [
-      "tsc --noEmit --project backend/tsconfig.json"
-    ]
+    "backend/**/*.ts": "npm run typecheck:backend"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

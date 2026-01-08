@@ -10,7 +10,7 @@ import { logger, extractErrorInfo } from '../utils/logger.js'
 const subLogger = logger.child('subscriptionAuth')
 
 /**
- * Check if user has active subscription or admin privileges
+ * Check if user has active subscription, trial period, or admin privileges
  * Allows read operations for expired users, blocks mutations
  */
 export async function subscriptionAuth(c: Context<{ Variables: Variables }>, next: Next) {
@@ -22,15 +22,15 @@ export async function subscriptionAuth(c: Context<{ Variables: Variables }>, nex
   }
 
   try {
-    // Get user's profile including account_type and subscription status
+    // Get user's profile including account_type, subscription status, and trial info
     const { data: profile, error } = await c.get('supabase')
       .from('user_profiles')
-      .select('account_type, subscription_status, current_period_end')
+      .select('account_type, subscription_status, current_period_end, trial_end')
       .eq('id', user.id)
       .single()
 
     if (error) {
-      console.error('Error fetching subscription status:', error)
+      subLogger.error('Error fetching subscription status', { userId: user.id, error: error.message })
       return c.json({ success: false, error: { message: 'Failed to verify subscription' } }, 500)
     }
 
@@ -39,19 +39,35 @@ export async function subscriptionAuth(c: Context<{ Variables: Variables }>, nex
       return next()
     }
 
+    const now = new Date()
+    
+    // Check for active subscription
     const hasActiveSubscription = profile?.subscription_status === 'active' && 
       profile?.current_period_end && 
-      new Date(profile.current_period_end) > new Date()
+      new Date(profile.current_period_end) > now
+    
+    // Check for active trial period
+    const hasActiveTrial = profile?.trial_end && 
+      new Date(profile.trial_end) > now
+    
+    // User has access if they have either active subscription OR active trial
+    const hasAccess = hasActiveSubscription || hasActiveTrial
 
     const method = c.req.method.toLowerCase()
     const isMutation = ['post', 'put', 'patch', 'delete'].includes(method)
 
-    // If no active subscription and trying to mutate data
-    if (!hasActiveSubscription && isMutation) {
+    // If no access and trying to mutate data
+    if (!hasAccess && isMutation) {
+      subLogger.warn('Mutation blocked - no active subscription or trial', {
+        userId: user.id,
+        accountType: profile?.account_type,
+        subscriptionStatus: profile?.subscription_status,
+        trialEnd: profile?.trial_end
+      })
       return c.json({ 
         success: false, 
         error: { 
-          message: 'Active subscription required for this action',
+          message: 'Active subscription or trial required for this action',
           code: 'SUBSCRIPTION_REQUIRED',
           upgrade_url: '/profile?tab=pay'
         } 
@@ -68,7 +84,7 @@ export async function subscriptionAuth(c: Context<{ Variables: Variables }>, nex
 }
 
 /**
- * Strict subscription check - requires active subscription for any access
+ * Strict subscription check - requires active subscription or trial for any access
  * Use for premium features that shouldn't be accessible in read-only mode
  */
 export async function requireActiveSubscription(c: Context<{ Variables: Variables }>, next: Next) {
@@ -80,10 +96,10 @@ export async function requireActiveSubscription(c: Context<{ Variables: Variable
   }
 
   try {
-    // Get user's profile including account_type and subscription status
+    // Get user's profile including account_type, subscription status, and trial info
     const { data: profile, error } = await c.get('supabase')
       .from('user_profiles')
-      .select('account_type, subscription_status, current_period_end')
+      .select('account_type, subscription_status, current_period_end, trial_end')
       .eq('id', user.id)
       .single()
 
@@ -97,15 +113,25 @@ export async function requireActiveSubscription(c: Context<{ Variables: Variable
       return next()
     }
 
+    const now = new Date()
+    
+    // Check for active subscription
     const hasActiveSubscription = profile?.subscription_status === 'active' && 
       profile?.current_period_end && 
-      new Date(profile.current_period_end) > new Date()
+      new Date(profile.current_period_end) > now
+    
+    // Check for active trial period
+    const hasActiveTrial = profile?.trial_end && 
+      new Date(profile.trial_end) > now
+    
+    // User has access if they have either active subscription OR active trial
+    const hasAccess = hasActiveSubscription || hasActiveTrial
 
-    if (!hasActiveSubscription) {
+    if (!hasAccess) {
       return c.json({ 
         success: false, 
         error: { 
-          message: 'Active subscription required',
+          message: 'Active subscription or trial required',
           code: 'SUBSCRIPTION_REQUIRED',
           upgrade_url: '/profile?tab=pay'
         } 
@@ -125,7 +151,9 @@ export async function requireActiveSubscription(c: Context<{ Variables: Variable
  */
 export async function getSubscriptionStatus(c: Context<{ Variables: Variables }>): Promise<{
   hasActiveSubscription: boolean
+  hasActiveTrial: boolean
   subscriptionStatus: string | null
+  trialEnd: string | null
   isReadOnly: boolean
 }> {
   const user = c.get('user')
@@ -134,16 +162,18 @@ export async function getSubscriptionStatus(c: Context<{ Variables: Variables }>
   if (!user || !jwtPayload) {
     return {
       hasActiveSubscription: false,
+      hasActiveTrial: false,
       subscriptionStatus: null,
+      trialEnd: null,
       isReadOnly: true
     }
   }
 
   try {
-    // Get user's profile including account_type and subscription status
+    // Get user's profile including account_type, subscription status, and trial info
     const { data: profile } = await c.get('supabase')
       .from('user_profiles')
-      .select('account_type, subscription_status, current_period_end')
+      .select('account_type, subscription_status, current_period_end, trial_end')
       .eq('id', user.id)
       .single()
 
@@ -151,26 +181,39 @@ export async function getSubscriptionStatus(c: Context<{ Variables: Variables }>
     if (profile?.account_type === 'admin') {
       return {
         hasActiveSubscription: true,
+        hasActiveTrial: false,
         subscriptionStatus: 'admin',
+        trialEnd: null,
         isReadOnly: false
       }
     }
 
+    const now = new Date()
+    
     const hasActiveSubscription = profile?.subscription_status === 'active' && 
       profile?.current_period_end && 
-      new Date(profile.current_period_end) > new Date()
+      new Date(profile.current_period_end) > now
+    
+    const hasActiveTrial = profile?.trial_end && 
+      new Date(profile.trial_end) > now
+    
+    const hasAccess = hasActiveSubscription || hasActiveTrial
 
     return {
       hasActiveSubscription,
+      hasActiveTrial: !!hasActiveTrial,
       subscriptionStatus: profile?.subscription_status || null,
-      isReadOnly: !hasActiveSubscription
+      trialEnd: profile?.trial_end || null,
+      isReadOnly: !hasAccess
     }
 
   } catch (error) {
     subLogger.error('Error getting subscription status', extractErrorInfo(error))
     return {
       hasActiveSubscription: false,
+      hasActiveTrial: false,
       subscriptionStatus: null,
+      trialEnd: null,
       isReadOnly: true
     }
   }
