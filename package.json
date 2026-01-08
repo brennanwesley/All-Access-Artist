@@ -18,7 +18,20 @@
     "build:frontend": "npm run build --workspace=frontend",
     "deploy:backend": "npm run deploy --workspace=backend",
     "lint": "npm run lint --workspace=frontend",
-    "preview": "npm run preview --workspace=frontend"
+    "lint:backend": "npm run lint --workspace=backend",
+    "typecheck": "tsc --noEmit --project frontend/tsconfig.json && tsc --noEmit --project backend/tsconfig.json",
+    "typecheck:frontend": "tsc --noEmit --project frontend/tsconfig.json",
+    "typecheck:backend": "tsc --noEmit --project backend/tsconfig.json",
+    "preview": "npm run preview --workspace=frontend",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "frontend/**/*.{ts,tsx}": [
+      "eslint --fix --max-warnings=0"
+    ],
+    "backend/**/*.ts": [
+      "tsc --noEmit --project backend/tsconfig.json"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
@@ -32,6 +45,8 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "lovable-tagger": "^1.1.7",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",

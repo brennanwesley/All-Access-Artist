@@ -238,13 +238,23 @@ if (jwtPayload.email === 'feedbacklooploop@gmail.com') { return next() }
 
 ---
 
-### 5.2 Pre-commit Hooks
-**Status**: ❌ Not Started
+### ~~5.2 Pre-commit Hooks~~
+**Status**: ✅ Complete (Jan 7, 2026)
 
-**Action**:
-- Add Husky + lint-staged
-- Pre-commit: lint, format, type-check
-- CI pipeline enforcement
+**Resolution**:
+- Installed Husky v9.1.7 for Git hooks management
+- Installed lint-staged v16.2.7 for staged file processing
+- Configured `.husky/pre-commit` to run lint-staged
+
+**Pre-commit Checks**:
+- Frontend (`*.ts`, `*.tsx`): ESLint with `--fix --max-warnings=0`
+- Backend (`*.ts`): TypeScript compilation check (`tsc --noEmit`)
+
+**New Scripts Added**:
+- `npm run typecheck` - Full project type checking
+- `npm run typecheck:frontend` - Frontend only
+- `npm run typecheck:backend` - Backend only
+- `npm run lint:backend` - Backend linting
 
 ---
 
@@ -300,7 +310,7 @@ if (jwtPayload.email === 'feedbacklooploop@gmail.com') { return next() }
 
 ### Phase 5: Infrastructure
 - [x] 5.1 Supabase rate limiting (persistent) ✅
-- [ ] 5.2 Husky + lint-staged
+- [x] 5.2 Husky + lint-staged ✅
 
 ---
 
