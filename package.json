@@ -23,7 +23,7 @@
     "typecheck:frontend": "tsc --noEmit --project frontend/tsconfig.json",
     "typecheck:backend": "tsc --noEmit --project backend/tsconfig.json",
     "preview": "npm run preview --workspace=frontend",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "lint-staged": {
     "frontend/**/*.{ts,tsx}": [
