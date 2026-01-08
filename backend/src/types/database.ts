@@ -5,11 +5,11 @@
  * Auto-generated from Supabase schema on 2026-01-07
  * To regenerate: Use Supabase MCP generate_typescript_types tool
  * 
- * Tables included: 24 tables
+ * Tables included: 25 tables
  * - accounts, artist_assets, artist_profiles, audit_log
  * - content_calendar, fan_analytics, generated_content, generation_jobs
  * - instagram_metrics, label_copy, lyric_sheets, music_releases
- * - n8n_error_logger, referrals, release_tasks, royalty_data
+ * - n8n_error_logger, rate_limits, referrals, release_tasks, royalty_data
  * - songs, split_sheet_contributors, split_sheets, subscriptions
  * - tiktok_metrics, twitter_metrics, user_profiles, wrong_social_handle
  * - youtube_metrics
@@ -788,6 +788,33 @@ export type Database = {
           timestamp?: string
           url?: string | null
           workflow?: string | null
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          id: string
+          key: string
+          count: number
+          reset_time: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          count?: number
+          reset_time: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          count?: number
+          reset_time?: string
+          created_at?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

@@ -219,15 +219,22 @@ if (jwtPayload.email === 'feedbacklooploop@gmail.com') { return next() }
 
 ## Phase 5: Infrastructure (Week 9-10)
 
-### 5.1 Rate Limiting Storage
-**Status**: ⚠️ In-Memory Only
+### ~~5.1 Rate Limiting Storage~~
+**Status**: ✅ Complete (Jan 7, 2026)
 
-Current implementation uses `Map<string, RateLimitEntry>` which:
-- Resets on deployment
-- Doesn't work with multiple instances
-- Has memory leak potential
+**Resolution**:
+- Created `rate_limits` table in Supabase with atomic increment function
+- Implemented `increment_rate_limit()` PostgreSQL RPC for thread-safe operations
+- Added `cleanup_expired_rate_limits()` function for maintenance
+- Updated `rateLimit.ts` middleware to use Supabase with in-memory fallback
+- Added structured logging for rate limit operations
 
-**Action**: Migrate to Redis or Supabase for rate limit storage.
+**Features**:
+- Persists across deployments
+- Works with multiple instances (shared database)
+- Automatic cleanup of expired entries
+- Graceful fallback to in-memory if DB unavailable
+- Per-user (100 req/min) and global (1000 req/min) limits
 
 ---
 
@@ -292,7 +299,7 @@ Current implementation uses `Map<string, RateLimitEntry>` which:
 - [ ] 4.1 Replace remaining console.logs (398 remaining)
 
 ### Phase 5: Infrastructure
-- [ ] 5.1 Redis rate limiting
+- [x] 5.1 Supabase rate limiting (persistent) ✅
 - [ ] 5.2 Husky + lint-staged
 
 ---
