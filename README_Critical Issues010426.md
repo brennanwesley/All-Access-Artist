@@ -157,12 +157,27 @@ if (jwtPayload.email === 'feedbacklooploop@gmail.com') { return next() }
 
 ---
 
-### 3.2 Database Types Out of Sync
-**Status**: ❌ Not Started
+### ~~3.2 Database Types Out of Sync~~
+**Status**: ✅ Complete (Jan 7, 2026)
 
-`backend/src/types/database.ts` only defines 3 tables but database has 20+.
+**Resolution**:
+- Auto-generated types from Supabase schema using MCP tool
+- Updated `backend/src/types/database.ts` from 132 lines to 1,540 lines
+- Now covers **24 tables** (was 3 tables)
+- Added convenience type aliases for common tables (MusicRelease, ReleaseTask, etc.)
+- Removed `any` types (lyric_sheets.structure now uses `Json` type)
+- Fixed table name: `releases` → `music_releases`
 
-**Action**: Regenerate from Supabase schema.
+**Tables Now Typed**:
+- Core: `music_releases`, `release_tasks`, `songs`, `lyric_sheets`, `artist_profiles`, `user_profiles`
+- Subscriptions: `subscriptions`, `referrals`
+- Split Sheets: `split_sheets`, `split_sheet_contributors`
+- Content: `content_calendar`, `label_copy`, `generated_content`, `generation_jobs`
+- Analytics: `fan_analytics`, `royalty_data`, `instagram_metrics`, `tiktok_metrics`, `twitter_metrics`, `youtube_metrics`
+- Assets: `artist_assets`
+- System: `audit_log`, `accounts`, `n8n_error_logger`, `wrong_social_handle`
+
+**To Regenerate**: Use Supabase MCP `generate_typescript_types` tool
 
 ---
 
@@ -254,7 +269,7 @@ Current implementation uses `Map<string, RateLimitEntry>` which:
 - [x] 3.1 Create centralized types file ✅
 - [x] 3.1 Fix api.ts (17 'any' removed) ✅
 - [x] 3.1 Fix hooks (65% reduction) ✅
-- [ ] 3.2 Update database.ts
+- [x] 3.2 Update database.ts (24 tables, 1540 lines) ✅
 
 ### Phase 4: Observability
 - [ ] 4.1 Create logger utility
