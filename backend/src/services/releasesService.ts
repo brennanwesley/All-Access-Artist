@@ -4,37 +4,33 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CreateReleaseData } from '../types/schemas.js'
+import { logger, extractErrorInfo } from '../utils/logger.js'
+
+const releaseLogger = logger.child('releasesService')
 
 export class ReleasesService {
   constructor(private supabase: SupabaseClient) {}
 
   async getAllReleases(userId: string) {
-    console.log('=== GET ALL RELEASES DEBUG ===')
-    console.log('1. Input userId:', userId)
+    releaseLogger.debug('getAllReleases called', { userId })
     
-    // Direct query using user_id - no artist profile lookup needed
     const { data, error } = await this.supabase
       .from('music_releases')
       .select('*')
       .eq('user_id', userId)
       .order('release_date', { ascending: false })
 
-    console.log('2. Releases found:', data?.length || 0)
-    console.log('=== END GET ALL RELEASES DEBUG ===')
-
     if (error) {
       throw new Error(`Failed to fetch releases: ${error.message}`)
     }
 
+    releaseLogger.debug('Releases retrieved', { userId, count: data?.length || 0 })
     return data || []
   }
 
   async getReleaseById(id: string, userId: string) {
-    console.log('=== GET RELEASE BY ID DEBUG ===')
-    console.log('Release ID:', id)
-    console.log('User ID:', userId)
+    releaseLogger.debug('getReleaseById called', { releaseId: id, userId })
     
-    // Direct query using user_id - no artist profile lookup needed
     const { data, error } = await this.supabase
       .from('music_releases')
       .select('*')
@@ -42,16 +38,13 @@ export class ReleasesService {
       .eq('user_id', userId)
       .maybeSingle()
 
-    console.log('Release query result:', { data: !!data, error })
-    console.log('=== END GET RELEASE BY ID DEBUG ===')
-
     if (error) {
-      console.log('Release query error:', error.message)
+      releaseLogger.error('Release query error', { releaseId: id, userId, error: error.message })
       throw new Error(`Failed to fetch release: ${error.message}`)
     }
 
     if (!data) {
-      console.log('Release not found or access denied for user:', userId)
+      releaseLogger.warn('Release not found or access denied', { releaseId: id, userId })
       throw new Error('Release not found or access denied')
     }
 
@@ -73,11 +66,8 @@ export class ReleasesService {
   }
 
   async createRelease(releaseData: CreateReleaseData) {
-    console.log('=== RELEASES SERVICE DEBUG ===')
-    console.log('5. Service Input Data:', JSON.stringify(releaseData, null, 2))
+    releaseLogger.debug('createRelease called', { title: releaseData.title, userId: releaseData.user_id })
     
-    // Start by creating the release record
-    console.log('6. Attempting database insert...')
     const { data: newRelease, error: releaseError } = await this.supabase
       .from('music_releases')
       .insert([releaseData])
@@ -85,29 +75,26 @@ export class ReleasesService {
       .single()
 
     if (releaseError) {
-      console.error('7. Database Insert Error:', {
-        message: releaseError.message,
-        details: releaseError.details,
-        hint: releaseError.hint,
-        code: releaseError.code
+      releaseLogger.error('Database insert error', {
+        error: releaseError.message,
+        code: releaseError.code,
+        details: releaseError.details
       })
       throw new Error(`Failed to create release: ${releaseError.message}`)
     }
 
-    console.log('8. Database Insert Success:', { id: newRelease.id, title: newRelease.title })
+    releaseLogger.info('Release created', { releaseId: newRelease.id, title: newRelease.title })
 
     try {
-      console.log('9. Starting task generation...')
-      // Try to generate to-do list tasks for the new release
       await this.generateReleaseTasks(newRelease.id, newRelease.user_id, releaseData.release_type || 'single')
-      console.log('10. Task generation completed successfully')
+      releaseLogger.debug('Task generation completed', { releaseId: newRelease.id })
     } catch (taskError) {
-      // Log the error but don't fail the release creation
-      console.warn('11. Task generation failed (non-critical):', taskError)
-      // Continue without tasks - the release is still created successfully
+      releaseLogger.warn('Task generation failed (non-critical)', {
+        releaseId: newRelease.id,
+        ...extractErrorInfo(taskError)
+      })
     }
     
-    console.log('=== RELEASES SERVICE COMPLETE ===')
     return newRelease
   }
 
@@ -194,7 +181,7 @@ export class ReleasesService {
       throw new Error(`Failed to insert release tasks: ${tasksError.message}`)
     }
 
-    console.log(`Generated ${allTaskRecords.length} tasks for release ${releaseId} (${releaseType})`)
+    releaseLogger.info('Tasks generated', { releaseId, releaseType, taskCount: allTaskRecords.length })
   }
 
   /**
@@ -294,7 +281,7 @@ export class ReleasesService {
         })
 
       if (error) {
-        console.warn(`Failed to upsert task template for ${template.release_type}:`, error)
+        releaseLogger.warn('Failed to upsert task template', { releaseType: template.release_type, error: error.message })
       }
     }
   }
@@ -369,28 +356,30 @@ export class ReleasesService {
 
     // Check if release_type changed and handle task regeneration
     if (releaseData.release_type && releaseData.release_type !== currentRelease.release_type) {
-      console.log(`Release type changed from ${currentRelease.release_type} to ${releaseData.release_type}`)
+      releaseLogger.info('Release type changed', {
+        releaseId: id,
+        from: currentRelease.release_type,
+        to: releaseData.release_type
+      })
       
       try {
-        // Clear existing tasks
         const { error: deleteError } = await this.supabase
           .from('release_tasks')
           .delete()
           .eq('release_id', id)
 
         if (deleteError) {
-          console.warn(`Failed to clear existing tasks: ${deleteError.message}`)
-        } else {
-          console.log('Existing tasks cleared successfully')
+          releaseLogger.warn('Failed to clear existing tasks', { releaseId: id, error: deleteError.message })
         }
 
-        // Generate new tasks for the new release type
         await this.generateReleaseTasks(id, userId, releaseData.release_type)
-        console.log(`New tasks generated for release type: ${releaseData.release_type}`)
+        releaseLogger.debug('New tasks generated after type change', { releaseId: id, releaseType: releaseData.release_type })
         
       } catch (taskError) {
-        console.error('Failed to regenerate tasks after release type change:', taskError)
-        // Don't fail the update if task regeneration fails
+        releaseLogger.error('Failed to regenerate tasks after release type change', {
+          releaseId: id,
+          ...extractErrorInfo(taskError)
+        })
       }
     }
 
@@ -444,7 +433,7 @@ export class ReleasesService {
         user_id: userId
       }
     } catch (error) {
-      console.error('Failed to capture release snapshot:', error)
+      releaseLogger.error('Failed to capture release snapshot', { releaseId, ...extractErrorInfo(error) })
       return {
         release: { id: releaseId, title: 'Unknown Release' },
         deleted_at: new Date().toISOString(),
@@ -470,9 +459,9 @@ export class ReleasesService {
             timestamp: new Date().toISOString()
           })
         
-        console.log(`Audit log created for deleted release: ${snapshot.release?.title || 'Unknown'}`)
+        releaseLogger.info('Audit log created for deleted release', { title: snapshot.release?.title })
       } catch (error) {
-        console.error('Failed to create audit log:', error)
+        releaseLogger.error('Failed to create audit log', extractErrorInfo(error))
       }
     }, 0)
   }

@@ -6,6 +6,7 @@ import type { Context } from 'hono'
 import { ZodError } from 'zod'
 import { APIError, CommonErrors, ErrorCategory, ErrorSeverity, type ErrorResponse } from '../types/errors.js'
 import type { Bindings, Variables } from '../types/bindings.js'
+import { logger, extractErrorInfo } from './logger.js'
 
 type HonoContext = Context<{ Bindings: Bindings; Variables: Variables }>
 
@@ -58,13 +59,21 @@ export function handleValidationError(zodError: ZodError, context: HonoContext) 
 /**
  * Handle Supabase database errors
  */
-export function handleDatabaseError(supabaseError: any, context: HonoContext, operation: string) {
-  console.error(`Database error during ${operation}:`, {
-    message: supabaseError.message,
-    code: supabaseError.code,
-    details: supabaseError.details,
-    hint: supabaseError.hint,
-    timestamp: new Date().toISOString()
+export function handleDatabaseError(supabaseError: unknown, context: HonoContext, operation: string) {
+  const errorInfo = supabaseError && typeof supabaseError === 'object' 
+    ? {
+        message: (supabaseError as Record<string, unknown>).message,
+        code: (supabaseError as Record<string, unknown>).code,
+        details: (supabaseError as Record<string, unknown>).details,
+        hint: (supabaseError as Record<string, unknown>).hint
+      }
+    : extractErrorInfo(supabaseError)
+
+  logger.error(`Database error during ${operation}`, {
+    ...errorInfo,
+    operation,
+    endpoint: context.req.path,
+    method: context.req.method
   })
 
   return context.json({
@@ -87,10 +96,11 @@ export function handleAuthError(message: string, context: HonoContext, code?: st
  * Handle generic service errors
  */
 export function handleServiceError(error: Error, context: HonoContext, operation: string) {
-  console.error(`Service error during ${operation}:`, {
-    message: error.message,
-    stack: error.stack,
-    timestamp: new Date().toISOString()
+  logger.error(`Service error during ${operation}`, {
+    ...extractErrorInfo(error),
+    operation,
+    endpoint: context.req.path,
+    method: context.req.method
   })
 
   return context.json({
@@ -128,23 +138,14 @@ export function asyncErrorHandler<T extends any[], R>(
 /**
  * Safe error logging (removes sensitive information)
  */
-export function logError(error: Error, context: HonoContext, additionalInfo?: Record<string, any>) {
-  const logData = {
-    timestamp: new Date().toISOString(),
-    error: {
-      name: error.name,
-      message: error.message,
-      // Only include stack trace in development
-      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-    },
+export function logError(error: Error, context: HonoContext, additionalInfo?: Record<string, unknown>) {
+  logger.error('API Error', {
+    ...extractErrorInfo(error),
     request: {
       method: context.req.method,
       path: context.req.path,
-      userAgent: context.req.header('User-Agent'),
-      // Don't log authorization headers or sensitive data
+      userAgent: context.req.header('User-Agent')
     },
     ...additionalInfo
-  }
-
-  console.error('API Error:', JSON.stringify(logData, null, 2))
+  })
 }

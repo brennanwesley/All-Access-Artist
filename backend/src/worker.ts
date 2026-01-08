@@ -28,6 +28,7 @@ import webhooks from './routes/webhooks.js'
 import onboarding from './routes/onboarding.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
+import { logger, extractErrorInfo } from './utils/logger.js'
 
 // NEW: social webhook route
 import social from './routes/social.js'
@@ -163,7 +164,13 @@ app.notFound((c) => {
 // Global error handler with standardized responses
 app.onError((err, c) => {
   const requestId = generateRequestId()
-  console.error('Global error:', err)
+  
+  logger.error('Unhandled error', {
+    ...extractErrorInfo(err),
+    requestId,
+    path: c.req.path,
+    method: c.req.method
+  })
   
   return c.json({
     success: false,

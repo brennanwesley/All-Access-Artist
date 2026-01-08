@@ -6,16 +6,21 @@
 
 import { serve } from '@hono/node-server'
 import app from './worker.js'
+import { logger } from './utils/logger.js'
 
 const port = parseInt(process.env.PORT || '3000')
+const env = process.env.NODE_ENV || 'development'
 
-console.log(`🚀 All Access Artist Backend API starting on port ${port}`)
-console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`)
-console.log(`🔗 Health check: http://localhost:${port}/health`)
+logger.info('Server starting', {
+  port,
+  environment: env,
+  healthCheck: `http://localhost:${port}/health`,
+  version: '2.0.0'
+})
 
 serve({
   fetch: app.fetch,
   port
 })
 
-console.log(`✅ Server running on http://localhost:${port}`)
+logger.info('Server running', { port, environment: env })

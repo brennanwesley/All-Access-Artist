@@ -5,6 +5,9 @@
 
 import { Context, Next } from 'hono'
 import { Variables } from '../types/bindings.js'
+import { logger, extractErrorInfo } from '../utils/logger.js'
+
+const subLogger = logger.child('subscriptionAuth')
 
 /**
  * Check if user has active subscription or admin privileges
@@ -59,7 +62,7 @@ export async function subscriptionAuth(c: Context<{ Variables: Variables }>, nex
     return next()
 
   } catch (error) {
-    console.error('Subscription auth middleware error:', error)
+    subLogger.error('Subscription auth middleware error', extractErrorInfo(error))
     return c.json({ success: false, error: { message: 'Subscription verification failed' } }, 500)
   }
 }
@@ -85,7 +88,7 @@ export async function requireActiveSubscription(c: Context<{ Variables: Variable
       .single()
 
     if (error) {
-      console.error('Error fetching subscription status:', error)
+      subLogger.error('Error fetching subscription status', { userId: user.id, error: error.message })
       return c.json({ success: false, error: { message: 'Failed to verify subscription' } }, 500)
     }
 
@@ -112,7 +115,7 @@ export async function requireActiveSubscription(c: Context<{ Variables: Variable
     return next()
 
   } catch (error) {
-    console.error('Subscription auth middleware error:', error)
+    subLogger.error('Subscription auth middleware error', extractErrorInfo(error))
     return c.json({ success: false, error: { message: 'Subscription verification failed' } }, 500)
   }
 }
@@ -164,7 +167,7 @@ export async function getSubscriptionStatus(c: Context<{ Variables: Variables }>
     }
 
   } catch (error) {
-    console.error('Error getting subscription status:', error)
+    subLogger.error('Error getting subscription status', extractErrorInfo(error))
     return {
       hasActiveSubscription: false,
       subscriptionStatus: null,

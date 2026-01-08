@@ -4,6 +4,9 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CreateUserProfileData, UpdateUserProfileData } from '../types/schemas.js'
+import { logger, extractErrorInfo } from '../utils/logger.js'
+
+const profileLogger = logger.child('profileService')
 
 export class ProfileService {
   constructor(private supabase: SupabaseClient) {}
@@ -12,10 +15,9 @@ export class ProfileService {
    * Get user profile with email from auth.users
    */
   async getUserProfile(userId: string, supabaseAdmin: SupabaseClient) {
-    console.log('ProfileService.getUserProfile called with userId:', userId)
+    profileLogger.debug('getUserProfile called', { userId })
     
     try {
-      console.log('Fetching user profile from database...')
       // Get user profile data using user-scoped client (for RLS)
       const { data: profileData, error: profileError } = await this.supabase
         .from('user_profiles')
@@ -35,15 +37,11 @@ export class ProfileService {
         .eq('id', userId)
         .single()
 
-      console.log('Database query result:', { profileData, profileError })
-
       if (profileError) {
-        console.log('Profile error detected:', profileError)
         // If user profile doesn't exist, create one
         if (profileError.code === 'PGRST116') {
-          console.log('Profile not found, creating new profile...')
+          profileLogger.info('Profile not found, creating new profile', { userId })
           const newProfile = await this.createUserProfile(userId)
-          console.log('New profile created:', newProfile)
           return {
             ...newProfile,
             email: null,
@@ -53,13 +51,11 @@ export class ProfileService {
         throw new Error(`Failed to fetch user profile: ${profileError.message}`)
       }
 
-      console.log('2. Fetching auth user data with admin client...')
       // Get user data from Supabase Auth using admin client (no JWT conflicts)
       const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId)
-      console.log('Auth admin API result:', { authUser, authError })
 
       if (authError) {
-        console.log('ProfileService.getUserProfile ERROR: Auth error:', authError)
+        profileLogger.error('Auth error fetching user data', { userId, error: authError.message })
         throw new Error(`Failed to fetch user auth data: ${authError.message}`)
       }
 
@@ -70,10 +66,10 @@ export class ProfileService {
         phone: authUser.user?.phone
       }
 
-      console.log('Final combined profile:', profile)
+      profileLogger.debug('Profile retrieved successfully', { userId })
       return profile
     } catch (error) {
-      console.log('ProfileService.getUserProfile ERROR:', error)
+      profileLogger.error('getUserProfile error', { userId, ...extractErrorInfo(error) })
       throw error
     }
   }
