@@ -5,7 +5,7 @@ const social = new Hono()
 
 // Supabase client for metrics queries
 const supabaseUrl = process.env.SUPABASE_URL || ''
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || ''
 
 // One URL per platform (set these in Render → Backend → Environment)
 // Fallback DEFAULT is used if a specific platform var is missing.
