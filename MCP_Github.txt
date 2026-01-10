@@ -1,2 +1,0 @@
-Github personal access token for MCP server setup with Windsurf for All Access Artist repo
-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
