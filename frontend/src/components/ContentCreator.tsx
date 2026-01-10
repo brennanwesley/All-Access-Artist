@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { useSocialMediaUrls, useInstagramMetrics } from '../hooks/api/useSocialMedia'
+import { useSocialMediaUrls, useInstagramMetrics, useTikTokMetrics, useYouTubeMetrics, useTwitterMetrics } from '../hooks/api/useSocialMedia'
 import { SocialConnectionModal } from "@/components/SocialConnectionModal";
 
 export const ContentCreator = () => {
@@ -46,9 +46,18 @@ export const ContentCreator = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<{ id: string; name: string } | null>(null);
 
-  // Fetch Instagram metrics when connected
+  // Fetch metrics for all platforms when connected
   const { data: instagramMetrics, isLoading: isLoadingInstagramMetrics } = useInstagramMetrics(
     socialMediaUrls?.instagram_url
+  );
+  const { data: tiktokMetrics, isLoading: isLoadingTikTokMetrics } = useTikTokMetrics(
+    socialMediaUrls?.tiktok_url
+  );
+  const { data: youtubeMetrics, isLoading: isLoadingYouTubeMetrics } = useYouTubeMetrics(
+    socialMediaUrls?.youtube_url
+  );
+  const { data: twitterMetrics, isLoading: isLoadingTwitterMetrics } = useTwitterMetrics(
+    socialMediaUrls?.twitter_url
   );
 
    //new - Optional safety net: fire once when Instagram URL appears
@@ -255,9 +264,20 @@ export const ContentCreator = () => {
               const username = isConnected ? extractUsername(socialMediaUrls[platformKey] || "", platform.id) : "";
               
               
-              // Get metrics for Instagram
+              // Determine which metrics to show based on platform
               const showInstagramMetrics = platform.id === 'instagram' && isConnected && instagramMetrics;
-              const isLoadingMetrics = platform.id === 'instagram' && isConnected && isLoadingInstagramMetrics;
+              const showTikTokMetrics = platform.id === 'tiktok' && isConnected && tiktokMetrics;
+              const showYouTubeMetrics = platform.id === 'youtube' && isConnected && youtubeMetrics;
+              const showTwitterMetrics = platform.id === 'twitter' && isConnected && twitterMetrics;
+              
+              const isLoadingMetrics = isConnected && (
+                (platform.id === 'instagram' && isLoadingInstagramMetrics) ||
+                (platform.id === 'tiktok' && isLoadingTikTokMetrics) ||
+                (platform.id === 'youtube' && isLoadingYouTubeMetrics) ||
+                (platform.id === 'twitter' && isLoadingTwitterMetrics)
+              );
+
+              const hasMetrics = showInstagramMetrics || showTikTokMetrics || showYouTubeMetrics || showTwitterMetrics;
 
               return (
                 <div key={platform.id} className="flex flex-col p-4 rounded-lg bg-secondary/20 border border-border/50">
@@ -303,8 +323,89 @@ export const ContentCreator = () => {
                     </div>
                   )}
 
+                  {/* TikTok Metrics Display */}
+                  {showTikTokMetrics && (
+                    <div className="mb-3 p-2 rounded-md bg-background/50">
+                      <div className="text-xs text-muted-foreground mb-2 font-medium">Last 30 Days</div>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {tiktokMetrics.videos_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Videos</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {tiktokMetrics.plays_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Plays</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {tiktokMetrics.likes_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Likes</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* YouTube Metrics Display */}
+                  {showYouTubeMetrics && (
+                    <div className="mb-3 p-2 rounded-md bg-background/50">
+                      <div className="text-xs text-muted-foreground mb-2 font-medium">Last 30 Days</div>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {youtubeMetrics.videos_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Videos</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {youtubeMetrics.views_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Views</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {youtubeMetrics.likes_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Likes</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Twitter/X Metrics Display */}
+                  {showTwitterMetrics && (
+                    <div className="mb-3 p-2 rounded-md bg-background/50">
+                      <div className="text-xs text-muted-foreground mb-2 font-medium">Last 30 Days</div>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {twitterMetrics.likes_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Likes</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {twitterMetrics.retweets_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Reposts</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {twitterMetrics.replies_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Replies</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Loading state for metrics */}
-                  {isLoadingMetrics && (
+                  {isLoadingMetrics && !hasMetrics && (
                     <div className="mb-3 p-2 rounded-md bg-background/50">
                       <div className="text-xs text-muted-foreground text-center animate-pulse">
                         Loading metrics...

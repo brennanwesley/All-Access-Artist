@@ -157,7 +157,10 @@ app.notFound((c) => {
       'POST /api/subscription/cancel',
       'POST /api/webhooks/stripe',
       'GET|POST /api/social/connect',
-      'GET /api/social/metrics/instagram/:username'
+      'GET /api/social/metrics/instagram/:username',
+      'GET /api/social/metrics/tiktok/:username',
+      'GET /api/social/metrics/youtube/:username',
+      'GET /api/social/metrics/twitter/:username'
     ]
   }, 404)
 })

@@ -14,6 +14,37 @@ export interface InstagramMetrics {
   profile_url: string | null
 }
 
+// Types for TikTok metrics
+export interface TikTokMetrics {
+  username: string
+  date_ingested: string
+  videos_30d: number | null
+  plays_30d: number | null
+  likes_30d: number | null
+  comments_30d: number | null
+  profile_url: string | null
+}
+
+// Types for YouTube metrics
+export interface YouTubeMetrics {
+  username: string
+  date_ingested: string
+  videos_30d: number | null
+  views_30d: number | null
+  likes_30d: number | null
+  profile_url: string | null
+}
+
+// Types for Twitter/X metrics
+export interface TwitterMetrics {
+  username: string
+  date_ingested: string
+  likes_30d: number | null
+  retweets_30d: number | null
+  replies_30d: number | null
+  profile_url: string | null
+}
+
 // Types for social media data
 export interface SocialMediaUrls {
   instagram_url?: string | undefined
@@ -133,6 +164,21 @@ export const useUpdateSinglePlatform = () => {
   })
 }
 
+// Helper function to extract username from URL or handle
+function extractCleanUsername(input: string): string {
+  try {
+    const url = new URL(input)
+    const pathParts = url.pathname.split('/').filter(Boolean)
+    const lastPart = pathParts[pathParts.length - 1]
+    if (lastPart) {
+      return lastPart.replace(/^@/, '')
+    }
+    return input.replace(/^@/, '')
+  } catch {
+    return input.replace(/^@/, '')
+  }
+}
+
 // Hook to fetch Instagram metrics for a username
 export const useInstagramMetrics = (username: string | null | undefined) => {
   return useQuery({
@@ -140,21 +186,7 @@ export const useInstagramMetrics = (username: string | null | undefined) => {
     queryFn: async (): Promise<InstagramMetrics | null> => {
       if (!username) return null
       
-      // Extract username from URL if needed
-      let cleanUsername = username
-      try {
-        const url = new URL(username)
-        // Extract from path like /emilydeeclark or /@emilydeeclark
-        const pathParts = url.pathname.split('/').filter(Boolean)
-        const lastPart = pathParts[pathParts.length - 1]
-        if (lastPart) {
-          cleanUsername = lastPart.replace(/^@/, '')
-        }
-      } catch {
-        // Not a URL, use as-is but strip @ if present
-        cleanUsername = username.replace(/^@/, '')
-      }
-      
+      const cleanUsername = extractCleanUsername(username)
       const response = await apiClient.getInstagramMetrics(cleanUsername)
       
       if (response.status !== 200) {
@@ -169,7 +201,88 @@ export const useInstagramMetrics = (username: string | null | undefined) => {
       return null
     },
     enabled: !!username,
-    staleTime: 5 * 60 * 1000, // 5 minutes - metrics update daily
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  })
+}
+
+// Hook to fetch TikTok metrics for a username
+export const useTikTokMetrics = (username: string | null | undefined) => {
+  return useQuery({
+    queryKey: ['tiktok-metrics', username],
+    queryFn: async (): Promise<TikTokMetrics | null> => {
+      if (!username) return null
+      
+      const cleanUsername = extractCleanUsername(username)
+      const response = await apiClient.getTikTokMetrics(cleanUsername)
+      
+      if (response.status !== 200) {
+        throw new Error(response.error || 'Failed to fetch TikTok metrics')
+      }
+      
+      const backendResponse = response.data as BackendResponse<TikTokMetrics> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      
+      return null
+    },
+    enabled: !!username,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  })
+}
+
+// Hook to fetch YouTube metrics for a username
+export const useYouTubeMetrics = (username: string | null | undefined) => {
+  return useQuery({
+    queryKey: ['youtube-metrics', username],
+    queryFn: async (): Promise<YouTubeMetrics | null> => {
+      if (!username) return null
+      
+      const cleanUsername = extractCleanUsername(username)
+      const response = await apiClient.getYouTubeMetrics(cleanUsername)
+      
+      if (response.status !== 200) {
+        throw new Error(response.error || 'Failed to fetch YouTube metrics')
+      }
+      
+      const backendResponse = response.data as BackendResponse<YouTubeMetrics> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      
+      return null
+    },
+    enabled: !!username,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  })
+}
+
+// Hook to fetch Twitter/X metrics for a username
+export const useTwitterMetrics = (username: string | null | undefined) => {
+  return useQuery({
+    queryKey: ['twitter-metrics', username],
+    queryFn: async (): Promise<TwitterMetrics | null> => {
+      if (!username) return null
+      
+      const cleanUsername = extractCleanUsername(username)
+      const response = await apiClient.getTwitterMetrics(cleanUsername)
+      
+      if (response.status !== 200) {
+        throw new Error(response.error || 'Failed to fetch Twitter metrics')
+      }
+      
+      const backendResponse = response.data as BackendResponse<TwitterMetrics> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      
+      return null
+    },
+    enabled: !!username,
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   })
 }

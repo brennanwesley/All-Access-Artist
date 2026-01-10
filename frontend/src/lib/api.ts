@@ -402,6 +402,40 @@ class ApiClient {
   }>>> {
     return this.makeRequest(`/api/social/metrics/instagram/${encodeURIComponent(username)}`)
   }
+
+  async getTikTokMetrics(username: string): Promise<ApiResponse<BackendResponse<{
+    username: string
+    date_ingested: string
+    videos_30d: number | null
+    plays_30d: number | null
+    likes_30d: number | null
+    comments_30d: number | null
+    profile_url: string | null
+  }>>> {
+    return this.makeRequest(`/api/social/metrics/tiktok/${encodeURIComponent(username)}`)
+  }
+
+  async getYouTubeMetrics(username: string): Promise<ApiResponse<BackendResponse<{
+    username: string
+    date_ingested: string
+    videos_30d: number | null
+    views_30d: number | null
+    likes_30d: number | null
+    profile_url: string | null
+  }>>> {
+    return this.makeRequest(`/api/social/metrics/youtube/${encodeURIComponent(username)}`)
+  }
+
+  async getTwitterMetrics(username: string): Promise<ApiResponse<BackendResponse<{
+    username: string
+    date_ingested: string
+    likes_30d: number | null
+    retweets_30d: number | null
+    replies_30d: number | null
+    profile_url: string | null
+  }>>> {
+    return this.makeRequest(`/api/social/metrics/twitter/${encodeURIComponent(username)}`)
+  }
 }
 
 export const apiClient = new ApiClient()

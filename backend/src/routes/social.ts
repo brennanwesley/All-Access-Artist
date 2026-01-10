@@ -127,7 +127,7 @@ for (const path of ['/connect', '/connect/']) {
 }
 
 // ============================================================================
-// GET /metrics/instagram/:username - Fetch Instagram metrics for a username
+// Metrics Interfaces
 // ============================================================================
 interface InstagramMetrics {
   id: number
@@ -142,6 +142,45 @@ interface InstagramMetrics {
   profile_url: string | null
   followers: number | null
 }
+
+interface TikTokMetrics {
+  id: number
+  date_ingested: string
+  name: string
+  videos_published_30d: number | null
+  play_30d: number | null
+  digg_30d: number | null
+  comment_30d: number | null
+  share_30d: number | null
+  collect_30d: number | null
+  profile_url: string | null
+}
+
+interface YouTubeMetrics {
+  id: number
+  date_ingested: string
+  username: string
+  videos_30d: number | null
+  views_30d: number | null
+  likes_30d: number | null
+  profile_url: string | null
+}
+
+interface TwitterMetrics {
+  id: number
+  date_ingested: string
+  username: string
+  like_30d: number | null
+  retweet_30d: number | null
+  reply_30d: number | null
+  quote_30d: number | null
+  profile_url: string | null
+  followers: number | null
+}
+
+// ============================================================================
+// GET /metrics/instagram/:username - Fetch Instagram metrics for a username
+// ============================================================================
 
 social.get('/metrics/instagram/:username', async (c) => {
   setCors(c)
@@ -192,6 +231,185 @@ social.get('/metrics/instagram/:username', async (c) => {
         posts_30d: metrics.posts_30d,
         likes_30d: metrics.likes_30d,
         comments_30d: metrics.comments_30d,
+        profile_url: metrics.profile_url
+      }
+    })
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return c.json({ success: false, error: { message: errorMessage } }, 500)
+  }
+})
+
+// ============================================================================
+// GET /metrics/tiktok/:username - Fetch TikTok metrics for a username
+// ============================================================================
+social.get('/metrics/tiktok/:username', async (c) => {
+  setCors(c)
+  
+  const username = c.req.param('username')
+  if (!username) {
+    return c.json({ success: false, error: { message: 'Username is required' } }, 400)
+  }
+
+  // Strip @ prefix if present
+  const cleanUsername = username.replace(/^@/, '')
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return c.json({ success: false, error: { message: 'Database configuration error' } }, 500)
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    // Get the most recent metrics for this username (TikTok uses 'name' column)
+    const { data, error } = await supabase
+      .from('tiktok_metrics')
+      .select('id, date_ingested, name, videos_published_30d, play_30d, digg_30d, comment_30d, share_30d, collect_30d, profile_url')
+      .ilike('name', cleanUsername)
+      .order('date_ingested', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return c.json({
+          success: true,
+          data: null,
+          message: 'No metrics found for this username'
+        })
+      }
+      return c.json({ success: false, error: { message: error.message } }, 500)
+    }
+
+    const metrics = data as TikTokMetrics
+
+    return c.json({
+      success: true,
+      data: {
+        username: metrics.name,
+        date_ingested: metrics.date_ingested,
+        videos_30d: metrics.videos_published_30d,
+        plays_30d: metrics.play_30d,
+        likes_30d: metrics.digg_30d,
+        comments_30d: metrics.comment_30d,
+        profile_url: metrics.profile_url
+      }
+    })
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return c.json({ success: false, error: { message: errorMessage } }, 500)
+  }
+})
+
+// ============================================================================
+// GET /metrics/youtube/:username - Fetch YouTube metrics for a username
+// ============================================================================
+social.get('/metrics/youtube/:username', async (c) => {
+  setCors(c)
+  
+  const username = c.req.param('username')
+  if (!username) {
+    return c.json({ success: false, error: { message: 'Username is required' } }, 400)
+  }
+
+  // Strip @ prefix if present
+  const cleanUsername = username.replace(/^@/, '')
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return c.json({ success: false, error: { message: 'Database configuration error' } }, 500)
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    const { data, error } = await supabase
+      .from('youtube_metrics')
+      .select('id, date_ingested, username, videos_30d, views_30d, likes_30d, profile_url')
+      .ilike('username', cleanUsername)
+      .order('date_ingested', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return c.json({
+          success: true,
+          data: null,
+          message: 'No metrics found for this username'
+        })
+      }
+      return c.json({ success: false, error: { message: error.message } }, 500)
+    }
+
+    const metrics = data as YouTubeMetrics
+
+    return c.json({
+      success: true,
+      data: {
+        username: metrics.username,
+        date_ingested: metrics.date_ingested,
+        videos_30d: metrics.videos_30d,
+        views_30d: metrics.views_30d,
+        likes_30d: metrics.likes_30d,
+        profile_url: metrics.profile_url
+      }
+    })
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return c.json({ success: false, error: { message: errorMessage } }, 500)
+  }
+})
+
+// ============================================================================
+// GET /metrics/twitter/:username - Fetch Twitter/X metrics for a username
+// ============================================================================
+social.get('/metrics/twitter/:username', async (c) => {
+  setCors(c)
+  
+  const username = c.req.param('username')
+  if (!username) {
+    return c.json({ success: false, error: { message: 'Username is required' } }, 400)
+  }
+
+  // Strip @ prefix if present
+  const cleanUsername = username.replace(/^@/, '')
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return c.json({ success: false, error: { message: 'Database configuration error' } }, 500)
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    const { data, error } = await supabase
+      .from('twitter_metrics')
+      .select('id, date_ingested, username, like_30d, retweet_30d, reply_30d, quote_30d, profile_url, followers')
+      .ilike('username', cleanUsername)
+      .order('date_ingested', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return c.json({
+          success: true,
+          data: null,
+          message: 'No metrics found for this username'
+        })
+      }
+      return c.json({ success: false, error: { message: error.message } }, 500)
+    }
+
+    const metrics = data as TwitterMetrics
+
+    return c.json({
+      success: true,
+      data: {
+        username: metrics.username,
+        date_ingested: metrics.date_ingested,
+        likes_30d: metrics.like_30d,
+        retweets_30d: metrics.retweet_30d,
+        replies_30d: metrics.reply_30d,
         profile_url: metrics.profile_url
       }
     })
