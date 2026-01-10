@@ -390,6 +390,18 @@ class ApiClient {
   async getAdminStats(): Promise<ApiResponse<BackendResponse<AdminStats>>> {
     return this.makeRequest('/api/admin/stats')
   }
+
+  // Social Media Metrics API
+  async getInstagramMetrics(username: string): Promise<ApiResponse<BackendResponse<{
+    username: string
+    date_ingested: string
+    posts_30d: number | null
+    likes_30d: number | null
+    comments_30d: number | null
+    profile_url: string | null
+  }>>> {
+    return this.makeRequest(`/api/social/metrics/instagram/${encodeURIComponent(username)}`)
+  }
 }
 
 export const apiClient = new ApiClient()

@@ -156,7 +156,8 @@ app.notFound((c) => {
       'POST /api/subscription/checkout',
       'POST /api/subscription/cancel',
       'POST /api/webhooks/stripe',
-      'GET|POST /api/social/connect'
+      'GET|POST /api/social/connect',
+      'GET /api/social/metrics/instagram/:username'
     ]
   }, 404)
 })

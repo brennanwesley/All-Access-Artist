@@ -1,6 +1,11 @@
 import { Hono } from 'hono'
+import { createClient } from '@supabase/supabase-js'
 
 const social = new Hono()
+
+// Supabase client for metrics queries
+const supabaseUrl = process.env.SUPABASE_URL || ''
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
 // One URL per platform (set these in Render → Backend → Environment)
 // Fallback DEFAULT is used if a specific platform var is missing.
@@ -120,5 +125,80 @@ async function handler(c: any) {
 for (const path of ['/connect', '/connect/']) {
   social.on(['OPTIONS', 'HEAD', 'GET', 'POST'], path, handler)
 }
+
+// ============================================================================
+// GET /metrics/instagram/:username - Fetch Instagram metrics for a username
+// ============================================================================
+interface InstagramMetrics {
+  id: number
+  date_ingested: string
+  username: string
+  posts_30d: number | null
+  likes_30d: number | null
+  comments_30d: number | null
+  posts_365d: number | null
+  likes_365d: number | null
+  comments_365d: number | null
+  profile_url: string | null
+  followers: number | null
+}
+
+social.get('/metrics/instagram/:username', async (c) => {
+  setCors(c)
+  
+  const username = c.req.param('username')
+  if (!username) {
+    return c.json({ success: false, error: { message: 'Username is required' } }, 400)
+  }
+
+  // Strip @ prefix if present
+  const cleanUsername = username.replace(/^@/, '')
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return c.json({ success: false, error: { message: 'Database configuration error' } }, 500)
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    // Get the most recent metrics for this username
+    const { data, error } = await supabase
+      .from('instagram_metrics')
+      .select('id, date_ingested, username, posts_30d, likes_30d, comments_30d, posts_365d, likes_365d, comments_365d, profile_url, followers')
+      .ilike('username', cleanUsername)
+      .order('date_ingested', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (error) {
+      // No data found is not an error - just return null metrics
+      if (error.code === 'PGRST116') {
+        return c.json({
+          success: true,
+          data: null,
+          message: 'No metrics found for this username'
+        })
+      }
+      return c.json({ success: false, error: { message: error.message } }, 500)
+    }
+
+    const metrics = data as InstagramMetrics
+
+    return c.json({
+      success: true,
+      data: {
+        username: metrics.username,
+        date_ingested: metrics.date_ingested,
+        posts_30d: metrics.posts_30d,
+        likes_30d: metrics.likes_30d,
+        comments_30d: metrics.comments_30d,
+        profile_url: metrics.profile_url
+      }
+    })
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return c.json({ success: false, error: { message: errorMessage } }, 500)
+  }
+})
 
 export default social

@@ -4,6 +4,16 @@ import { useAuth } from '../../contexts/AuthContext'
 import { toast } from 'sonner'
 import type { Artist, BackendResponse } from '../../types/api'
 
+// Types for Instagram metrics
+export interface InstagramMetrics {
+  username: string
+  date_ingested: string
+  posts_30d: number | null
+  likes_30d: number | null
+  comments_30d: number | null
+  profile_url: string | null
+}
+
 // Types for social media data
 export interface SocialMediaUrls {
   instagram_url?: string | undefined
@@ -120,5 +130,46 @@ export const useUpdateSinglePlatform = () => {
       console.error('Failed to update social media URL:', error)
       toast.error(`Failed to update social media profile: ${error.message}`)
     }
+  })
+}
+
+// Hook to fetch Instagram metrics for a username
+export const useInstagramMetrics = (username: string | null | undefined) => {
+  return useQuery({
+    queryKey: ['instagram-metrics', username],
+    queryFn: async (): Promise<InstagramMetrics | null> => {
+      if (!username) return null
+      
+      // Extract username from URL if needed
+      let cleanUsername = username
+      try {
+        const url = new URL(username)
+        // Extract from path like /emilydeeclark or /@emilydeeclark
+        const pathParts = url.pathname.split('/').filter(Boolean)
+        const lastPart = pathParts[pathParts.length - 1]
+        if (lastPart) {
+          cleanUsername = lastPart.replace(/^@/, '')
+        }
+      } catch {
+        // Not a URL, use as-is but strip @ if present
+        cleanUsername = username.replace(/^@/, '')
+      }
+      
+      const response = await apiClient.getInstagramMetrics(cleanUsername)
+      
+      if (response.status !== 200) {
+        throw new Error(response.error || 'Failed to fetch Instagram metrics')
+      }
+      
+      const backendResponse = response.data as BackendResponse<InstagramMetrics> | undefined
+      if (backendResponse && 'success' in backendResponse && backendResponse.success) {
+        return backendResponse.data
+      }
+      
+      return null
+    },
+    enabled: !!username,
+    staleTime: 5 * 60 * 1000, // 5 minutes - metrics update daily
+    retry: 1,
   })
 }

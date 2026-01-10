@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { useSocialMediaUrls } from '../hooks/api/useSocialMedia'
+import { useSocialMediaUrls, useInstagramMetrics } from '../hooks/api/useSocialMedia'
 import { SocialConnectionModal } from "@/components/SocialConnectionModal";
 
 export const ContentCreator = () => {
@@ -45,6 +45,11 @@ export const ContentCreator = () => {
   const { data: socialMediaUrls } = useSocialMediaUrls();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<{ id: string; name: string } | null>(null);
+
+  // Fetch Instagram metrics when connected
+  const { data: instagramMetrics, isLoading: isLoadingInstagramMetrics } = useInstagramMetrics(
+    socialMediaUrls?.instagram_url
+  );
 
    //new - Optional safety net: fire once when Instagram URL appears
   useEffect(() => {
@@ -250,6 +255,10 @@ export const ContentCreator = () => {
               const username = isConnected ? extractUsername(socialMediaUrls[platformKey] || "", platform.id) : "";
               
               
+              // Get metrics for Instagram
+              const showInstagramMetrics = platform.id === 'instagram' && isConnected && instagramMetrics;
+              const isLoadingMetrics = platform.id === 'instagram' && isConnected && isLoadingInstagramMetrics;
+
               return (
                 <div key={platform.id} className="flex flex-col p-4 rounded-lg bg-secondary/20 border border-border/50">
                   <div className="flex items-center justify-between mb-2">
@@ -264,6 +273,42 @@ export const ContentCreator = () => {
                   {username && (
                     <div className="mb-2 px-2">
                       <span className="text-xs text-muted-foreground">{username}</span>
+                    </div>
+                  )}
+
+                  {/* Instagram Metrics Display */}
+                  {showInstagramMetrics && (
+                    <div className="mb-3 p-2 rounded-md bg-background/50">
+                      <div className="text-xs text-muted-foreground mb-2 font-medium">Last 30 Days</div>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {instagramMetrics.posts_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Posts</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {instagramMetrics.likes_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Likes</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {instagramMetrics.comments_30d ?? '--'}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">Comments</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Loading state for metrics */}
+                  {isLoadingMetrics && (
+                    <div className="mb-3 p-2 rounded-md bg-background/50">
+                      <div className="text-xs text-muted-foreground text-center animate-pulse">
+                        Loading metrics...
+                      </div>
                     </div>
                   )}
                   
