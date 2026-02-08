@@ -34,7 +34,6 @@ assets.get('/', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching assets:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch assets' 
@@ -54,7 +53,6 @@ assets.get('/:id', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching asset:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch asset' 
@@ -74,7 +72,6 @@ assets.post('/', zValidator('json', CreateArtistAssetSchema), async (c) => {
     
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    console.error('Error creating asset:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to create asset' 
@@ -95,7 +92,6 @@ assets.put('/:id', zValidator('json', UpdateArtistAssetSchema), async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error updating asset:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update asset' 
@@ -115,7 +111,6 @@ assets.delete('/:id', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error deleting asset:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete asset' 
@@ -135,7 +130,6 @@ assets.get('/primary/:type?', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching primary assets:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch primary assets' 
@@ -155,7 +149,6 @@ assets.post('/upload-url', zValidator('json', FileUploadSchema), async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error generating upload URL:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to generate upload URL' 
@@ -196,7 +189,6 @@ assets.post('/:id/download-url', async (c) => {
       } 
     })
   } catch (error) {
-    console.error('Error generating download URL:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to generate download URL' 
@@ -215,7 +207,6 @@ assets.get('/stats', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching asset statistics:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch asset statistics' 

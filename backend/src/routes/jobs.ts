@@ -33,7 +33,6 @@ jobs.get('/', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching generation jobs:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch generation jobs' 
@@ -53,7 +52,6 @@ jobs.get('/:id', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching generation job:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch generation job' 
@@ -73,7 +71,6 @@ jobs.post('/', zValidator('json', CreateGenerationJobSchema), async (c) => {
     
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    console.error('Error creating generation job:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to create generation job' 
@@ -94,7 +91,6 @@ jobs.patch('/:id', zValidator('json', UpdateGenerationJobSchema), async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error updating generation job:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update generation job' 
@@ -114,7 +110,6 @@ jobs.post('/:id/cancel', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error cancelling generation job:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to cancel generation job' 
@@ -134,7 +129,6 @@ jobs.post('/:id/retry', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error retrying generation job:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to retry generation job' 
@@ -153,7 +147,6 @@ jobs.get('/stats', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching job statistics:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch job statistics' 

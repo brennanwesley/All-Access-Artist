@@ -24,7 +24,6 @@ releases.get('/', async (c) => {
     const data = await releasesService.getAllReleases(user.id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching releases:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch releases' 
@@ -40,8 +39,6 @@ releases.get('/:id', async (c) => {
     const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
-    console.log('Releases: Fetching release details for ID:', id)
-    
     if (!user?.id) {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
@@ -50,7 +47,6 @@ releases.get('/:id', async (c) => {
     const release = await releasesService.getReleaseById(id, user.id)
     
     if (!release) {
-      console.log('Releases: No release found with ID:', id)
       return c.json({ 
         success: false, 
         error: 'Release not found' 
@@ -65,14 +61,12 @@ releases.get('/:id', async (c) => {
       .order('task_order', { ascending: true })
     
     if (tasksError) {
-      console.error('Releases: Database error fetching tasks:', tasksError)
       // Don't fail the request if tasks can't be fetched
     }
     
     // If no tasks exist, try to generate them automatically
     if (!tasks || tasks.length === 0) {
       try {
-        console.log('Releases: No tasks found, generating tasks for release:', id)
         await releasesService.generateTasksForExistingRelease(id, user.id)
         
         // Refetch tasks after generation
@@ -82,8 +76,6 @@ releases.get('/:id', async (c) => {
           .eq('release_id', id)
           .order('task_order', { ascending: true })
         
-        console.log('Releases: Tasks generated successfully, count:', newTasks?.length || 0)
-        
         const releaseWithDetails = {
           ...release,
           release_tasks: newTasks || [],
@@ -91,8 +83,7 @@ releases.get('/:id', async (c) => {
         }
         
         return c.json({ success: true, data: releaseWithDetails })
-      } catch (taskError) {
-        console.warn('Releases: Failed to generate tasks:', taskError)
+      } catch (_taskError) {
         // Continue with empty tasks if generation fails
       }
     }
@@ -105,7 +96,6 @@ releases.get('/:id', async (c) => {
       .order('track_number', { ascending: true })
     
     if (songsError) {
-      console.error('Releases: Database error fetching songs:', songsError)
       // Don't fail the request if songs can't be fetched
     }
     
@@ -115,10 +105,8 @@ releases.get('/:id', async (c) => {
       songs: songs || []
     }
     
-    console.log('Releases: Release details fetched successfully')
     return c.json({ success: true, data: releaseWithDetails })
   } catch (error) {
-    console.error('Releases: Error fetching release:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch release' 
@@ -144,25 +132,9 @@ releases.post('/', zValidator('json', CreateReleaseSchema), async (c) => {
       user_id: user.id
     }
     
-    // Phase 1 Diagnostic Logging
-    console.log('=== RELEASE CREATION DEBUG START ===')
-    console.log('1. Request Data:', JSON.stringify(validatedReleaseData, null, 2))
-    console.log('2. User Context:', user ? { id: user.id, email: user.email } : 'NO USER CONTEXT')
-    console.log('3. Supabase Client Type:', supabase ? 'AVAILABLE' : 'MISSING')
-    
     const data = await releasesService.createRelease(validatedReleaseData)
-    
-    console.log('4. Release Created Successfully:', { id: data.id, title: data.title })
-    console.log('=== RELEASE CREATION DEBUG END ===')
-    
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    console.error('=== RELEASE CREATION ERROR ===')
-    console.error('Error Type:', error?.constructor?.name)
-    console.error('Error Message:', error instanceof Error ? error.message : 'Unknown error')
-    console.error('Error Stack:', error instanceof Error ? error.stack : 'No stack trace')
-    console.error('=== END ERROR LOG ===')
-    
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to create release' 
@@ -186,7 +158,6 @@ releases.put('/:id', zValidator('json', CreateReleaseSchema.partial()), async (c
     const data = await releasesService.updateRelease(id, releaseData, user.id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error updating release:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update release' 
@@ -210,7 +181,6 @@ releases.patch('/:id', zValidator('json', CreateReleaseSchema.partial()), async 
     const data = await releasesService.updateRelease(id, releaseData, user.id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error updating release:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update release' 
@@ -233,7 +203,6 @@ releases.delete('/:id', async (c) => {
     const data = await releasesService.deleteRelease(id, user.id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error deleting release:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete release' 
@@ -256,7 +225,6 @@ releases.post('/:releaseId/generate-tasks', async (c) => {
     const result = await releasesService.generateTasksForExistingRelease(releaseId, user.id)
     return c.json({ success: true, data: result })
   } catch (error) {
-    console.error('Error generating tasks for release:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to generate tasks' 
@@ -276,11 +244,8 @@ releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('Releases: Adding song to release', releaseId, 'data:', songData)
-    
     // Validate releaseId format
     if (!releaseId || typeof releaseId !== 'string') {
-      console.error('Releases: Invalid releaseId format:', releaseId)
       return c.json({ success: false, error: 'Invalid release ID format' }, 400)
     }
     
@@ -293,7 +258,6 @@ releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (
       .single()
     
     if (releaseError || !release) {
-      console.error('Releases: Release not found or access denied:', releaseError)
       return c.json({ success: false, error: 'Release not found or access denied' }, 404)
     }
     
@@ -304,8 +268,6 @@ releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (
       user_id: user.id
     }
     
-    console.log('Releases: Inserting song with payload:', songPayload)
-    
     const { data, error } = await supabase
       .from('songs')
       .insert(songPayload)
@@ -313,17 +275,14 @@ releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (
       .single()
     
     if (error) {
-      console.error('Releases: Database error creating song:', error)
       return c.json({ 
         success: false, 
         error: `Database error: ${error.message}` 
       }, 400)
     }
     
-    console.log('Releases: Song created successfully:', data)
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    console.error('Releases: Error creating song:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to create song' 

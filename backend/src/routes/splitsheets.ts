@@ -20,8 +20,6 @@ splitsheets.get('/song/:songId', async (c) => {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('SplitSheet: Getting split sheet for song ID', songId, 'user', user.id)
-    
     // First, get the song title from the songs table using the songId
     const { data: songData, error: songError } = await supabase
       .from('songs')
@@ -30,11 +28,8 @@ splitsheets.get('/song/:songId', async (c) => {
       .single()
     
     if (songError) {
-      console.error('SplitSheet: Error getting song title:', songError)
       return c.json({ success: false, error: 'Song not found' }, 404)
     }
-    
-    console.log('SplitSheet: Found song title:', songData.song_title)
     
     // Now query split_sheets using the actual song title
     // Use order by updated_at desc and limit 1 to get the most recent record
@@ -49,19 +44,15 @@ splitsheets.get('/song/:songId', async (c) => {
       .maybeSingle()
     
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error('SplitSheet: Database error getting split sheet:', error)
       throw new Error(`Database error: ${error.message}`)
     }
     
     if (!data) {
-      console.log('SplitSheet: No split sheet found for song')
       return c.json({ success: true, data: null })
     }
     
-    console.log('SplitSheet: Split sheet retrieved successfully')
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('SplitSheet: Error getting split sheet:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to get split sheet' 
@@ -74,12 +65,10 @@ splitsheets.put('/song/:songId', async (c) => {
   try {
     const songId = c.req.param('songId')
     const rawData = await c.req.json()
-    console.log('SplitSheet: Raw request data:', JSON.stringify(rawData, null, 2))
     
     // Manual validation with detailed error reporting
     const validationResult = UpdateSplitSheetSchema.safeParse(rawData)
     if (!validationResult.success) {
-      console.error('SplitSheet: Validation failed:', validationResult.error.issues)
       return c.json({ 
         success: false, 
         error: 'Validation failed', 
@@ -94,8 +83,6 @@ splitsheets.put('/song/:songId', async (c) => {
     if (!user?.id) {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
-    
-    console.log('SplitSheet: Upserting split sheet for song', songId, 'user', user.id, 'data:', splitSheetData)
     
     // Validate percentage totals (application-level validation)
     if (splitSheetData.contributors) {
@@ -161,14 +148,11 @@ splitsheets.put('/song/:songId', async (c) => {
     }
     
     if (result.error) {
-      console.error('SplitSheet: Database error upserting split sheet:', result.error)
       throw new Error(`Database error: ${result.error.message}`)
     }
     
-    console.log('SplitSheet: Split sheet upserted successfully')
     return c.json({ success: true, data: result.data })
   } catch (error) {
-    console.error('SplitSheet: Error upserting split sheet:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to save split sheet' 
@@ -187,8 +171,6 @@ splitsheets.delete('/song/:songId', async (c) => {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('SplitSheet: Deleting split sheet for song', songId, 'user', user.id)
-    
     // First get the song title from the songs table
     const { data: songData, error: songError } = await supabase
       .from('songs')
@@ -197,7 +179,6 @@ splitsheets.delete('/song/:songId', async (c) => {
       .single()
     
     if (songError) {
-      console.error('SplitSheet: Error getting song title for deletion:', songError)
       return c.json({ success: false, error: 'Song not found' }, 404)
     }
 
@@ -208,14 +189,11 @@ splitsheets.delete('/song/:songId', async (c) => {
       .eq('song_title', songData.song_title)
     
     if (error) {
-      console.error('SplitSheet: Database error deleting split sheet:', error)
       throw new Error(`Database error: ${error.message}`)
     }
     
-    console.log('SplitSheet: Split sheet deleted successfully')
     return c.json({ success: true, message: 'Split sheet deleted successfully' })
   } catch (error) {
-    console.error('SplitSheet: Error deleting split sheet:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete split sheet' 

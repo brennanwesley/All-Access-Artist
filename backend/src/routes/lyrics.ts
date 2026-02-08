@@ -39,8 +39,6 @@ lyrics.get('/:songId', async (c) => {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('Lyrics: Fetching lyric sheet for song ID:', songId, 'for user', user.sub)
-    
     // Get lyric sheet with sections (filtered by user_id)
     const { data: lyricSheet, error: sheetError } = await supabase
       .from('lyric_sheets')
@@ -51,13 +49,11 @@ lyrics.get('/:songId', async (c) => {
     
     if (sheetError) {
       if (sheetError.code === 'PGRST116') { // No rows returned
-        console.log('Lyrics: No lyric sheet found for song', songId)
         return c.json({
           success: false,
           error: 'No lyric sheet found for this song'
         }, 404)
       }
-      console.error('Lyrics: Database error fetching lyric sheet:', sheetError)
       throw new Error(`Database error: ${sheetError.message}`)
     }
     
@@ -70,7 +66,6 @@ lyrics.get('/:songId', async (c) => {
       .order('section_order', { ascending: true })
     
     if (sectionsError) {
-      console.error('Lyrics: Database error fetching sections:', sectionsError)
       // Don't fail the request if sections can't be fetched
     }
     
@@ -89,13 +84,11 @@ lyrics.get('/:songId', async (c) => {
       sections: mappedSections || []
     }
     
-    console.log('Lyrics: Lyric sheet fetched successfully', JSON.stringify(lyricSheetWithSections, null, 2))
     return c.json({
       success: true,
       data: lyricSheetWithSections
     })
   } catch (error) {
-    console.error('Lyrics: Error fetching lyric sheet:', error)
     return c.json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch lyric sheet'
@@ -111,8 +104,6 @@ lyrics.post('/:songId', zValidator('json', CreateLyricSheetSchema), async (c) =>
     const supabase = c.get('supabase')
     const user = c.get('jwtPayload')
     
-    console.log('Lyrics: Creating lyric sheet for song ID:', songId, 'data:', lyricSheetData)
-    
     // Get song details to verify user ownership
     const { data: song, error: songError } = await supabase
       .from('songs')
@@ -122,7 +113,6 @@ lyrics.post('/:songId', zValidator('json', CreateLyricSheetSchema), async (c) =>
       .single()
     
     if (songError) {
-      console.error('Lyrics: Database error fetching song:', songError)
       throw new Error(`Song not found: ${songError.message}`)
     }
     
@@ -137,17 +127,14 @@ lyrics.post('/:songId', zValidator('json', CreateLyricSheetSchema), async (c) =>
       .single()
     
     if (error) {
-      console.error('Lyrics: Database error creating lyric sheet:', error)
       throw new Error(`Database error: ${error.message}`)
     }
     
-    console.log('Lyrics: Lyric sheet created successfully')
     return c.json({
       success: true,
       data: { ...data, sections: [] } // Include empty sections array
     }, 201)
   } catch (error) {
-    console.error('Lyrics: Error creating lyric sheet:', error)
     return c.json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create lyric sheet'
@@ -167,8 +154,6 @@ lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), a
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('Lyrics: Adding section to song ID:', songId, 'for user', user.sub, 'data:', sectionData)
-    
     // Get lyric sheet ID for this song (filtered by user_id)
     const { data: lyricSheet, error: sheetError } = await supabase
       .from('lyric_sheets')
@@ -178,7 +163,6 @@ lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), a
       .single()
     
     if (sheetError) {
-      console.error('Lyrics: Database error fetching lyric sheet:', sheetError)
       throw new Error(`Lyric sheet not found: ${sheetError.message}`)
     }
     
@@ -196,13 +180,11 @@ lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), a
       updated_at: result.updated_at
     }
 
-    console.log('Lyrics: Section created successfully')
     return c.json({
       success: true,
       data: mappedData
     }, 201)
   } catch (error) {
-    console.error('Lyrics: Error creating section:', error)
     return c.json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create section'
@@ -222,8 +204,6 @@ lyrics.patch('/sections/:sectionId', zValidator('json', UpdateLyricSectionSchema
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('Lyrics: Updating section ID:', sectionId, 'for user', user.sub, 'data:', updateData)
-    
     // Map frontend fields to database fields
     const dbUpdateData: any = {}
     if (updateData.section_type) dbUpdateData.section_type = updateData.section_type
@@ -239,7 +219,6 @@ lyrics.patch('/sections/:sectionId', zValidator('json', UpdateLyricSectionSchema
       .single()
     
     if (error) {
-      console.error('Lyrics: Database error updating section:', error)
       throw new Error(`Database error: ${error.message}`)
     }
     
@@ -253,13 +232,11 @@ lyrics.patch('/sections/:sectionId', zValidator('json', UpdateLyricSectionSchema
       updated_at: data.updated_at
     }
 
-    console.log('Lyrics: Section updated successfully')
     return c.json({
       success: true,
       data: mappedData
     })
   } catch (error) {
-    console.error('Lyrics: Error updating section:', error)
     return c.json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update section'
@@ -278,8 +255,6 @@ lyrics.delete('/sections/:sectionId', async (c) => {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('Lyrics: Deleting section ID:', sectionId, 'for user', user.sub)
-    
     const { error } = await supabase
       .from('lyric_sheet_sections')
       .delete()
@@ -287,17 +262,14 @@ lyrics.delete('/sections/:sectionId', async (c) => {
       .eq('user_id', user.sub)
     
     if (error) {
-      console.error('Lyrics: Database error deleting section:', error)
       throw new Error(`Database error: ${error.message}`)
     }
     
-    console.log('Lyrics: Section deleted successfully')
     return c.json({
       success: true,
       message: 'Section deleted successfully'
     })
   } catch (error) {
-    console.error('Lyrics: Error deleting section:', error)
     return c.json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete section'

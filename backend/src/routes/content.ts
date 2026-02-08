@@ -32,7 +32,6 @@ content.get('/', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching generated content:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch generated content' 
@@ -52,7 +51,6 @@ content.get('/:id', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching generated content:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch generated content' 
@@ -72,7 +70,6 @@ content.post('/', zValidator('json', CreateGeneratedContentSchema), async (c) =>
     
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    console.error('Error creating generated content:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to create generated content' 
@@ -93,7 +90,6 @@ content.put('/:id', zValidator('json', UpdateGeneratedContentSchema), async (c) 
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error updating generated content:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update generated content' 
@@ -113,7 +109,6 @@ content.delete('/:id', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error deleting generated content:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete generated content' 
@@ -133,7 +128,6 @@ content.post('/:id/track-usage', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error tracking content usage:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to track content usage' 
@@ -161,7 +155,6 @@ content.get('/search', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error searching generated content:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to search generated content' 
@@ -180,7 +173,6 @@ content.get('/stats', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching content statistics:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch content statistics' 

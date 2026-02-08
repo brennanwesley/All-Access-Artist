@@ -20,7 +20,6 @@ analytics.get('/', async (c) => {
     const data = await analyticsService.getAllAnalytics(userId)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching analytics:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch analytics' 
@@ -39,7 +38,6 @@ analytics.get('/:id', async (c) => {
     const data = await analyticsService.getAnalyticsById(userId, id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching analytics:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch analytics' 
@@ -58,7 +56,6 @@ analytics.post('/', zValidator('json', CreateAnalyticsSchema), async (c) => {
     const data = await analyticsService.createAnalytics(userId, analyticsData)
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    console.error('Error creating analytics:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to create analytics' 
@@ -78,7 +75,6 @@ analytics.put('/:id', zValidator('json', CreateAnalyticsSchema.partial()), async
     const data = await analyticsService.updateAnalytics(userId, id, analyticsData)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error updating analytics:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update analytics' 
@@ -97,7 +93,6 @@ analytics.delete('/:id', async (c) => {
     const data = await analyticsService.deleteAnalytics(userId, id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error deleting analytics:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete analytics' 

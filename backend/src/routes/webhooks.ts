@@ -20,12 +20,10 @@ webhooks.post('/stripe', async (c) => {
     const signature = c.req.header('stripe-signature')
 
     if (!signature) {
-      console.error('❌ Missing Stripe signature header')
       return c.json({ success: false, error: { message: 'Missing signature' } }, 400)
     }
 
     if (!process.env.STRIPE_WEBHOOK_SECRET) {
-      console.error('❌ Missing STRIPE_WEBHOOK_SECRET environment variable')
       return c.json({ success: false, error: { message: 'Webhook secret not configured' } }, 500)
     }
 
@@ -43,12 +41,9 @@ webhooks.post('/stripe', async (c) => {
         signature,
         process.env.STRIPE_WEBHOOK_SECRET
       )
-    } catch (err) {
-      console.error('❌ Webhook signature verification failed:', err)
+    } catch (_err) {
       return c.json({ success: false, error: { message: 'Invalid signature' } }, 400)
     }
-
-    console.log(`✅ Received Stripe webhook: ${event.type}`)
 
     // Process the webhook event
     const stripeService = new StripeService(c.get('supabase'))
@@ -57,7 +52,6 @@ webhooks.post('/stripe', async (c) => {
     return c.json({ success: true, received: true })
 
   } catch (error) {
-    console.error('❌ Error processing Stripe webhook:', error)
     return c.json({ success: false, error: { message: 'Webhook processing failed' } }, 500)
   }
 })

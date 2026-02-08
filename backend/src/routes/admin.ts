@@ -15,23 +15,17 @@ admin.use('*', adminAuth)
 
 // GET /api/admin/users - Get all users for admin dashboard
 admin.get('/users', async (c) => {
-  console.log('=== ADMIN GET USERS REQUEST START ===')
   try {
-    console.log('1. Getting admin Supabase client...')
     const supabaseAdmin = c.get('supabaseAdmin')
     if (!supabaseAdmin) {
-      console.log('ERROR: No admin Supabase client found')
       return c.json({ 
         success: false, 
         error: 'Database connection error' 
       }, 500)
     }
 
-    console.log('2. Creating AdminService and calling getAllUsers...')
     const adminService = new AdminService(supabaseAdmin)
     const users = await adminService.getAllUsers()
-    
-    console.log('3. Successfully retrieved', users.length, 'users')
     
     return c.json({ 
       success: true, 
@@ -43,32 +37,23 @@ admin.get('/users', async (c) => {
       }
     })
   } catch (error) {
-    console.log('=== ADMIN GET USERS ERROR ===')
-    console.error('Error details:', error)
-    console.log('=== END ADMIN GET USERS ERROR ===')
     return handleServiceError(error as Error, c, 'fetch admin user list')
   }
 })
 
 // GET /api/admin/stats - Get system statistics for admin dashboard
 admin.get('/stats', async (c) => {
-  console.log('=== ADMIN GET STATS REQUEST START ===')
   try {
-    console.log('1. Getting admin Supabase client...')
     const supabaseAdmin = c.get('supabaseAdmin')
     if (!supabaseAdmin) {
-      console.log('ERROR: No admin Supabase client found')
       return c.json({ 
         success: false, 
         error: 'Database connection error' 
       }, 500)
     }
 
-    console.log('2. Creating AdminService and calling getSystemStats...')
     const adminService = new AdminService(supabaseAdmin)
     const stats = await adminService.getSystemStats()
-    
-    console.log('3. Successfully retrieved system stats')
     
     return c.json({ 
       success: true, 
@@ -79,9 +64,6 @@ admin.get('/stats', async (c) => {
       }
     })
   } catch (error) {
-    console.log('=== ADMIN GET STATS ERROR ===')
-    console.error('Error details:', error)
-    console.log('=== END ADMIN GET STATS ERROR ===')
     return handleServiceError(error as Error, c, 'fetch admin system stats')
   }
 })

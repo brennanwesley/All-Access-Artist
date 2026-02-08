@@ -42,7 +42,6 @@ artists.get('/:id', async (c) => {
     const data = await artistsService.getArtistById(id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching artist:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch artist' 
@@ -115,7 +114,6 @@ artists.put('/:id', zValidator('json', CreateArtistSchema.partial()), async (c) 
     const data = await artistsService.updateArtist(id, artistData)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error updating artist:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update artist' 
@@ -133,7 +131,6 @@ artists.delete('/:id', async (c) => {
     const data = await artistsService.deleteArtist(id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error deleting artist:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete artist' 
@@ -174,7 +171,6 @@ artists.patch('/social-media', async (c) => {
       }
     })
   } catch (error) {
-    console.error('Error updating social media URLs:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update social media URLs' 

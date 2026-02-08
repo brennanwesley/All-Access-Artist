@@ -26,8 +26,6 @@ tasks.patch('/:taskId', zValidator('json', UpdateTaskSchema), async (c) => {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('Tasks: Updating task', taskId, 'for user', user.sub, 'completed_at:', completed_at)
-    
     const { data, error } = await supabase
       .from('release_tasks')
       .update({ completed_at })
@@ -37,14 +35,11 @@ tasks.patch('/:taskId', zValidator('json', UpdateTaskSchema), async (c) => {
       .single()
     
     if (error) {
-      console.error('Tasks: Database error updating task:', error)
       throw new Error(`Database error: ${error.message}`)
     }
     
-    console.log('Tasks: Task updated successfully')
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Tasks: Error updating task:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update task' 

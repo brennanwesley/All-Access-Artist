@@ -20,7 +20,6 @@ calendar.get('/', async (c) => {
     const data = await calendarService.getAllCalendarEvents(userId)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching calendar events:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch calendar events' 
@@ -39,7 +38,6 @@ calendar.get('/:id', async (c) => {
     const data = await calendarService.getCalendarEventById(userId, id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching calendar event:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch calendar event' 
@@ -58,7 +56,6 @@ calendar.post('/', zValidator('json', CreateCalendarSchema), async (c) => {
     const data = await calendarService.createCalendarEvent(userId, eventData)
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    console.error('Error creating calendar event:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to create calendar event' 
@@ -78,7 +75,6 @@ calendar.put('/:id', zValidator('json', CreateCalendarSchema.partial()), async (
     const data = await calendarService.updateCalendarEvent(userId, id, eventData)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error updating calendar event:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update calendar event' 
@@ -98,7 +94,6 @@ calendar.patch('/:id/content', zValidator('json', UpdateContentCalendarSchema), 
     const data = await calendarService.updateCalendarEvent(userId, id, contentData)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error associating content with calendar event:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to associate content with calendar event' 
@@ -117,7 +112,6 @@ calendar.get('/:id/content', async (c) => {
     const data = await calendarService.getCalendarEventWithContent(userId, id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error fetching calendar event with content:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch calendar event with content' 
@@ -136,7 +130,6 @@ calendar.delete('/:id', async (c) => {
     const data = await calendarService.deleteCalendarEvent(userId, id)
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Error deleting calendar event:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete calendar event' 

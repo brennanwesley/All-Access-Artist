@@ -61,7 +61,7 @@ This document converts the full‑stack review findings into an **incremental, p
 
 ---
 
-## P1 — Backend Reliability & Consistency
+## P2 — Backend Reliability & Consistency
 
 1) **Standardize error responses across all routes**
    - **Why**: Inconsistent error shapes lead to brittle UI error handling.
@@ -85,7 +85,7 @@ This document converts the full‑stack review findings into an **incremental, p
 
 ---
 
-## P2 — Frontend Robustness & Data Consistency
+## P3 — Frontend Robustness & Data Consistency
 
 1) **Graceful handling for missing auth sessions**
    - **Why**: `apiClient` throws if the session is missing; this can cascade into broken UI.
@@ -104,7 +104,7 @@ This document converts the full‑stack review findings into an **incremental, p
 
 ---
 
-## P2 — Observability & Operational Discipline
+## P4 — Observability & Operational Discipline
 
 1) **Add error monitoring (Sentry or similar)**
    - **Why**: You need real‑world visibility into crashes at scale.
@@ -118,7 +118,7 @@ This document converts the full‑stack review findings into an **incremental, p
 
 ---
 
-## P3 — Long‑Term Scalability & Maintenance
+## P5 — Long‑Term Scalability & Maintenance
 
 1) **Introduce formal API contract tests**
    - **Why**: Prevent accidental backend changes from breaking the frontend.
@@ -138,7 +138,7 @@ This document converts the full‑stack review findings into an **incremental, p
 ---
 
 ## Suggested Execution Order (Incremental)
-1) P0‑1 → P0‑2 → P0‑3 → P0‑4
+1) P0‑1 → P0‑2 → P0‑3 → P0‑4 → P0‑5
 2) P1 DB items (indexes + RLS consolidation + init‑plan)
 3) P1 backend consistency (errors + logging + strict TS)
 4) P2 frontend robustness

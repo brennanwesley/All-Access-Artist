@@ -60,7 +60,6 @@ subscription.get('/status', async (c) => {
       .single()
 
     if (error) {
-      console.error('Error fetching subscription details:', error)
       return c.json({ success: false, error: { message: 'Failed to fetch subscription details' } }, 500)
     }
 
@@ -85,7 +84,6 @@ subscription.get('/status', async (c) => {
     })
 
   } catch (error) {
-    console.error('Error getting subscription status:', error)
     return c.json({ success: false, error: { message: 'Failed to get subscription status' } }, 500)
   }
 })
@@ -123,7 +121,6 @@ subscription.post('/checkout', zValidator('json', CheckoutSessionSchema), async 
     })
 
   } catch (error) {
-    console.error('Error creating checkout session:', error)
     return c.json({ success: false, error: { message: 'Failed to create checkout session' } }, 500)
   }
 })
@@ -163,7 +160,6 @@ subscription.post('/cancel', async (c) => {
     })
 
   } catch (error) {
-    console.error('Error canceling subscription:', error)
     return c.json({ success: false, error: { message: 'Failed to cancel subscription' } }, 500)
   }
 })
@@ -246,7 +242,6 @@ subscription.get('/products', async (c) => {
     })
 
   } catch (error) {
-    console.error('Error getting subscription products:', error)
     return c.json({ success: false, error: { message: 'Failed to get subscription products' } }, 500)
   }
 })
@@ -283,7 +278,6 @@ subscription.post('/setup', async (c) => {
     })
 
   } catch (error) {
-    console.error('Error setting up Stripe products:', error)
     return c.json({ success: false, error: { message: 'Failed to setup Stripe products' } }, 500)
   }
 })

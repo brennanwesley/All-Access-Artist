@@ -21,8 +21,6 @@ songs.patch('/:songId', zValidator('json', UpdateSongSchema), async (c) => {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('Songs: Updating song', songId, 'for user', user.id, 'data:', songData)
-    
     const { data, error } = await supabase
       .from('songs')
       .update(songData)
@@ -32,14 +30,11 @@ songs.patch('/:songId', zValidator('json', UpdateSongSchema), async (c) => {
       .single()
     
     if (error) {
-      console.error('Songs: Database error updating song:', error)
       throw new Error(`Database error: ${error.message}`)
     }
     
-    console.log('Songs: Song updated successfully')
     return c.json({ success: true, data })
   } catch (error) {
-    console.error('Songs: Error updating song:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update song' 
@@ -58,8 +53,6 @@ songs.delete('/:songId', async (c) => {
       return c.json({ success: false, error: 'User not authenticated' }, 401)
     }
     
-    console.log('Songs: Deleting song', songId, 'for user', user.id)
-    
     const { error } = await supabase
       .from('songs')
       .delete()
@@ -67,14 +60,11 @@ songs.delete('/:songId', async (c) => {
       .eq('user_id', user.id)
     
     if (error) {
-      console.error('Songs: Database error deleting song:', error)
       throw new Error(`Database error: ${error.message}`)
     }
     
-    console.log('Songs: Song deleted successfully')
     return c.json({ success: true, message: 'Song deleted successfully' })
   } catch (error) {
-    console.error('Songs: Error deleting song:', error)
     return c.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete song' 
