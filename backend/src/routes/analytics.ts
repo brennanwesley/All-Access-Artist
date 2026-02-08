@@ -14,8 +14,8 @@ const analytics = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 analytics.get('/', async (c) => {
   try {
     const userId = c.get('jwtPayload').sub
-    const bindings = c.env
-    const analyticsService = new AnalyticsService(bindings)
+    const supabase = c.get('supabase')
+    const analyticsService = new AnalyticsService(supabase)
     
     const data = await analyticsService.getAllAnalytics(userId)
     return c.json({ success: true, data })
@@ -33,8 +33,8 @@ analytics.get('/:id', async (c) => {
   try {
     const id = c.req.param('id')
     const userId = c.get('jwtPayload').sub
-    const bindings = c.env
-    const analyticsService = new AnalyticsService(bindings)
+    const supabase = c.get('supabase')
+    const analyticsService = new AnalyticsService(supabase)
     
     const data = await analyticsService.getAnalyticsById(userId, id)
     return c.json({ success: true, data })
@@ -52,8 +52,8 @@ analytics.post('/', zValidator('json', CreateAnalyticsSchema), async (c) => {
   try {
     const analyticsData = c.req.valid('json')
     const userId = c.get('jwtPayload').sub
-    const bindings = c.env
-    const analyticsService = new AnalyticsService(bindings)
+    const supabase = c.get('supabase')
+    const analyticsService = new AnalyticsService(supabase)
     
     const data = await analyticsService.createAnalytics(userId, analyticsData)
     return c.json({ success: true, data }, 201)
@@ -72,8 +72,8 @@ analytics.put('/:id', zValidator('json', CreateAnalyticsSchema.partial()), async
     const id = c.req.param('id')
     const analyticsData = c.req.valid('json')
     const userId = c.get('jwtPayload').sub
-    const bindings = c.env
-    const analyticsService = new AnalyticsService(bindings)
+    const supabase = c.get('supabase')
+    const analyticsService = new AnalyticsService(supabase)
     
     const data = await analyticsService.updateAnalytics(userId, id, analyticsData)
     return c.json({ success: true, data })
@@ -91,8 +91,8 @@ analytics.delete('/:id', async (c) => {
   try {
     const id = c.req.param('id')
     const userId = c.get('jwtPayload').sub
-    const bindings = c.env
-    const analyticsService = new AnalyticsService(bindings)
+    const supabase = c.get('supabase')
+    const analyticsService = new AnalyticsService(supabase)
     
     const data = await analyticsService.deleteAnalytics(userId, id)
     return c.json({ success: true, data })

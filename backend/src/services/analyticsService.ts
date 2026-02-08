@@ -2,17 +2,14 @@
  * Analytics Service - Business logic for fan analytics management
  * All Access Artist - Backend API v2.0.0
  */
-import { createClient } from '@supabase/supabase-js'
-import type { Bindings } from '../types/bindings.js'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { CreateAnalyticsData } from '../types/schemas.js'
 
 export class AnalyticsService {
-  private supabase
+  private supabase: SupabaseClient
 
-  constructor(bindings: Bindings) {
-    this.supabase = createClient(
-      bindings.SUPABASE_URL,
-      bindings.SUPABASE_SERVICE_KEY
-    )
+  constructor(supabase: SupabaseClient) {
+    this.supabase = supabase
   }
 
   async getAllAnalytics(userId: string) {
@@ -29,7 +26,7 @@ export class AnalyticsService {
     return data
   }
 
-  async createAnalytics(userId: string, analyticsData: any) {
+  async createAnalytics(userId: string, analyticsData: CreateAnalyticsData) {
     const { data, error } = await this.supabase
       .from('fan_analytics')
       .insert({
@@ -62,7 +59,11 @@ export class AnalyticsService {
     return data
   }
 
-  async updateAnalytics(analyticsId: string, userId: string, analyticsData: any) {
+  async updateAnalytics(
+    analyticsId: string,
+    userId: string,
+    analyticsData: Partial<CreateAnalyticsData>
+  ) {
     const { data, error } = await this.supabase
       .from('fan_analytics')
       .update(analyticsData)

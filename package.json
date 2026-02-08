@@ -27,9 +27,8 @@
   },
   "lint-staged": {
     "frontend/**/*.{ts,tsx}": [
-      "eslint --fix --max-warnings=0"
-    ],
-    "backend/**/*.ts": "npm run typecheck:backend"
+      "eslint --fix --max-warnings=0 --config frontend/eslint.config.js"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

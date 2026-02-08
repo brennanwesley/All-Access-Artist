@@ -1,15 +1,24 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Environment variables (with fallbacks to prevent crashes)
-const supabaseUrl = import.meta.env['VITE_SUPABASE_URL'] || 'https://placeholder.supabase.co'
-const supabaseAnonKey = import.meta.env['VITE_SUPABASE_ANON_KEY'] || 'placeholder-anon-key'
+// Environment variables (fail fast in production)
+const supabaseUrl = import.meta.env['VITE_SUPABASE_URL'] ?? ''
+const supabaseAnonKey = import.meta.env['VITE_SUPABASE_ANON_KEY'] ?? ''
 
-if (!import.meta.env['VITE_SUPABASE_URL'] || !import.meta.env['VITE_SUPABASE_ANON_KEY']) {
-  console.warn('Supabase environment variables not configured. Using placeholder values. Authentication will not work until proper credentials are set.')
+if (!supabaseUrl || !supabaseAnonKey) {
+  if (import.meta.env.PROD) {
+    throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in production.')
+  }
+
+  console.warn(
+    'Supabase environment variables not configured. Using placeholder values. Authentication will not work until proper credentials are set.'
+  )
 }
 
+const resolvedSupabaseUrl = supabaseUrl || 'https://placeholder.supabase.co'
+const resolvedSupabaseAnonKey = supabaseAnonKey || 'placeholder-anon-key'
+
 // Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(resolvedSupabaseUrl, resolvedSupabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
