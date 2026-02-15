@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, FileText, Music, Save, Globe, Clock, Plus, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ReleaseDetails, Song } from "@/hooks/api/useReleaseDetails";
-import { useAuth } from "@/contexts/AuthContext";
 import { SplitSheetTemplate } from "@/components/split-sheet";
+import { apiClient } from "@/lib/api";
 
 type ActiveTemplate = "main" | "labelCopy" | "splitSheet" | "lyricSheet" | null;
 
@@ -59,8 +59,58 @@ interface ReleaseData {
   explicitContent: boolean;
 }
 
+interface LabelCopyTrackMetadata {
+  track_number: number;
+  duration_seconds?: number;
+  isrc?: string;
+  version_subtitle?: string;
+  featured_artists?: string;
+  explicit_content?: boolean;
+  preview_start_time?: number;
+  mix_engineer?: string;
+  mastering_engineer?: string;
+  remixer?: string;
+  songwriters?: string;
+  producers?: string;
+  sub_genre?: string;
+  language_lyrics?: string;
+}
+
+interface LabelCopyData {
+  version_subtitle?: string;
+  phonogram_copyright?: string;
+  composition_copyright?: string;
+  sub_genre?: string;
+  territories?: string[] | string;
+  explicit_content?: boolean;
+  language_lyrics?: string;
+  upc_code?: string;
+  copyright_year?: number;
+  tracks_metadata?: LabelCopyTrackMetadata[];
+}
+
+const DEFAULT_TRACKS: Track[] = [
+  {
+    id: "1",
+    songTitle: "",
+    trackNumber: 1,
+    duration: "",
+    isrc: "",
+    versionSubtitle: "",
+    featuredArtists: "",
+    explicitContent: false,
+    previewStartTime: 30,
+    mixEngineer: "",
+    masteringEngineer: "",
+    remixer: "",
+    songwriters: "",
+    producers: "",
+    subGenre: "",
+    languageLyrics: "en"
+  }
+];
+
 export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack }: MetadataPrepProps = {}) => {
-  const { getAccessToken } = useAuth();
   const [activeTemplate, setActiveTemplate] = useState<ActiveTemplate>("main");
   const [releaseData, setReleaseData] = useState<ReleaseData>({
     releaseTitle: "",
@@ -80,26 +130,8 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
     subGenre: "",
     explicitContent: false
   });
-  const [tracks, setTracks] = useState<Track[]>([
-    {
-      id: "1",
-      songTitle: "",
-      trackNumber: 1,
-      duration: "",
-      isrc: "",
-      versionSubtitle: "",
-      featuredArtists: "",
-      explicitContent: false,
-      previewStartTime: 30,
-      mixEngineer: "",
-      masteringEngineer: "",
-      remixer: "",
-      songwriters: "",
-      producers: "",
-      subGenre: "",
-      languageLyrics: "en"
-    }
-  ]);
+  const [tracks, setTracks] = useState<Track[]>(DEFAULT_TRACKS);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -110,15 +142,15 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
   const { toast } = useToast();
 
   // Helper function to convert seconds to MM:SS format
-  const formatDuration = (seconds?: number): string => {
+  const formatDuration = useCallback((seconds?: number): string => {
     if (!seconds) return "";
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
   // Helper function to convert Song[] to Track[]
-  const convertSongsToTracks = (songs: Song[]): Track[] => {
+  const convertSongsToTracks = useCallback((songs: Song[]): Track[] => {
     return songs.map((song) => ({
       id: song.id,
       songTitle: song.song_title,
@@ -137,10 +169,10 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
       subGenre: "",
       languageLyrics: "en"
     }));
-  };
+  }, [formatDuration]);
 
   // Helper function to merge Label Copy data with tracks
-  const mergeLabelCopyWithTracks = (existingTracks: Track[], labelCopyTracks: any[]): Track[] => {
+  const mergeLabelCopyWithTracks = useCallback((existingTracks: Track[], labelCopyTracks: LabelCopyTrackMetadata[]): Track[] => {
     return existingTracks.map((track) => {
       // Find matching track in label copy data by track number
       const labelCopyTrack = labelCopyTracks.find(lct => lct.track_number === track.trackNumber);
@@ -166,77 +198,64 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
       
       return track;
     });
-  };
+  }, [formatDuration]);
 
   // Fetch existing Label Copy data
-  const fetchLabelCopyData = async (releaseId: string) => {
+  const fetchLabelCopyData = useCallback(async (releaseIdentifier: string): Promise<LabelCopyData | null> => {
     setIsLoadingLabelCopy(true);
     try {
-      const API_URL = import.meta.env['VITE_API_URL'] || 'https://all-access-artist.onrender.com';
-      const response = await fetch(`${API_URL}/api/labelcopy/${releaseId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${await getAccessToken()}`
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          // No label copy data exists yet - this is normal for new releases
-          console.log('No existing label copy data found for release:', releaseId);
-          return null;
-        }
-        throw new Error(`Failed to fetch label copy data: ${response.status}`);
+      const response = await apiClient.getLabelCopy(releaseIdentifier);
+      if (response.error || response.status !== 200) {
+        return null;
       }
 
-      const result = await response.json();
-      if (result.success && result.data) {
-        console.log('Label copy data loaded successfully:', result.data);
-        return result.data;
+      const result = response.data as { success?: boolean; data?: LabelCopyData | null } | undefined;
+      if (result?.success) {
+        return result.data ?? null;
       }
-      
+
       return null;
-    } catch (error) {
-      console.error('Error fetching label copy data:', error);
+    } catch {
       // Don't show error toast for missing data - it's expected for new releases
       return null;
     } finally {
       setIsLoadingLabelCopy(false);
     }
-  };
+  }, []);
 
   // Session storage key for auto-save
-  const getSessionStorageKey = () => `labelCopy_${releaseId || 'new'}`;
+  const getSessionStorageKey = useCallback(() => `labelCopy_${releaseId || 'new'}`, [releaseId]);
 
   // Save form data to session storage
-  const saveToSessionStorage = () => {
+  const saveToSessionStorage = useCallback(() => {
     if (activeTemplate === 'labelCopy') {
       const formData = { releaseData, tracks };
       sessionStorage.setItem(getSessionStorageKey(), JSON.stringify(formData));
     }
-  };
+  }, [activeTemplate, getSessionStorageKey, releaseData, tracks]);
 
   // Load form data from session storage
-  const loadFromSessionStorage = () => {
+  const loadFromSessionStorage = useCallback(() => {
     if (activeTemplate === 'labelCopy') {
       const saved = sessionStorage.getItem(getSessionStorageKey());
       if (saved) {
         try {
           const formData = JSON.parse(saved);
-          setReleaseData(formData.releaseData || releaseData);
-          setTracks(formData.tracks || tracks);
-        } catch (error) {
-          console.error('Error loading from session storage:', error);
+          setReleaseData((prev) => formData.releaseData || prev);
+          setTracks((prev) => formData.tracks || prev);
+        } catch {
+          // Ignore malformed session data and continue with current in-memory state
+          return;
         }
       }
     }
-  };
+  }, [activeTemplate, getSessionStorageKey]);
 
   // Check for unsaved changes
-  const checkForUnsavedChanges = () => {
+  const checkForUnsavedChanges = useCallback(() => {
     if (!lastSavedData) return false;
     return JSON.stringify({ releaseData, tracks }) !== JSON.stringify(lastSavedData);
-  };
+  }, [lastSavedData, releaseData, tracks]);
 
   // Handle edit mode toggle
   const handleEditToggle = () => {
@@ -259,22 +278,22 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
   };
 
   // Start auto-save interval
-  const startAutoSave = () => {
+  const startAutoSave = useCallback(() => {
     if (autoSaveIntervalRef.current) {
       clearInterval(autoSaveIntervalRef.current);
     }
     autoSaveIntervalRef.current = setInterval(() => {
       saveToSessionStorage();
     }, 3000); // Auto-save every 3 seconds
-  };
+  }, [saveToSessionStorage]);
 
   // Stop auto-save interval
-  const stopAutoSave = () => {
+  const stopAutoSave = useCallback(() => {
     if (autoSaveIntervalRef.current) {
       clearInterval(autoSaveIntervalRef.current);
       autoSaveIntervalRef.current = null;
     }
-  };
+  }, []);
 
   // Pre-populate form data when props are provided
   useEffect(() => {
@@ -303,7 +322,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
         // Convert songs to tracks first
         const baseTracks = existingSongs && existingSongs.length > 0 
           ? convertSongsToTracks(existingSongs) 
-          : tracks;
+          : DEFAULT_TRACKS;
 
         // Fetch existing Label Copy data and merge it
         const labelCopyData = await fetchLabelCopyData(releaseId);
@@ -353,7 +372,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
     };
 
     loadReleaseData();
-  }, [existingRelease, existingSongs, releaseId]);
+  }, [convertSongsToTracks, existingRelease, existingSongs, fetchLabelCopyData, mergeLabelCopyWithTracks, releaseId]);
 
   // Handle template change and session storage
   useEffect(() => {
@@ -374,14 +393,14 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
     return () => {
       stopAutoSave();
     };
-  }, [activeTemplate, isReadOnly]);
+  }, [activeTemplate, isReadOnly, loadFromSessionStorage, startAutoSave, stopAutoSave]);
 
   // Track form changes for unsaved changes detection
   useEffect(() => {
     if (activeTemplate === 'labelCopy' && !isReadOnly) {
       setHasUnsavedChanges(checkForUnsavedChanges());
     }
-  }, [releaseData, tracks, activeTemplate, isReadOnly]);
+  }, [activeTemplate, checkForUnsavedChanges, isReadOnly, releaseData, tracks]);
 
   // Handle beforeunload warning for unsaved changes
   useEffect(() => {
@@ -427,7 +446,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
     }
   };
 
-  const updateTrack = (trackId: string, field: keyof Track, value: any) => {
+  const updateTrack = <K extends keyof Track>(trackId: string, field: K, value: Track[K]) => {
     if (!isReadOnly) {
       setTracks(tracks.map(track => 
         track.id === trackId ? { ...track, [field]: value } : track
@@ -453,10 +472,6 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
   };
 
   const handleSave = async () => {
-    // IMMEDIATE DEBUG - Check if function executes at all
-    console.log('🔥 HANDLEAVE FUNCTION CALLED - BUTTON CLICK DETECTED');
-    console.log('🔥 Current time:', new Date().toISOString());
-    
     setIsLoading(true);
     setSaveStatus('saving');
     
@@ -468,88 +483,51 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
 
       // Determine if this is an update or create operation
       const isUpdate = releaseId && existingRelease;
+
+      const normalizedReleaseType = (releaseData.releaseType || 'single') as 'single' | 'ep' | 'album' | 'mixtape';
+      const parsedCopyrightYear = Number.parseInt(releaseData.copyright, 10);
+      const copyrightYear = Number.isNaN(parsedCopyrightYear)
+        ? new Date().getFullYear()
+        : parsedCopyrightYear;
+      const normalizedReleaseDate = releaseData.releaseDate || new Date().toISOString().slice(0, 10);
       
       // Create release payload with correct database field names
       const releasePayload = {
         title: releaseData.releaseTitle,
-        release_type: releaseData.releaseType,
-        release_date: releaseData.releaseDate || new Date().toISOString().split('T')[0], // Keep as YYYY-MM-DD format
-        copyright_year: parseInt(releaseData.copyright) || new Date().getFullYear(),
+        release_type: normalizedReleaseType,
+        release_date: normalizedReleaseDate,
+        copyright_year: copyrightYear,
         upc: releaseData.upc,
         genre: releaseData.genre,
         language_lyrics: releaseData.languageLyrics,
         phonogram_copyright: releaseData.phonogramCopyright,
         composition_copyright: releaseData.compositionCopyright,
         label: releaseData.label,
-        territories: releaseData.territories ? releaseData.territories.split(',').map(t => t.trim()) : [],
-        description: releaseData.description,
-        ...(isUpdate ? {} : { user_id: crypto.randomUUID() }) // Generate proper UUID for new releases
+        territories: releaseData.territories
+          ? releaseData.territories.split(',').map(t => t.trim()).filter(Boolean)
+          : [],
+        description: releaseData.description
       };
-
-      // Get API URL from environment
-      const API_URL = import.meta.env['VITE_API_URL'] || 'https://all-access-artist.onrender.com';
-
-      // DEBUG LOGGING - Remove after testing
-      console.log('=== LABEL COPY SAVE DEBUG START ===');
-      console.log('1. Save Operation Type:', isUpdate ? 'UPDATE' : 'CREATE');
-      console.log('2. Release ID:', releaseId);
-      console.log('3. Release Payload:', JSON.stringify(releasePayload, null, 2));
-      console.log('4. Tracks with Content:', tracksWithContent.length);
-      console.log('5. API URL:', API_URL);
       
       let currentReleaseId = releaseId;
       
       if (isUpdate) {
-        // Update existing release
-        const releaseResponse = await fetch(`${API_URL}/api/releases/${releaseId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${await getAccessToken()}`
-          },
-          body: JSON.stringify(releasePayload)
-        });
-
-        if (!releaseResponse.ok) {
-          // DEBUG LOGGING - Remove after testing
-          const errorText = await releaseResponse.text();
-          console.error('UPDATE RELEASE FAILED:');
-          console.error('Status:', releaseResponse.status, releaseResponse.statusText);
-          console.error('Response:', errorText);
-          console.error('Request URL:', `${API_URL}/api/releases/${releaseId}`);
-          console.error('Request Payload:', JSON.stringify(releasePayload, null, 2));
-          throw new Error(`Failed to update release: ${releaseResponse.status} ${errorText}`);
+        const response = await apiClient.updateRelease(releaseId, releasePayload);
+        if (response.error || response.status !== 200) {
+          throw new Error(response.error || 'Failed to update release');
         }
-        
-        // DEBUG LOGGING - Remove after testing
-        console.log('6. Release UPDATE successful');
       } else {
-        // Create new release
-        const releaseResponse = await fetch(`${API_URL}/api/releases`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${await getAccessToken()}`
-          },
-          body: JSON.stringify(releasePayload)
-        });
-
-        if (!releaseResponse.ok) {
-          // DEBUG LOGGING - Remove after testing
-          const errorText = await releaseResponse.text();
-          console.error('CREATE RELEASE FAILED:');
-          console.error('Status:', releaseResponse.status, releaseResponse.statusText);
-          console.error('Response:', errorText);
-          console.error('Request URL:', `${API_URL}/api/releases`);
-          console.error('Request Payload:', JSON.stringify(releasePayload, null, 2));
-          throw new Error(`Failed to create release: ${releaseResponse.status} ${errorText}`);
+        const response = await apiClient.createRelease(releasePayload);
+        if (response.error || response.status !== 201) {
+          throw new Error(response.error || 'Failed to create release');
         }
-        
-        // DEBUG LOGGING - Remove after testing
-        console.log('6. Release CREATE successful');
 
-        const release = await releaseResponse.json();
-        currentReleaseId = release.data?.id || release.id;
+        const createdReleaseResponse = response.data as { success?: boolean; data?: { id?: string } } | undefined;
+        currentReleaseId = createdReleaseResponse?.data?.id;
+      }
+
+      if (!currentReleaseId) {
+        throw new Error('Release ID missing after save operation');
       }
 
       // Prepare tracks metadata for label copy
@@ -570,7 +548,6 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
         sub_genre: track.subGenre
       }));
 
-      // Create label copy payload
       const labelCopyPayload = {
         version_subtitle: releaseData.versionSubtitle,
         phonogram_copyright: releaseData.phonogramCopyright,
@@ -580,22 +557,14 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
         explicit_content: releaseData.explicitContent || false,
         language_lyrics: releaseData.languageLyrics,
         upc_code: releaseData.upc,
-        copyright_year: parseInt(releaseData.copyright) || undefined,
+        copyright_year: Number.isNaN(parsedCopyrightYear) ? undefined : parsedCopyrightYear,
         tracks_metadata: tracksMetadata
       };
 
-      // Save label copy data
-      const labelCopyResponse = await fetch(`${API_URL}/api/labelcopy/${currentReleaseId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await getAccessToken()}`
-        },
-        body: JSON.stringify(labelCopyPayload)
-      });
+      const labelCopyResponse = await apiClient.saveLabelCopy(currentReleaseId, labelCopyPayload);
 
-      if (!labelCopyResponse.ok) {
-        throw new Error('Failed to save Label Copy data');
+      if (labelCopyResponse.error || labelCopyResponse.status !== 200) {
+        throw new Error(labelCopyResponse.error || 'Failed to save Label Copy data');
       }
 
       // Clear session storage on successful save
@@ -620,11 +589,6 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
       // Clear success status after 3 seconds
       setTimeout(() => setSaveStatus('idle'), 3000);
       
-      // DEBUG LOGGING - Remove after testing
-      console.log('=== LABEL COPY SAVE SUCCESS ===');
-      console.log('Final Release ID:', currentReleaseId);
-      console.log('=== DEBUG END ===');
-
       // Only reset form if creating new (not updating)
       if (!isUpdate) {
         setReleaseData({
@@ -666,16 +630,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
         }]);
       }
 
-    } catch (error) {
-      // DEBUG LOGGING - Remove after testing
-      console.error('=== LABEL COPY SAVE ERROR ===');
-      console.error('Error Type:', error?.constructor?.name);
-      console.error('Error Message:', error instanceof Error ? error.message : 'Unknown error');
-      console.error('Error Stack:', error instanceof Error ? error.stack : 'No stack trace');
-      console.error('Release Data:', JSON.stringify(releaseData, null, 2));
-      console.error('Tracks Data:', JSON.stringify(tracks, null, 2));
-      console.error('=== ERROR DEBUG END ===');
-      
+    } catch {
       setSaveStatus('error');
       
       toast({
@@ -976,7 +931,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
                   <Checkbox 
                     id="explicitContent"
                     checked={releaseData.explicitContent}
-                    onCheckedChange={(checked) => updateReleaseData('explicitContent', checked as boolean)}
+                    onCheckedChange={(checked) => updateReleaseData('explicitContent', checked === true)}
                     disabled={isReadOnly}
                   />
                   <Label htmlFor="explicitContent" className="text-sm font-medium">
@@ -1154,7 +1109,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
                     <Checkbox 
                       id={`explicit-${track.id}`}
                       checked={track.explicitContent}
-                      onCheckedChange={(checked) => updateTrack(track.id, 'explicitContent', checked)}
+                      onCheckedChange={(checked) => updateTrack(track.id, 'explicitContent', checked === true)}
                       disabled={isReadOnly}
                     />
                     <Label htmlFor={`explicit-${track.id}`} className="text-sm font-medium">
@@ -1180,17 +1135,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
         <div className="space-y-3 pt-4">
           <div className="flex gap-4">
             <Button 
-              onClick={() => {
-                console.log('🔥 SAVE BUTTON CLICKED');
-                console.log('🔥 isLoading:', isLoading);
-                console.log('🔥 isReadOnly:', isReadOnly);
-                console.log('🔥 Button disabled:', isLoading || isReadOnly);
-                if (!isLoading && !isReadOnly) {
-                  handleSave();
-                } else {
-                  console.log('🔥 BUTTON DISABLED - SAVE BLOCKED');
-                }
-              }}
+              onClick={handleSave}
               disabled={isLoading || isReadOnly}
               className="flex items-center gap-2"
             >

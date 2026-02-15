@@ -69,12 +69,25 @@ export interface Release {
 
 export interface CreateReleaseData {
   title: string
-  user_id: string
+  user_id?: string
   release_date: string
   release_type: ReleaseType
   status?: ReleaseStatus
   description?: string
   genre?: string
+  upc?: string
+  label?: string
+  language_lyrics?: string
+  phonogram_copyright?: string
+  composition_copyright?: string
+  sub_genre?: string
+  territories?: string[]
+  explicit_content?: boolean
+  songwriters?: string
+  producers?: string
+  copyright_year?: number
+  track_description?: string
+  version_subtitle?: string
 }
 
 export interface UpdateReleaseData {
@@ -85,6 +98,19 @@ export interface UpdateReleaseData {
   description?: string
   genre?: string
   cover_art_url?: string
+  upc?: string
+  label?: string
+  language_lyrics?: string
+  phonogram_copyright?: string
+  composition_copyright?: string
+  sub_genre?: string
+  territories?: string[]
+  explicit_content?: boolean
+  songwriters?: string
+  producers?: string
+  copyright_year?: number
+  track_description?: string
+  version_subtitle?: string
 }
 
 // ============================================
@@ -550,7 +576,7 @@ export interface ZodValidationError {
 export function isZodValidationError(error: unknown): error is ZodValidationError {
   if (typeof error !== 'object' || error === null) return false
   const e = error as Record<string, unknown>
-  return Array.isArray(e.issues) || typeof e.message === 'string'
+  return Array.isArray(e['issues']) || typeof e['message'] === 'string'
 }
 
 /**
@@ -572,8 +598,8 @@ export function extractErrorMessage(error: unknown, defaultMessage: string): str
   
   if (typeof error === 'object' && error !== null) {
     const e = error as Record<string, unknown>
-    if (typeof e.message === 'string') {
-      return e.message
+    if (typeof e['message'] === 'string') {
+      return e['message']
     }
   }
   

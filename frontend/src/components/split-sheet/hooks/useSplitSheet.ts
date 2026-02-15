@@ -38,7 +38,6 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
         if (splitSheetData) {
           setSplitSheetData(splitSheetData);
           setLastSavedData(splitSheetData);
-          console.log('Split sheet data loaded successfully:', splitSheetData);
           return;
         }
       }

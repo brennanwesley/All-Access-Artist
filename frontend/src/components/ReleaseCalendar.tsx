@@ -27,17 +27,9 @@ interface Release {
 export const ReleaseCalendar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Add debug logging for button clicks
   const handleNewReleaseClick = () => {
-    console.log('New Release button clicked, opening modal');
     setIsModalOpen(true);
-    console.log('Modal state after setIsModalOpen(true):', true);
   };
-  
-  // Debug modal state changes
-  console.log('ReleaseCalendar render - isModalOpen:', isModalOpen);
-  console.log('ReleaseCalendar render - document exists:', typeof document !== 'undefined');
-  console.log('ReleaseCalendar render - document.body exists:', typeof document !== 'undefined' && !!document.body);
   
   // Fetch releases from API
   const { data: releases, isLoading, isError, error } = useReleases();

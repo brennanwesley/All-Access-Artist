@@ -197,6 +197,21 @@ class ApiClient {
     })
   }
 
+  // Label Copy API
+  async getLabelCopy(releaseId: string): Promise<ApiResponse<BackendResponse<Record<string, unknown> | null>>> {
+    return this.makeRequest(`/api/labelcopy/${releaseId}`)
+  }
+
+  async saveLabelCopy(
+    releaseId: string,
+    labelCopyData: Record<string, unknown>
+  ): Promise<ApiResponse<BackendResponse<Record<string, unknown>>>> {
+    return this.makeRequest(`/api/labelcopy/${releaseId}`, {
+      method: 'PUT',
+      body: JSON.stringify(labelCopyData),
+    })
+  }
+
   // Tasks API
   async updateTask(taskId: string, taskData: UpdateTaskData): Promise<ApiResponse<BackendResponse<Task>>> {
     return this.makeRequest(`/api/tasks/${taskId}`, {
@@ -435,6 +450,21 @@ class ApiClient {
     profile_url: string | null
   }>>> {
     return this.makeRequest(`/api/social/metrics/twitter/${encodeURIComponent(username)}`)
+  }
+
+  async connectSocialPlatform(
+    platform: string,
+    usernameOrUrl: string,
+    userId?: string
+  ): Promise<ApiResponse<{ ok: boolean; platform: string; username: string }>> {
+    return this.makeRequestPublic('/api/social/connect', {
+      method: 'POST',
+      body: JSON.stringify({
+        platform,
+        usernameOrUrl,
+        ...(userId ? { userId } : {}),
+      }),
+    })
   }
 }
 

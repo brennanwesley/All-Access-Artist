@@ -20,13 +20,14 @@ import {
 } from "lucide-react";
 import { XIcon } from "@/components/ui/x-icon";
 //import { useState } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useSocialMediaUrls, useInstagramMetrics, useTikTokMetrics, useYouTubeMetrics, useTwitterMetrics } from '../hooks/api/useSocialMedia'
 import { SocialConnectionModal } from "@/components/SocialConnectionModal";
+import { apiClient } from "@/lib/api";
 
 export const ContentCreator = () => {
   const { toast } = useToast();
@@ -59,17 +60,6 @@ export const ContentCreator = () => {
   const { data: twitterMetrics, isLoading: isLoadingTwitterMetrics } = useTwitterMetrics(
     socialMediaUrls?.twitter_url
   );
-
-   //new - Optional safety net: fire once when Instagram URL appears
-  useEffect(() => {
-    const ig = (socialMediaUrls as any)?.instagram_url as string | undefined;
-    if (!ig) return;
-    if (typeof window !== 'undefined' && window.sessionStorage.getItem('igWebhookFired') === '1') return;
-    handleSocialConnected('instagram', ig)
-      .finally(() => {
-        try { window.sessionStorage.setItem('igWebhookFired', '1'); } catch {}
-      });
-  }, [socialMediaUrls?.instagram_url]);
 
   // Creation tools from Create.tsx
   const creationTools = [
@@ -202,28 +192,35 @@ export const ContentCreator = () => {
     setIsModalOpen(true);
   };
 
- //new - Fire server endpoint that forwards to n8n when a platform is connected
-// HOTFIX: call the backend directly (absolute URL)
-  const handleSocialConnected = async (platformId: string, usernameOrUrl: string) => {
+  const handleSocialConnected = useCallback(async (platformId: string, usernameOrUrl: string) => {
+    const response = await apiClient.connectSocialPlatform(platformId, usernameOrUrl);
+
+    if (response.error || response.status < 200 || response.status >= 300) {
+      throw new Error(response.error || 'Failed to connect social platform');
+    }
+  }, []);
+
+  const handleSocialConnectedSafe = useCallback(async (platformId: string, usernameOrUrl: string) => {
     try {
-      const res = await fetch(
-        'https://all-access-artist.onrender.com/api/social/connect',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          // keep this if your /api/social/* route is auth-protected; otherwise it's harmless
-          credentials: 'include',
-          body: JSON.stringify({ platform: platformId, usernameOrUrl }),
-        }
-      );
-      if (!res.ok) {
-        const detail = await res.text().catch(() => '');
-        console.error('social/connect failed', res.status, detail);
-      }
+      await handleSocialConnected(platformId, usernameOrUrl);
     } catch (e) {
       console.error('Webhook call failed', e);
     }
-  };
+  }, [handleSocialConnected]);
+
+  // Optional safety net: fire once when Instagram URL appears
+  useEffect(() => {
+    const ig = socialMediaUrls?.instagram_url;
+    if (!ig) return;
+    if (typeof window !== 'undefined' && window.sessionStorage.getItem('igWebhookFired') === '1') return;
+    handleSocialConnectedSafe('instagram', ig)
+      .finally(() => {
+        try { window.sessionStorage.setItem('igWebhookFired', '1'); } catch {
+          // Ignore sessionStorage errors in restricted browser contexts
+          return;
+        }
+      });
+  }, [socialMediaUrls?.instagram_url, handleSocialConnectedSafe]);
   
   const getPillarDistribution = (): Record<string, number> => {
     // For MVP, show static distribution - will connect to real data later
@@ -758,7 +755,7 @@ export const ContentCreator = () => {
 
       {/* Social Connection Modal */}
       <SocialConnectionModal
-        onConnected={handleSocialConnected} //new
+        onConnected={handleSocialConnectedSafe}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         platform={selectedPlatform}

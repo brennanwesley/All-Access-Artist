@@ -16,56 +16,41 @@ import { useProfile } from "@/hooks/api/useProfile";
 
 const Index = () => {
   const location = useLocation();
-  const navigation = useNavigation();
+  const { activeSection, setActiveSection } = useNavigation();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { data: userProfile } = useProfile();
 
   // Handle navigation state from route transitions
   useEffect(() => {
-    console.log('Index: useEffect triggered with location.state:', location.state);
-    console.log('Index: Current activeSection:', navigation.activeSection);
-    
     if (location.state?.activeSection) {
-      console.log('Index: Setting activeSection from route state to:', location.state.activeSection);
-      navigation.setActiveSection(location.state.activeSection);
+      setActiveSection(location.state.activeSection);
       // Clear the location state after processing to prevent re-processing
       window.history.replaceState({}, '', window.location.pathname);
-    } else if (!navigation.activeSection) {
+    } else if (!activeSection) {
       // If no activeSection is set, default to dashboard
-      console.log('Index: No activeSection set, defaulting to dashboard');
-      navigation.setActiveSection('dashboard');
+      setActiveSection('dashboard');
     }
-  }, [location.state, navigation.setActiveSection]);
+  }, [location.state, activeSection, setActiveSection]);
 
   const renderActiveSection = () => {
-    console.log('Index: renderActiveSection called with activeSection:', navigation.activeSection);
-    console.log('Index: User account type:', userProfile?.account_type);
-    
-    switch (navigation.activeSection) {
+    switch (activeSection) {
       case "dashboard":
-        console.log('Index: Rendering Dashboard based on account type');
         // Route to AdminDashboard for admin users, regular Dashboard for others
         if (userProfile?.account_type === 'admin') {
           return <AdminDashboard />;
         }
         return <Dashboard />;
       case "releases":
-        console.log('Index: Rendering ReleaseCalendar');
         return <ReleaseCalendar />;
       case "content":
-        console.log('Index: Rendering ContentCreator');
         return <ContentCreator />;
       case "royalties":
-        console.log('Index: Rendering RoyaltyDashboard');
         return <RoyaltyDashboard />;
       case "fans":
-        console.log('Index: Rendering Fans');
         return <Fans />;
       case "community":
-        console.log('Index: Rendering Community');
         return <Community />;
       case "pitch":
-        console.log('Index: Rendering DSP Pitch Tool');
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold mb-4">DSP Pitch Tool</h2>
@@ -87,10 +72,8 @@ const Index = () => {
           </div>
         );
       case "settings":
-        console.log('Index: Rendering Settings');
         return <Settings />;
       default:
-        console.log('Index: Default case - rendering Dashboard for activeSection:', navigation.activeSection);
         // Default also respects account type
         if (userProfile?.account_type === 'admin') {
           return <AdminDashboard />;
@@ -103,12 +86,12 @@ const Index = () => {
   if (showOnboarding) {
     return <Onboarding onComplete={() => {
       setShowOnboarding(false);
-      navigation.setActiveSection("dashboard");
+      setActiveSection("dashboard");
     }} />;
   }
 
   // Landing page view - only show if activeSection is explicitly null/undefined AND not coming from route state
-  if (!navigation.activeSection && !location.state?.activeSection) {
+  if (!activeSection && !location.state?.activeSection) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4">
         <div className="max-w-4xl mx-auto text-center">

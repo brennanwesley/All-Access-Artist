@@ -30,8 +30,6 @@ interface NewReleaseModalProps {
 }
 
 export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) => {
-  console.log('NewReleaseModal render - simplified auth system');
-  
   const createReleaseMutation = useCreateRelease();
   const { user } = useAuth();
   
@@ -85,7 +83,7 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
       } else if (typeof error === 'string') {
         errorMessage = error;
       } else if (error && typeof error === 'object') {
-        const errorObj = error as any;
+        const errorObj = error as { message?: string; error?: string };
         if (errorObj.message) {
           errorMessage = errorObj.message;
         } else if (errorObj.error) {

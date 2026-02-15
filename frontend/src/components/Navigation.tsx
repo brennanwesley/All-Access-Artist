@@ -17,13 +17,12 @@ interface NavigationProps {
   onSectionChange?: (section: string) => void;
 }
 
-export const Navigation = ({ activeSection: propActiveSection, onSectionChange: propOnSectionChange }: NavigationProps) => {
+export const Navigation = ({ activeSection: propActiveSection, onSectionChange: propOnSectionChange }: NavigationProps = {}) => {
   const navigation = useNavigation()
   
   // Use context values, fallback to props for backward compatibility
   const activeSection = propActiveSection || navigation.activeSection
   const handleSectionChange = propOnSectionChange || ((section: string) => {
-    console.log('Navigation: handleSectionChange called with section:', section);
     // Prevent redundant navigation calls
     if (section !== navigation.activeSection) {
       navigation.navigateToSection(section);
