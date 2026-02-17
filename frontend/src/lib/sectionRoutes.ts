@@ -39,32 +39,13 @@ export const pathFromSection = (section: SectionId): string =>
   SECTION_CANONICAL_PATHS[section];
 
 export const sectionFromPath = (pathname: string): SectionId => {
-  if (pathname.startsWith('/releases/') || pathname.startsWith('/dashboard/releases')) {
+  if (pathname.startsWith('/releases/')) {
     return 'releases';
   }
 
-  if (pathname.startsWith('/dashboard/content')) {
-    return 'content';
-  }
-
-  if (pathname.startsWith('/dashboard/fans')) {
-    return 'fans';
-  }
-
-  if (pathname.startsWith('/dashboard/community')) {
-    return 'community';
-  }
-
-  if (pathname.startsWith('/dashboard/royalties')) {
-    return 'royalties';
-  }
-
-  if (pathname.startsWith('/dashboard/settings')) {
-    return 'settings';
-  }
-
-  if (pathname.startsWith('/dashboard/pitch')) {
-    return 'pitch';
+  if (pathname.startsWith('/dashboard/')) {
+    const sectionCandidate = pathname.split('/')[2];
+    return normalizeSectionId(sectionCandidate);
   }
 
   return DEFAULT_SECTION;

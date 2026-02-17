@@ -37,6 +37,7 @@ function App() {
                   <Route path="/plans" element={<PlanSelection />} />
                   <Route path="/onboarding/:sessionId" element={<OnboardingComplete />} />
                   <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                  <Route path="/dashboard/:section" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                   <Route path="/releases/:id" element={<ProtectedRoute><ReleaseDetail /></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

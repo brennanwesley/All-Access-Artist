@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { DEFAULT_SECTION, isDetailPath, normalizeSectionId, pathFromSection, sectionFromPath } from '@/lib/sectionRoutes'
+import { isDetailPath, normalizeSectionId, pathFromSection, sectionFromPath } from '@/lib/sectionRoutes'
 
 interface NavigationContextType {
   activeSection: string
@@ -28,10 +28,19 @@ interface NavigationProviderProps {
 export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [activeSection, setActiveSection] = useState<string>(() => sectionFromPath(location.pathname))
+  const activeSection = sectionFromPath(location.pathname)
 
   // Detect if we're on a detail page (any route with parameters)
   const isOnDetailPage = isDetailPath(location.pathname)
+
+  const setActiveSection = useCallback((section: string) => {
+    const normalizedSection = normalizeSectionId(section)
+    const targetPath = pathFromSection(normalizedSection)
+
+    if (location.pathname !== targetPath) {
+      navigate(targetPath)
+    }
+  }, [navigate, location.pathname])
 
   // Define which sections can be navigated to directly vs require main app
   const canNavigateDirectly = useCallback((_section: string) => {
@@ -42,17 +51,8 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
 
   // Unified navigation handler
   const navigateToSection = useCallback((section: string) => {
-    const normalizedSection = normalizeSectionId(section)
-    const currentlyOnDetailPage = isDetailPath(location.pathname)
-    
-    if (currentlyOnDetailPage) {
-      // From detail page: navigate to main app with section state
-      navigate(pathFromSection(DEFAULT_SECTION), { state: { activeSection: normalizedSection }, replace: true })
-    } else {
-      // From main app: just change section
-      setActiveSection(normalizedSection)
-    }
-  }, [navigate, location.pathname, setActiveSection])
+    setActiveSection(section)
+  }, [setActiveSection])
 
   const contextValue: NavigationContextType = {
     activeSection,
