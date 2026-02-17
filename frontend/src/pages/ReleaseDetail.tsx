@@ -10,7 +10,7 @@ const ReleaseDetail = () => {
   };
 
   return (
-    <AppShell rootClassName="min-h-screen bg-gradient-subtle" mainClassName="min-h-screen md:ml-64 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+    <AppShell rootClassName="min-h-screen bg-gradient-subtle">
       <ReleaseDetailComponent onBack={handleBackToReleases} />
     </AppShell>
   );
