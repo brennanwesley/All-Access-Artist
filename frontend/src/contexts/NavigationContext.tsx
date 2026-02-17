@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback } from 'react'
+import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { isDetailPath, normalizeSectionId, pathFromSection, sectionFromPath } from '@/lib/sectionRoutes'
 
@@ -29,6 +29,18 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
   const navigate = useNavigate()
   const location = useLocation()
   const activeSection = sectionFromPath(location.pathname)
+
+  useEffect(() => {
+    if (!location.pathname.startsWith('/dashboard/')) {
+      return
+    }
+
+    const canonicalPath = pathFromSection(activeSection)
+
+    if (location.pathname !== canonicalPath) {
+      navigate(canonicalPath, { replace: true })
+    }
+  }, [activeSection, location.pathname, navigate])
 
   // Detect if we're on a detail page (any route with parameters)
   const isOnDetailPage = isDetailPath(location.pathname)
