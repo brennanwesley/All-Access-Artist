@@ -2,8 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserProfile } from "@/components/auth/UserProfile";
 import { useNavigation } from "@/contexts/NavigationContext";
-import { normalizeSectionId, type SectionId } from "@/lib/sectionRoutes";
+import { sectionFromPath, type SectionId } from "@/lib/sectionRoutes";
 import type { LucideIcon } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 import { 
   Calendar, 
@@ -14,23 +15,17 @@ import {
   Users
 } from "lucide-react";
 
-interface NavigationProps {
-  // Props are now optional - context provides the state
-  activeSection?: SectionId;
-  onSectionChange?: (section: SectionId) => void;
-}
-
-export const Navigation = ({ activeSection: propActiveSection, onSectionChange: propOnSectionChange }: NavigationProps = {}) => {
+export const Navigation = () => {
   const navigation = useNavigation()
-  
-  // Use context values, fallback to props for backward compatibility
-  const activeSection = normalizeSectionId(propActiveSection || navigation.activeSection)
-  const handleSectionChange = propOnSectionChange || ((section: SectionId) => {
+  const location = useLocation()
+
+  const activeSection = sectionFromPath(location.pathname)
+  const handleSectionChange = (section: SectionId) => {
     // Prevent redundant navigation calls
-    if (section !== navigation.activeSection) {
+    if (section !== activeSection) {
       navigation.navigateToSection(section);
     }
-  })
+  }
 
   const navItems: Array<{ id: SectionId; label: string; icon: LucideIcon }> = [
     { id: "dashboard", label: "Dashboard", icon: Home },
