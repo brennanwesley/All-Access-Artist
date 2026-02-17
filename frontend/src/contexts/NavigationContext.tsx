@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { DEFAULT_SECTION, isDetailPath, normalizeSectionId, pathFromSection, sectionFromPath } from '@/lib/sectionRoutes'
 
 interface NavigationContextType {
   activeSection: string
@@ -11,6 +12,7 @@ interface NavigationContextType {
 
 const NavigationContext = createContext<NavigationContextType | null>(null)
 
+// eslint-disable-next-line react-refresh/only-export-components -- Context modules intentionally export both the provider component and the consumer hook.
 export const useNavigation = () => {
   const context = useContext(NavigationContext)
   if (!context) {
@@ -26,12 +28,10 @@ interface NavigationProviderProps {
 export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [activeSection, setActiveSection] = useState<string>('dashboard')
+  const [activeSection, setActiveSection] = useState<string>(() => sectionFromPath(location.pathname))
 
   // Detect if we're on a detail page (any route with parameters)
-  const isOnDetailPage = location.pathname.includes('/releases/') || 
-                        location.pathname.includes('/songs/') ||
-                        location.pathname.includes('/metadata/')
+  const isOnDetailPage = isDetailPath(location.pathname)
 
   // Define which sections can be navigated to directly vs require main app
   const canNavigateDirectly = useCallback((_section: string) => {
@@ -42,22 +42,15 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
 
   // Unified navigation handler
   const navigateToSection = useCallback((section: string) => {
-    console.log('NavigationContext: Navigating to section', section, 'from', location.pathname)
-    console.log('NavigationContext: Current activeSection before change:', activeSection)
-    
-    // Check if we're currently on a detail page at the time of this call
-    const currentlyOnDetailPage = location.pathname.includes('/releases/') || 
-                                 location.pathname.includes('/songs/') ||
-                                 location.pathname.includes('/metadata/')
+    const normalizedSection = normalizeSectionId(section)
+    const currentlyOnDetailPage = isDetailPath(location.pathname)
     
     if (currentlyOnDetailPage) {
       // From detail page: navigate to main app with section state
-      console.log('NavigationContext: Navigating from detail page to main app with section:', section)
-      navigate('/dashboard', { state: { activeSection: section }, replace: true })
+      navigate(pathFromSection(DEFAULT_SECTION), { state: { activeSection: normalizedSection }, replace: true })
     } else {
       // From main app: just change section
-      console.log('NavigationContext: Setting activeSection to:', section)
-      setActiveSection(section)
+      setActiveSection(normalizedSection)
     }
   }, [navigate, location.pathname, setActiveSection])
 

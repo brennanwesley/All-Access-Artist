@@ -13,24 +13,26 @@ import { Settings } from "@/components/Settings";
 import { Onboarding } from "@/components/Onboarding";
 import { useNavigation } from "@/contexts/NavigationContext";
 import { useProfile } from "@/hooks/api/useProfile";
+import { DEFAULT_SECTION, sectionFromLocationState } from "@/lib/sectionRoutes";
 
 const Index = () => {
   const location = useLocation();
   const { activeSection, setActiveSection } = useNavigation();
+  const activeSectionFromLocationState = sectionFromLocationState(location.state);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { data: userProfile } = useProfile();
 
   // Handle navigation state from route transitions
   useEffect(() => {
-    if (location.state?.activeSection) {
-      setActiveSection(location.state.activeSection);
+    if (activeSectionFromLocationState) {
+      setActiveSection(activeSectionFromLocationState);
       // Clear the location state after processing to prevent re-processing
       window.history.replaceState({}, '', window.location.pathname);
     } else if (!activeSection) {
       // If no activeSection is set, default to dashboard
-      setActiveSection('dashboard');
+      setActiveSection(DEFAULT_SECTION);
     }
-  }, [location.state, activeSection, setActiveSection]);
+  }, [activeSectionFromLocationState, activeSection, setActiveSection, location.pathname]);
 
   const renderActiveSection = () => {
     switch (activeSection) {
@@ -86,12 +88,12 @@ const Index = () => {
   if (showOnboarding) {
     return <Onboarding onComplete={() => {
       setShowOnboarding(false);
-      setActiveSection("dashboard");
+      setActiveSection(DEFAULT_SECTION);
     }} />;
   }
 
   // Landing page view - only show if activeSection is explicitly null/undefined AND not coming from route state
-  if (!activeSection && !location.state?.activeSection) {
+  if (!activeSection && !activeSectionFromLocationState) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4">
         <div className="max-w-4xl mx-auto text-center">

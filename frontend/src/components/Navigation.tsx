@@ -2,6 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserProfile } from "@/components/auth/UserProfile";
 import { useNavigation } from "@/contexts/NavigationContext";
+import { normalizeSectionId, type SectionId } from "@/lib/sectionRoutes";
+import type { LucideIcon } from "lucide-react";
+
 import { 
   Calendar, 
   Video, 
@@ -13,23 +16,23 @@ import {
 
 interface NavigationProps {
   // Props are now optional - context provides the state
-  activeSection?: string;
-  onSectionChange?: (section: string) => void;
+  activeSection?: SectionId;
+  onSectionChange?: (section: SectionId) => void;
 }
 
 export const Navigation = ({ activeSection: propActiveSection, onSectionChange: propOnSectionChange }: NavigationProps = {}) => {
   const navigation = useNavigation()
   
   // Use context values, fallback to props for backward compatibility
-  const activeSection = propActiveSection || navigation.activeSection
-  const handleSectionChange = propOnSectionChange || ((section: string) => {
+  const activeSection = normalizeSectionId(propActiveSection || navigation.activeSection)
+  const handleSectionChange = propOnSectionChange || ((section: SectionId) => {
     // Prevent redundant navigation calls
     if (section !== navigation.activeSection) {
       navigation.navigateToSection(section);
     }
   })
 
-  const navItems = [
+  const navItems: Array<{ id: SectionId; label: string; icon: LucideIcon }> = [
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "releases", label: "Releases", icon: Calendar },
     { id: "content", label: "Content Creator", icon: Video },
