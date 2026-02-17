@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Navigation } from "@/components/Navigation";
+import { AppShell } from "@/components/AppShell";
 import { Dashboard } from "@/components/Dashboard";
 import { AdminDashboard } from "@/components/AdminDashboard";
 import { ReleaseCalendar } from "@/components/ReleaseCalendar";
@@ -124,14 +124,9 @@ const Index = () => {
 
   // Dashboard view
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="ml-64 min-h-screen bg-gradient-subtle">
-        <div className="p-8">
-          {renderActiveSection()}
-        </div>
-      </main>
-    </div>
+    <AppShell>
+      {renderActiveSection()}
+    </AppShell>
   );
 };
 
