@@ -1007,21 +1007,6 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="upc">UPC Code</Label>
-                  <Input
-                    value={releaseData.upc}
-                    onChange={(e) => setReleaseData({ ...releaseData, upc: e.target.value })}
-                    disabled={isReadOnly}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
                   <Label htmlFor="genre">Primary Genre *</Label>
                   <Select value={releaseData.genre} onValueChange={(value) => updateReleaseData('genre', value)} disabled={isReadOnly}>
                     <SelectTrigger className="w-full">
@@ -1039,36 +1024,57 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subGenre">Sub-Genre</Label>
-                  <Input
-                    id="subGenre"
-                    value={releaseData.subGenre}
-                    onChange={(e) => updateReleaseData('subGenre', e.target.value)}
-                    placeholder="Dance Pop, Alternative Rock"
-                    className="w-full"
-                    disabled={isReadOnly}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="languageLyrics">Primary Language</Label>
-                  <Select value={releaseData.languageLyrics} onValueChange={(value) => updateReleaseData('languageLyrics', value)} disabled={isReadOnly}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="de">German</SelectItem>
-                      <SelectItem value="it">Italian</SelectItem>
-                      <SelectItem value="pt">Portuguese</SelectItem>
-                      <SelectItem value="ja">Japanese</SelectItem>
-                      <SelectItem value="ko">Korean</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
+
+              <details className="rounded-md border border-border/50 bg-muted/30 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-foreground">
+                  Advanced release metadata
+                </summary>
+                <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="upc">UPC Code</Label>
+                    <Input
+                      id="upc"
+                      value={releaseData.upc}
+                      onChange={(e) => setReleaseData({ ...releaseData, upc: e.target.value })}
+                      disabled={isReadOnly}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subGenre">Sub-Genre</Label>
+                    <Input
+                      id="subGenre"
+                      value={releaseData.subGenre}
+                      onChange={(e) => updateReleaseData('subGenre', e.target.value)}
+                      placeholder="Dance Pop, Alternative Rock"
+                      className="w-full"
+                      disabled={isReadOnly}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="languageLyrics">Primary Language</Label>
+                    <Select value={releaseData.languageLyrics} onValueChange={(value) => updateReleaseData('languageLyrics', value)} disabled={isReadOnly}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Spanish</SelectItem>
+                        <SelectItem value="fr">French</SelectItem>
+                        <SelectItem value="de">German</SelectItem>
+                        <SelectItem value="it">Italian</SelectItem>
+                        <SelectItem value="pt">Portuguese</SelectItem>
+                        <SelectItem value="ja">Japanese</SelectItem>
+                        <SelectItem value="ko">Korean</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </details>
             </CardContent>
           </Card>
         )}
@@ -1110,70 +1116,77 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="versionSubtitle">Version Subtitle</Label>
-                  <Input
-                    id="versionSubtitle"
-                    value={releaseData.versionSubtitle}
-                    onChange={(e) => updateReleaseData('versionSubtitle', e.target.value)}
-                    placeholder="Deluxe Edition, Remastered"
-                    className="w-full"
-                    disabled={isReadOnly}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="label">Record Label</Label>
-                  <Input
-                    id="label"
-                    value={releaseData.label}
-                    onChange={(e) => updateReleaseData('label', e.target.value)}
-                    placeholder="Independent / Label name"
-                    className="w-full"
-                    disabled={isReadOnly}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="territories" className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
-                    Territories (comma-separated)
-                  </Label>
-                  <Input
-                    id="territories"
-                    value={releaseData.territories}
-                    onChange={(e) => updateReleaseData('territories', e.target.value)}
-                    placeholder="US, CA, UK, AU, DE"
-                    className="w-full"
-                    disabled={isReadOnly}
-                  />
-                </div>
-              </div>
+              <details className="rounded-md border border-border/50 bg-muted/30 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-foreground">
+                  Advanced rights metadata
+                </summary>
+                <div className="mt-3 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="versionSubtitle">Version Subtitle</Label>
+                      <Input
+                        id="versionSubtitle"
+                        value={releaseData.versionSubtitle}
+                        onChange={(e) => updateReleaseData('versionSubtitle', e.target.value)}
+                        placeholder="Deluxe Edition, Remastered"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="label">Record Label</Label>
+                      <Input
+                        id="label"
+                        value={releaseData.label}
+                        onChange={(e) => updateReleaseData('label', e.target.value)}
+                        placeholder="Independent / Label name"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="territories" className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        Territories (comma-separated)
+                      </Label>
+                      <Input
+                        id="territories"
+                        value={releaseData.territories}
+                        onChange={(e) => updateReleaseData('territories', e.target.value)}
+                        placeholder="US, CA, UK, AU, DE"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="description">Release Description</Label>
-                  <Textarea
-                    id="description"
-                    value={releaseData.description}
-                    onChange={(e) => updateReleaseData('description', e.target.value)}
-                    placeholder="Brief description of the release for promotional use..."
-                    rows={3}
-                    className="w-full"
-                    disabled={isReadOnly}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Release Description</Label>
+                      <Textarea
+                        id="description"
+                        value={releaseData.description}
+                        onChange={(e) => updateReleaseData('description', e.target.value)}
+                        placeholder="Brief description of the release for promotional use..."
+                        rows={3}
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2 pt-2">
+                      <Checkbox
+                        id="explicitContent"
+                        checked={releaseData.explicitContent}
+                        onCheckedChange={(checked) => updateReleaseData('explicitContent', checked === true)}
+                        disabled={isReadOnly}
+                      />
+                      <Label htmlFor="explicitContent" className="text-sm font-medium">
+                        Explicit Content (Release-level)
+                      </Label>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox
-                    id="explicitContent"
-                    checked={releaseData.explicitContent}
-                    onCheckedChange={(checked) => updateReleaseData('explicitContent', checked === true)}
-                    disabled={isReadOnly}
-                  />
-                  <Label htmlFor="explicitContent" className="text-sm font-medium">
-                    Explicit Content (Release-level)
-                  </Label>
-                </div>
-              </div>
+              </details>
             </CardContent>
           </Card>
         )}
