@@ -535,9 +535,13 @@ export interface AdminStats {
 // ============================================
 
 export interface OnboardingData {
-  first_name: string
-  last_name: string
-  account_type?: AccountType
+  session_id: string
+  full_name: string
+  email: string
+  phone?: string | null
+  artist_name?: string | null
+  referral_code?: string | null
+  password: string
 }
 
 export interface FallbackAccountResponse {
