@@ -322,7 +322,12 @@ export const SplitSheetForm = ({ songId, songTitle, releaseId, onBack }: SplitSh
             )}
 
             {/* Percentage Validation */}
-            <PercentageValidator validation={validation} />
+            <div className={isReadOnly ? '' : 'sticky bottom-3 z-20'}>
+              <PercentageValidator
+                validation={validation}
+                className={isReadOnly ? '' : 'border border-border/60 bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/90'}
+              />
+            </div>
           </div>
 
           {/* Additional Notes */}
@@ -348,7 +353,14 @@ export const SplitSheetForm = ({ songId, songTitle, releaseId, onBack }: SplitSh
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 pt-4">
+          <div className="space-y-2 pt-4">
+            {!isReadOnly && !validation.isValid && (
+              <p className="text-xs text-amber-700">
+                Save is disabled until both Writer and Publisher totals equal 100%.
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-4">
             {isReadOnly ? (
               <Button onClick={handleEdit} className="flex items-center gap-2">
                 <Edit className="h-4 w-4" />
@@ -372,6 +384,7 @@ export const SplitSheetForm = ({ songId, songTitle, releaseId, onBack }: SplitSh
             <Button variant="outline" disabled>
               Export to PDF
             </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
