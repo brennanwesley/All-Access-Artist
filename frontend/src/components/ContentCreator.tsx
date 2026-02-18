@@ -25,12 +25,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useSocialMediaUrls, useInstagramMetrics, useTikTokMetrics, useYouTubeMetrics, useTwitterMetrics } from '../hooks/api/useSocialMedia'
 import { SocialConnectionModal } from "@/components/SocialConnectionModal";
 import { apiClient } from "@/lib/api";
 
+type PlatformMetric = {
+  label: string;
+  value: number | null | undefined;
+};
+
+type PlatformMetricValue = {
+  label: string;
+  value: number;
+};
+
 export const ContentCreator = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [brandPillars] = useState([
     "Upcoming Release",
     "New Songs I'm Working On", 
@@ -232,6 +244,68 @@ export const ContentCreator = () => {
     };
   };
 
+  const getPlatformMetrics = (platformId: string): PlatformMetric[] => {
+    switch (platformId) {
+      case "instagram":
+        return [
+          { label: "Posts", value: instagramMetrics?.posts_30d },
+          { label: "Likes", value: instagramMetrics?.likes_30d },
+          { label: "Comments", value: instagramMetrics?.comments_30d },
+        ];
+      case "tiktok":
+        return [
+          { label: "Videos", value: tiktokMetrics?.videos_30d },
+          { label: "Plays", value: tiktokMetrics?.plays_30d },
+          { label: "Likes", value: tiktokMetrics?.likes_30d },
+        ];
+      case "youtube":
+        return [
+          { label: "Videos", value: youtubeMetrics?.videos_30d },
+          { label: "Views", value: youtubeMetrics?.views_30d },
+          { label: "Likes", value: youtubeMetrics?.likes_30d },
+        ];
+      case "twitter":
+        return [
+          { label: "Likes", value: twitterMetrics?.likes_30d },
+          { label: "Reposts", value: twitterMetrics?.retweets_30d },
+          { label: "Replies", value: twitterMetrics?.replies_30d },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const connectedPlatformCount = platforms.filter((platform) => {
+    const platformKey = `${platform.id}_url` as keyof typeof socialMediaUrls;
+    return Boolean(socialMediaUrls?.[platformKey]);
+  }).length;
+
+  const platformsWithMetricsCount = platforms.filter((platform) => {
+    const platformKey = `${platform.id}_url` as keyof typeof socialMediaUrls;
+    const isConnected = Boolean(socialMediaUrls?.[platformKey]);
+
+    if (!isConnected) {
+      return false;
+    }
+
+    return getPlatformMetrics(platform.id).some((metric) => typeof metric.value === "number");
+  }).length;
+
+  const total30DayActivitySignals = platforms.reduce((sum, platform) => {
+    const platformKey = `${platform.id}_url` as keyof typeof socialMediaUrls;
+    const isConnected = Boolean(socialMediaUrls?.[platformKey]);
+
+    if (!isConnected) {
+      return sum;
+    }
+
+    const platformTotal = getPlatformMetrics(platform.id).reduce((metricSum, metric) => {
+      return metricSum + (typeof metric.value === "number" ? metric.value : 0);
+    }, 0);
+
+    return sum + platformTotal;
+  }, 0);
+
   return (
     <div className="space-y-8">
       <div>
@@ -253,19 +327,33 @@ export const ContentCreator = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+            <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
+              <p className="text-xs text-muted-foreground">Connected Accounts</p>
+              <p className="text-xl font-semibold">{connectedPlatformCount}</p>
+            </div>
+            <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
+              <p className="text-xs text-muted-foreground">Platforms with Metrics</p>
+              <p className="text-xl font-semibold">{platformsWithMetricsCount}</p>
+            </div>
+            <div className="col-span-2 rounded-lg border border-border/50 bg-secondary/20 p-3 md:col-span-1">
+              <p className="text-xs text-muted-foreground">30-Day Activity Signals</p>
+              <p className="text-xl font-semibold">{total30DayActivitySignals}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {platforms.map((platform) => {
               const Icon = platform.icon;
               const platformKey = `${platform.id}_url` as keyof typeof socialMediaUrls;
               const isConnected = socialMediaUrls?.[platformKey];
               const username = isConnected ? extractUsername(socialMediaUrls[platformKey] || "", platform.id) : "";
-              
-              
-              // Determine which metrics to show based on platform
-              const showInstagramMetrics = platform.id === 'instagram' && isConnected && instagramMetrics;
-              const showTikTokMetrics = platform.id === 'tiktok' && isConnected && tiktokMetrics;
-              const showYouTubeMetrics = platform.id === 'youtube' && isConnected && youtubeMetrics;
-              const showTwitterMetrics = platform.id === 'twitter' && isConnected && twitterMetrics;
+
+              const platformMetrics = getPlatformMetrics(platform.id).filter(
+                (metric): metric is PlatformMetricValue => typeof metric.value === "number"
+              );
+              const hasMetrics = platformMetrics.length > 0;
+              const primaryMetric = platformMetrics[0];
               
               const isLoadingMetrics = isConnected && (
                 (platform.id === 'instagram' && isLoadingInstagramMetrics) ||
@@ -273,8 +361,6 @@ export const ContentCreator = () => {
                 (platform.id === 'youtube' && isLoadingYouTubeMetrics) ||
                 (platform.id === 'twitter' && isLoadingTwitterMetrics)
               );
-
-              const hasMetrics = showInstagramMetrics || showTikTokMetrics || showYouTubeMetrics || showTwitterMetrics;
 
               return (
                 <div key={platform.id} className="flex flex-col p-4 rounded-lg bg-secondary/20 border border-border/50">
@@ -293,112 +379,45 @@ export const ContentCreator = () => {
                     </div>
                   )}
 
-                  {/* Instagram Metrics Display */}
-                  {showInstagramMetrics && (
-                    <div className="mb-3 p-2 rounded-md bg-background/50">
-                      <div className="text-xs text-muted-foreground mb-2 font-medium">Last 30 Days</div>
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {instagramMetrics.posts_30d ?? '--'}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">Posts</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {instagramMetrics.likes_30d ?? '--'}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">Likes</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {instagramMetrics.comments_30d ?? '--'}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">Comments</div>
-                        </div>
+                  {/* Mobile-first Metrics Display */}
+                  {isMobile && primaryMetric && (
+                    <div className="mb-3 rounded-md bg-background/50 p-2">
+                      <div className="text-xs font-medium text-muted-foreground">30-Day Snapshot</div>
+                      <div className="mt-1 flex items-end justify-between">
+                        <div className="text-lg font-bold text-foreground">{primaryMetric.value}</div>
+                        <div className="text-[10px] text-muted-foreground">{primaryMetric.label}</div>
                       </div>
                     </div>
                   )}
 
-                  {/* TikTok Metrics Display */}
-                  {showTikTokMetrics && (
-                    <div className="mb-3 p-2 rounded-md bg-background/50">
-                      <div className="text-xs text-muted-foreground mb-2 font-medium">Last 30 Days</div>
+                  {!isMobile && hasMetrics && (
+                    <div className="mb-3 rounded-md bg-background/50 p-2">
+                      <div className="mb-2 text-xs font-medium text-muted-foreground">Last 30 Days</div>
                       <div className="grid grid-cols-3 gap-2 text-center">
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {tiktokMetrics.videos_30d ?? '--'}
+                        {platformMetrics.map((metric) => (
+                          <div key={`${platform.id}-${metric.label}`}>
+                            <div className="text-lg font-bold text-foreground">{metric.value}</div>
+                            <div className="text-[10px] text-muted-foreground">{metric.label}</div>
                           </div>
-                          <div className="text-[10px] text-muted-foreground">Videos</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {tiktokMetrics.plays_30d ?? '--'}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">Plays</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {tiktokMetrics.likes_30d ?? '--'}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">Likes</div>
-                        </div>
+                        ))}
                       </div>
                     </div>
                   )}
 
-                  {/* YouTube Metrics Display */}
-                  {showYouTubeMetrics && (
-                    <div className="mb-3 p-2 rounded-md bg-background/50">
-                      <div className="text-xs text-muted-foreground mb-2 font-medium">Last 30 Days</div>
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {youtubeMetrics.videos_30d ?? '--'}
+                  {isMobile && platformMetrics.length > 1 && (
+                    <details className="mb-3 rounded-md border border-border/50 bg-background/50 p-2">
+                      <summary className="cursor-pointer text-xs font-medium text-foreground">
+                        View all 30-day metrics
+                      </summary>
+                      <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                        {platformMetrics.map((metric) => (
+                          <div key={`${platform.id}-mobile-${metric.label}`}>
+                            <div className="text-sm font-semibold text-foreground">{metric.value}</div>
+                            <div className="text-[10px] text-muted-foreground">{metric.label}</div>
                           </div>
-                          <div className="text-[10px] text-muted-foreground">Videos</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {youtubeMetrics.views_30d ?? '--'}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">Views</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {youtubeMetrics.likes_30d ?? '--'}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">Likes</div>
-                        </div>
+                        ))}
                       </div>
-                    </div>
-                  )}
-
-                  {/* Twitter/X Metrics Display */}
-                  {showTwitterMetrics && (
-                    <div className="mb-3 p-2 rounded-md bg-background/50">
-                      <div className="text-xs text-muted-foreground mb-2 font-medium">Last 30 Days</div>
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {twitterMetrics.likes_30d ?? '--'}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">Likes</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {twitterMetrics.retweets_30d ?? '--'}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">Reposts</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-foreground">
-                            {twitterMetrics.replies_30d ?? '--'}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground">Replies</div>
-                        </div>
-                      </div>
-                    </div>
+                    </details>
                   )}
 
                   {/* Loading state for metrics */}
@@ -437,7 +456,7 @@ export const ContentCreator = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {brandPillars.map((pillar, index) => {
               const pillarCount = getPillarDistribution()[pillar] || 0;
               return (
@@ -528,7 +547,7 @@ export const ContentCreator = () => {
               {/* Base Image Upload - Uses existing brand assets */}
               <div className="mb-6">
                 <Label className="text-sm font-medium mb-2 block">Base Image</Label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                   {brandAssets.map((asset) => (
                     <div 
                       key={asset.id}
@@ -622,7 +641,7 @@ export const ContentCreator = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {brandAssets.map((asset) => (
               <div key={asset.id} className="relative">
                 <div className="aspect-square rounded-lg border-2 border-dashed border-border/50 bg-secondary/20 flex flex-col items-center justify-center p-4 hover:border-primary/50 transition-colors">
@@ -692,7 +711,7 @@ export const ContentCreator = () => {
                   className="w-full px-3 py-2 rounded-lg border border-border/50 bg-background text-sm resize-none"
                   rows={3}
                 />
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="text-xs text-muted-foreground">
                     {brandAssets.filter(a => a.file).length} of 3 brand assets uploaded
                   </div>
@@ -728,7 +747,7 @@ export const ContentCreator = () => {
                     alt={content.title}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-black/50 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-center gap-2">
                     <Button variant="secondary" size="sm">
                       <Download className="h-3 w-3" />
                     </Button>
