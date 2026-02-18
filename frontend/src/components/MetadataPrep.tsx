@@ -89,6 +89,12 @@ interface LabelCopyData {
   tracks_metadata?: LabelCopyTrackMetadata[];
 }
 
+interface LabelCopyDraftData {
+  releaseData: ReleaseData;
+  tracks: Track[];
+  savedAt?: string;
+}
+
 const DEFAULT_TRACKS: Track[] = [
   {
     id: "1",
@@ -136,10 +142,25 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<{releaseData: ReleaseData; tracks: Track[]} | null>(null);
+  const [restoredDraftAt, setRestoredDraftAt] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [isLoadingLabelCopy, setIsLoadingLabelCopy] = useState(false);
   const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+
+  const formatDraftTimestamp = useCallback((timestamp: string) => {
+    const parsedDate = new Date(timestamp);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return 'just now';
+    }
+
+    return parsedDate.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  }, []);
 
   // Helper function to convert seconds to MM:SS format
   const formatDuration = useCallback((seconds?: number): string => {
@@ -229,7 +250,11 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
   // Save form data to session storage
   const saveToSessionStorage = useCallback(() => {
     if (activeTemplate === 'labelCopy') {
-      const formData = { releaseData, tracks };
+      const formData: LabelCopyDraftData = {
+        releaseData,
+        tracks,
+        savedAt: new Date().toISOString()
+      };
       sessionStorage.setItem(getSessionStorageKey(), JSON.stringify(formData));
     }
   }, [activeTemplate, getSessionStorageKey, releaseData, tracks]);
@@ -238,11 +263,25 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
   const loadFromSessionStorage = useCallback(() => {
     if (activeTemplate === 'labelCopy') {
       const saved = sessionStorage.getItem(getSessionStorageKey());
+      if (!saved) {
+        setRestoredDraftAt(null);
+        return;
+      }
+
       if (saved) {
         try {
-          const formData = JSON.parse(saved);
-          setReleaseData((prev) => formData.releaseData || prev);
-          setTracks((prev) => formData.tracks || prev);
+          const parsedData: unknown = JSON.parse(saved);
+          if (typeof parsedData !== 'object' || parsedData === null) {
+            return;
+          }
+
+          const formData = parsedData as Partial<LabelCopyDraftData>;
+
+          if (formData.releaseData && Array.isArray(formData.tracks)) {
+            setReleaseData(formData.releaseData);
+            setTracks(formData.tracks);
+            setRestoredDraftAt(formData.savedAt ?? new Date().toISOString());
+          }
         } catch {
           // Ignore malformed session data and continue with current in-memory state
           return;
@@ -569,6 +608,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
 
       // Clear session storage on successful save
       sessionStorage.removeItem(getSessionStorageKey());
+      setRestoredDraftAt(null);
       
       // Update last saved data
       setLastSavedData({ releaseData, tracks });
@@ -709,6 +749,27 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
             </div>
           </div>
         </div>
+
+        {restoredDraftAt && (
+          <div className="flex flex-col gap-3 rounded-md border border-emerald-200 bg-emerald-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2">
+              <Clock className="mt-0.5 h-4 w-4 text-emerald-700" />
+              <div>
+                <p className="text-sm font-medium text-emerald-800">Draft restored from this device</p>
+                <p className="text-xs text-emerald-700">Last autosave: {formatDraftTimestamp(restoredDraftAt)}</p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setRestoredDraftAt(null)}
+              className="h-8 justify-start px-2 text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900 sm:justify-center"
+            >
+              Dismiss
+            </Button>
+          </div>
+        )}
 
         {/* Release Information Card */}
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
