@@ -13,6 +13,7 @@ import { SplitSheetTemplate } from "@/components/split-sheet";
 import { apiClient } from "@/lib/api";
 
 type ActiveTemplate = "main" | "labelCopy" | "splitSheet" | "lyricSheet" | null;
+type LabelCopyStep = "release-info" | "rights-ids" | "track-metadata" | "review-save";
 
 interface MetadataPrepProps {
   releaseId?: string;
@@ -116,8 +117,32 @@ const DEFAULT_TRACKS: Track[] = [
   }
 ];
 
+const LABEL_COPY_STEP_SEQUENCE: Array<{ key: LabelCopyStep; label: string; description: string }> = [
+  {
+    key: "release-info",
+    label: "Release Info",
+    description: "Define core release identity and classification for distribution."
+  },
+  {
+    key: "rights-ids",
+    label: "Rights & IDs",
+    description: "Confirm rights ownership, identifiers, and release-level metadata."
+  },
+  {
+    key: "track-metadata",
+    label: "Track Metadata",
+    description: "Complete required credits and metadata for each track."
+  },
+  {
+    key: "review-save",
+    label: "Review & Save",
+    description: "Review completeness and save Label Copy to persist the latest draft."
+  }
+];
+
 export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack }: MetadataPrepProps = {}) => {
   const [activeTemplate, setActiveTemplate] = useState<ActiveTemplate>("main");
+  const [labelCopyStep, setLabelCopyStep] = useState<LabelCopyStep>("release-info");
   const [releaseData, setReleaseData] = useState<ReleaseData>({
     releaseTitle: "",
     artist: "",
@@ -686,6 +711,111 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
     }
   };
 
+  const getLabelCopyStepMissingFields = useCallback((step: LabelCopyStep): string[] => {
+    if (isReadOnly) {
+      return [];
+    }
+
+    if (step === "release-info") {
+      const missing: string[] = [];
+
+      if (!releaseData.releaseTitle.trim()) missing.push("Release Title");
+      if (!releaseData.artist.trim()) missing.push("Artist Name");
+      if (!releaseData.releaseType.trim()) missing.push("Release Type");
+      if (!releaseData.releaseDate.trim()) missing.push("Release Date");
+      if (!releaseData.copyright.trim()) missing.push("Copyright Year");
+      if (!releaseData.genre.trim()) missing.push("Primary Genre");
+
+      return missing;
+    }
+
+    if (step === "track-metadata") {
+      const missing: string[] = [];
+      const tracksWithMetadata = tracks.filter((track) =>
+        track.songTitle.trim() || track.duration.trim() || track.songwriters.trim()
+      );
+
+      if (tracksWithMetadata.length === 0) {
+        return ["Add metadata for at least one track"];
+      }
+
+      tracksWithMetadata.forEach((track) => {
+        const trackLabel = track.songTitle.trim() || `Track ${track.trackNumber}`;
+
+        if (!track.duration.trim()) {
+          missing.push(`${trackLabel}: Duration`);
+        }
+
+        if (!track.songwriters.trim()) {
+          missing.push(`${trackLabel}: Songwriters`);
+        }
+      });
+
+      return missing;
+    }
+
+    return [];
+  }, [isReadOnly, releaseData.artist, releaseData.copyright, releaseData.genre, releaseData.releaseDate, releaseData.releaseTitle, releaseData.releaseType, tracks]);
+
+  const currentLabelCopyStepIndex = LABEL_COPY_STEP_SEQUENCE.findIndex((step) => step.key === labelCopyStep);
+  const normalizedLabelCopyStepIndex = currentLabelCopyStepIndex < 0 ? 0 : currentLabelCopyStepIndex;
+  const fallbackLabelCopyStep = LABEL_COPY_STEP_SEQUENCE[0] ?? {
+    key: "release-info" as LabelCopyStep,
+    label: "Release Info",
+    description: "Define core release identity and classification for distribution."
+  };
+  const currentLabelCopyStep = LABEL_COPY_STEP_SEQUENCE[normalizedLabelCopyStepIndex] ?? fallbackLabelCopyStep;
+
+  const nextLabelCopyStep = LABEL_COPY_STEP_SEQUENCE[normalizedLabelCopyStepIndex + 1];
+
+  const goToNextLabelCopyStep = useCallback(() => {
+    setLabelCopyStep((currentStep) => {
+      const currentStepIndex = LABEL_COPY_STEP_SEQUENCE.findIndex((step) => step.key === currentStep);
+      const safeIndex = currentStepIndex < 0 ? 0 : currentStepIndex;
+      const nextStep = LABEL_COPY_STEP_SEQUENCE[safeIndex + 1];
+
+      return nextStep ? nextStep.key : currentStep;
+    });
+  }, []);
+
+  const goToPreviousLabelCopyStep = useCallback(() => {
+    setLabelCopyStep((currentStep) => {
+      const currentStepIndex = LABEL_COPY_STEP_SEQUENCE.findIndex((step) => step.key === currentStep);
+      const safeIndex = currentStepIndex < 0 ? 0 : currentStepIndex;
+      const previousStep = LABEL_COPY_STEP_SEQUENCE[safeIndex - 1];
+
+      return previousStep ? previousStep.key : currentStep;
+    });
+  }, []);
+
+  const handleSaveDraft = useCallback(() => {
+    if (isReadOnly) {
+      return;
+    }
+
+    saveToSessionStorage();
+    const savedAt = new Date().toISOString();
+
+    toast({
+      title: "Draft Saved",
+      description: `Saved locally at ${formatDraftTimestamp(savedAt)}.`
+    });
+  }, [formatDraftTimestamp, isReadOnly, saveToSessionStorage, toast]);
+
+  const handleLabelCopyBackAction = useCallback(() => {
+    if (normalizedLabelCopyStepIndex === 0) {
+      setActiveTemplate("main");
+      return;
+    }
+
+    goToPreviousLabelCopyStep();
+  }, [goToPreviousLabelCopyStep, normalizedLabelCopyStepIndex]);
+
+  const currentLabelCopyStepMissingFields = getLabelCopyStepMissingFields(labelCopyStep);
+  const visibleMissingFields = currentLabelCopyStepMissingFields.slice(0, 3);
+  const remainingMissingFieldsCount = Math.max(currentLabelCopyStepMissingFields.length - visibleMissingFields.length, 0);
+  const canContinueToNextLabelCopyStep = Boolean(nextLabelCopyStep) && currentLabelCopyStepMissingFields.length === 0;
+
   if (activeTemplate === "labelCopy") {
     return (
       <div className="space-y-6">
@@ -771,225 +901,269 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
           </div>
         )}
 
-        {/* Release Information Card */}
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Release Information
-            </CardTitle>
-            <CardDescription>
-              Master information for this Label Copy document
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="releaseTitle">Release Title *</Label>
-                <Input 
-                  id="releaseTitle" 
-                  value={releaseData.releaseTitle}
-                  onChange={(e) => updateReleaseData('releaseTitle', e.target.value)}
-                  placeholder="Album/EP/Single title" 
-                  className="w-full" 
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="artist">Artist Name *</Label>
-                <Input 
-                  id="artist" 
-                  value={releaseData.artist}
-                  onChange={(e) => updateReleaseData('artist', e.target.value)}
-                  placeholder="Enter artist name" 
-                  className="w-full" 
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="releaseType">Release Type *</Label>
-                <Select value={releaseData.releaseType} onValueChange={(value) => updateReleaseData('releaseType', value)} disabled={isReadOnly}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="single">Single</SelectItem>
-                    <SelectItem value="ep">EP</SelectItem>
-                    <SelectItem value="album">Album</SelectItem>
-                    <SelectItem value="mixtape">Mixtape</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            {LABEL_COPY_STEP_SEQUENCE.map((step, index) => {
+              const isActive = step.key === labelCopyStep;
+              const isCompleted = index < normalizedLabelCopyStepIndex;
+              const canSelectStep = isReadOnly || index <= normalizedLabelCopyStepIndex || currentLabelCopyStepMissingFields.length === 0;
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="releaseDate">Release Date *</Label>
-                <Input
-                  type="date"
-                  value={releaseData.releaseDate}
-                  onChange={(e) => setReleaseData({ ...releaseData, releaseDate: e.target.value })}
-                  disabled={isReadOnly}
-                  autoComplete="off"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="copyright">Copyright Year *</Label>
-                <Input
-                  value={releaseData.copyright}
-                  onChange={(e) => setReleaseData({ ...releaseData, copyright: e.target.value })}
-                  disabled={isReadOnly}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck="false"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="upc">UPC Code</Label>
-                <Input
-                  value={releaseData.upc}
-                  onChange={(e) => setReleaseData({ ...releaseData, upc: e.target.value })}
-                  disabled={isReadOnly}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck="false"
-                />
-              </div>
-            </div>
+              return (
+                <Button
+                  key={step.key}
+                  type="button"
+                  variant={isActive ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    if (canSelectStep) {
+                      setLabelCopyStep(step.key);
+                    }
+                  }}
+                  disabled={!canSelectStep}
+                  className="justify-start"
+                >
+                  <span className="mr-1 text-xs">{index + 1}.</span>
+                  <span>{step.label}</span>
+                  {isCompleted && !isActive && <span className="ml-1 text-xs">✓</span>}
+                </Button>
+              );
+            })}
+          </div>
+          <p className="text-sm text-muted-foreground">{currentLabelCopyStep.description}</p>
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="genre">Primary Genre *</Label>
-                <Select value={releaseData.genre} onValueChange={(value) => updateReleaseData('genre', value)} disabled={isReadOnly}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select genre" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pop">Pop</SelectItem>
-                    <SelectItem value="rock">Rock</SelectItem>
-                    <SelectItem value="hip-hop">Hip-Hop</SelectItem>
-                    <SelectItem value="electronic">Electronic</SelectItem>
-                    <SelectItem value="indie">Indie</SelectItem>
-                    <SelectItem value="country">Country</SelectItem>
-                    <SelectItem value="r&b">R&B</SelectItem>
-                    <SelectItem value="folk">Folk</SelectItem>
-                  </SelectContent>
-                </Select>
+        {labelCopyStep === 'release-info' && (
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Release Information
+              </CardTitle>
+              <CardDescription>
+                Master release details for this Label Copy document
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="releaseTitle">Release Title *</Label>
+                  <Input
+                    id="releaseTitle"
+                    value={releaseData.releaseTitle}
+                    onChange={(e) => updateReleaseData('releaseTitle', e.target.value)}
+                    placeholder="Album/EP/Single title"
+                    className="w-full"
+                    disabled={isReadOnly}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="artist">Artist Name *</Label>
+                  <Input
+                    id="artist"
+                    value={releaseData.artist}
+                    onChange={(e) => updateReleaseData('artist', e.target.value)}
+                    placeholder="Enter artist name"
+                    className="w-full"
+                    disabled={isReadOnly}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="releaseType">Release Type *</Label>
+                  <Select value={releaseData.releaseType} onValueChange={(value) => updateReleaseData('releaseType', value)} disabled={isReadOnly}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Single</SelectItem>
+                      <SelectItem value="ep">EP</SelectItem>
+                      <SelectItem value="album">Album</SelectItem>
+                      <SelectItem value="mixtape">Mixtape</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="subGenre">Sub-Genre</Label>
-                <Input 
-                  id="subGenre" 
-                  value={releaseData.subGenre}
-                  onChange={(e) => updateReleaseData('subGenre', e.target.value)}
-                  placeholder="Dance Pop, Alternative Rock" 
-                  className="w-full" 
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="languageLyrics">Primary Language</Label>
-                <Select value={releaseData.languageLyrics} onValueChange={(value) => updateReleaseData('languageLyrics', value)} disabled={isReadOnly}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
-                    <SelectItem value="de">German</SelectItem>
-                    <SelectItem value="it">Italian</SelectItem>
-                    <SelectItem value="pt">Portuguese</SelectItem>
-                    <SelectItem value="ja">Japanese</SelectItem>
-                    <SelectItem value="ko">Korean</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phonogramCopyright">Phonogram Copyright (℗)</Label>
-                <Input 
-                  id="phonogramCopyright" 
-                  value={releaseData.phonogramCopyright}
-                  onChange={(e) => updateReleaseData('phonogramCopyright', e.target.value)}
-                  placeholder="℗ 2025 Record Label Name" 
-                  className="w-full" 
-                  disabled={isReadOnly}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="releaseDate">Release Date *</Label>
+                  <Input
+                    type="date"
+                    value={releaseData.releaseDate}
+                    onChange={(e) => setReleaseData({ ...releaseData, releaseDate: e.target.value })}
+                    disabled={isReadOnly}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="copyright">Copyright Year *</Label>
+                  <Input
+                    value={releaseData.copyright}
+                    onChange={(e) => setReleaseData({ ...releaseData, copyright: e.target.value })}
+                    disabled={isReadOnly}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="upc">UPC Code</Label>
+                  <Input
+                    value={releaseData.upc}
+                    onChange={(e) => setReleaseData({ ...releaseData, upc: e.target.value })}
+                    disabled={isReadOnly}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="compositionCopyright">Composition Copyright (©)</Label>
-                <Input 
-                  id="compositionCopyright" 
-                  value={releaseData.compositionCopyright}
-                  onChange={(e) => updateReleaseData('compositionCopyright', e.target.value)}
-                  placeholder="© 2025 Publishing Company" 
-                  className="w-full" 
-                  disabled={isReadOnly}
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="versionSubtitle">Version Subtitle</Label>
-                <Input 
-                  id="versionSubtitle" 
-                  value={releaseData.versionSubtitle}
-                  onChange={(e) => updateReleaseData('versionSubtitle', e.target.value)}
-                  placeholder="Deluxe Edition, Remastered" 
-                  className="w-full" 
-                  disabled={isReadOnly}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="genre">Primary Genre *</Label>
+                  <Select value={releaseData.genre} onValueChange={(value) => updateReleaseData('genre', value)} disabled={isReadOnly}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select genre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pop">Pop</SelectItem>
+                      <SelectItem value="rock">Rock</SelectItem>
+                      <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                      <SelectItem value="electronic">Electronic</SelectItem>
+                      <SelectItem value="indie">Indie</SelectItem>
+                      <SelectItem value="country">Country</SelectItem>
+                      <SelectItem value="r&b">R&B</SelectItem>
+                      <SelectItem value="folk">Folk</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subGenre">Sub-Genre</Label>
+                  <Input
+                    id="subGenre"
+                    value={releaseData.subGenre}
+                    onChange={(e) => updateReleaseData('subGenre', e.target.value)}
+                    placeholder="Dance Pop, Alternative Rock"
+                    className="w-full"
+                    disabled={isReadOnly}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="languageLyrics">Primary Language</Label>
+                  <Select value={releaseData.languageLyrics} onValueChange={(value) => updateReleaseData('languageLyrics', value)} disabled={isReadOnly}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Spanish</SelectItem>
+                      <SelectItem value="fr">French</SelectItem>
+                      <SelectItem value="de">German</SelectItem>
+                      <SelectItem value="it">Italian</SelectItem>
+                      <SelectItem value="pt">Portuguese</SelectItem>
+                      <SelectItem value="ja">Japanese</SelectItem>
+                      <SelectItem value="ko">Korean</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="label">Record Label</Label>
-                <Input 
-                  id="label" 
-                  value={releaseData.label}
-                  onChange={(e) => updateReleaseData('label', e.target.value)}
-                  placeholder="Independent / Label name" 
-                  className="w-full" 
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="territories" className="flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  Territories (comma-separated)
-                </Label>
-                <Input 
-                  id="territories" 
-                  value={releaseData.territories}
-                  onChange={(e) => updateReleaseData('territories', e.target.value)}
-                  placeholder="US, CA, UK, AU, DE" 
-                  className="w-full" 
-                  disabled={isReadOnly}
-                />
-              </div>
-            </div>
+            </CardContent>
+          </Card>
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="description">Release Description</Label>
-                <Textarea 
-                  id="description" 
-                  value={releaseData.description}
-                  onChange={(e) => updateReleaseData('description', e.target.value)}
-                  placeholder="Brief description of the release for promotional use..."
-                  rows={3}
-                  className="w-full"
-                  disabled={isReadOnly}
-                />
+        {labelCopyStep === 'rights-ids' && (
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Rights & Identifiers
+              </CardTitle>
+              <CardDescription>
+                Rights ownership and identifier metadata for distribution
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phonogramCopyright">Phonogram Copyright (℗)</Label>
+                  <Input
+                    id="phonogramCopyright"
+                    value={releaseData.phonogramCopyright}
+                    onChange={(e) => updateReleaseData('phonogramCopyright', e.target.value)}
+                    placeholder="℗ 2025 Record Label Name"
+                    className="w-full"
+                    disabled={isReadOnly}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="compositionCopyright">Composition Copyright (©)</Label>
+                  <Input
+                    id="compositionCopyright"
+                    value={releaseData.compositionCopyright}
+                    onChange={(e) => updateReleaseData('compositionCopyright', e.target.value)}
+                    placeholder="© 2025 Publishing Company"
+                    className="w-full"
+                    disabled={isReadOnly}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-base font-medium">Content Rating</Label>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="versionSubtitle">Version Subtitle</Label>
+                  <Input
+                    id="versionSubtitle"
+                    value={releaseData.versionSubtitle}
+                    onChange={(e) => updateReleaseData('versionSubtitle', e.target.value)}
+                    placeholder="Deluxe Edition, Remastered"
+                    className="w-full"
+                    disabled={isReadOnly}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="label">Record Label</Label>
+                  <Input
+                    id="label"
+                    value={releaseData.label}
+                    onChange={(e) => updateReleaseData('label', e.target.value)}
+                    placeholder="Independent / Label name"
+                    className="w-full"
+                    disabled={isReadOnly}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="territories" className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Territories (comma-separated)
+                  </Label>
+                  <Input
+                    id="territories"
+                    value={releaseData.territories}
+                    onChange={(e) => updateReleaseData('territories', e.target.value)}
+                    placeholder="US, CA, UK, AU, DE"
+                    className="w-full"
+                    disabled={isReadOnly}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="description">Release Description</Label>
+                  <Textarea
+                    id="description"
+                    value={releaseData.description}
+                    onChange={(e) => updateReleaseData('description', e.target.value)}
+                    placeholder="Brief description of the release for promotional use..."
+                    rows={3}
+                    className="w-full"
+                    disabled={isReadOnly}
+                  />
+                </div>
                 <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox 
+                  <Checkbox
                     id="explicitContent"
                     checked={releaseData.explicitContent}
                     onCheckedChange={(checked) => updateReleaseData('explicitContent', checked === true)}
@@ -1000,229 +1174,322 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
                   </Label>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Tracks Information Card */}
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Music className="h-5 w-5" />
-              Track Listing
-            </CardTitle>
-            <CardDescription>
-              Individual track information for this release
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {tracks.map((track) => (
-              <div key={track.id} className="border rounded-lg p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-md font-semibold">Track {track.trackNumber}</h4>
-                  {tracks.length > 1 && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => removeTrack(track.id)}
-                      className="text-red-600 hover:text-red-700"
-                      disabled={isReadOnly}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+        {labelCopyStep === 'track-metadata' && (
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Music className="h-5 w-5" />
+                Track Listing
+              </CardTitle>
+              <CardDescription>
+                Individual track information for this release
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {tracks.map((track) => (
+                <div key={track.id} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-md font-semibold">Track {track.trackNumber}</h4>
+                    {tracks.length > 1 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeTrack(track.id)}
+                        className="text-red-600 hover:text-red-700"
+                        disabled={isReadOnly}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
 
-                {/* Basic Track Info */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Song Title</Label>
-                    <div className="flex items-center gap-2">
-                      <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 w-full">
-                        {track.songTitle || "Untitled Track"}
-                      </div>
-                      <div className="text-xs text-gray-500 whitespace-nowrap">
-                        Edit in Songs tab
+                  {/* Basic Track Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Song Title</Label>
+                      <div className="flex items-center gap-2">
+                        <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 w-full">
+                          {track.songTitle || "Untitled Track"}
+                        </div>
+                        <div className="text-xs text-gray-500 whitespace-nowrap">
+                          Edit in Songs tab
+                        </div>
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <Label>Duration *</Label>
+                      <Input
+                        value={track.duration}
+                        onChange={(e) => updateTrack(track.id, 'duration', e.target.value)}
+                        placeholder="3:45"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>ISRC Code</Label>
+                      <Input
+                        value={track.isrc}
+                        onChange={(e) => updateTrack(track.id, 'isrc', e.target.value)}
+                        placeholder="US-XXX-XX-XXXXX"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Duration *</Label>
-                    <Input 
-                      value={track.duration}
-                      onChange={(e) => updateTrack(track.id, 'duration', e.target.value)}
-                      placeholder="3:45" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>ISRC Code</Label>
-                    <Input 
-                      value={track.isrc}
-                      onChange={(e) => updateTrack(track.id, 'isrc', e.target.value)}
-                      placeholder="US-XXX-XX-XXXXX" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
-                  </div>
-                </div>
 
-                {/* Version & Features */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Version Subtitle</Label>
-                    <Input 
-                      value={track.versionSubtitle}
-                      onChange={(e) => updateTrack(track.id, 'versionSubtitle', e.target.value)}
-                      placeholder="Radio Edit, Extended Mix, Acoustic" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
+                  {/* Version & Features */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Version Subtitle</Label>
+                      <Input
+                        value={track.versionSubtitle}
+                        onChange={(e) => updateTrack(track.id, 'versionSubtitle', e.target.value)}
+                        placeholder="Radio Edit, Extended Mix, Acoustic"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Featured Artists</Label>
+                      <Input
+                        value={track.featuredArtists}
+                        onChange={(e) => updateTrack(track.id, 'featuredArtists', e.target.value)}
+                        placeholder="Artist Name, Another Artist"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Featured Artists</Label>
-                    <Input 
-                      value={track.featuredArtists}
-                      onChange={(e) => updateTrack(track.id, 'featuredArtists', e.target.value)}
-                      placeholder="Artist Name, Another Artist" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
-                  </div>
-                </div>
 
-                {/* Credits */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Songwriters *</Label>
-                    <Input 
-                      value={track.songwriters}
-                      onChange={(e) => updateTrack(track.id, 'songwriters', e.target.value)}
-                      placeholder="John Doe, Jane Smith" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
+                  {/* Credits */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Songwriters *</Label>
+                      <Input
+                        value={track.songwriters}
+                        onChange={(e) => updateTrack(track.id, 'songwriters', e.target.value)}
+                        placeholder="John Doe, Jane Smith"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Producers</Label>
+                      <Input
+                        value={track.producers}
+                        onChange={(e) => updateTrack(track.id, 'producers', e.target.value)}
+                        placeholder="Producer names"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Producers</Label>
-                    <Input 
-                      value={track.producers}
-                      onChange={(e) => updateTrack(track.id, 'producers', e.target.value)}
-                      placeholder="Producer names" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
-                  </div>
-                </div>
 
-                {/* Engineers */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Mix Engineer</Label>
-                    <Input 
-                      value={track.mixEngineer}
-                      onChange={(e) => updateTrack(track.id, 'mixEngineer', e.target.value)}
-                      placeholder="Engineer name" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
+                  {/* Engineers */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Mix Engineer</Label>
+                      <Input
+                        value={track.mixEngineer}
+                        onChange={(e) => updateTrack(track.id, 'mixEngineer', e.target.value)}
+                        placeholder="Engineer name"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Mastering Engineer</Label>
+                      <Input
+                        value={track.masteringEngineer}
+                        onChange={(e) => updateTrack(track.id, 'masteringEngineer', e.target.value)}
+                        placeholder="Engineer name"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Remixer</Label>
+                      <Input
+                        value={track.remixer}
+                        onChange={(e) => updateTrack(track.id, 'remixer', e.target.value)}
+                        placeholder="Remixer name"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Mastering Engineer</Label>
-                    <Input 
-                      value={track.masteringEngineer}
-                      onChange={(e) => updateTrack(track.id, 'masteringEngineer', e.target.value)}
-                      placeholder="Engineer name" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Remixer</Label>
-                    <Input 
-                      value={track.remixer}
-                      onChange={(e) => updateTrack(track.id, 'remixer', e.target.value)}
-                      placeholder="Remixer name" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
-                  </div>
-                </div>
 
-                {/* Additional Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Preview Start Time (seconds)
-                    </Label>
-                    <Input 
-                      type="number"
-                      value={track.previewStartTime}
-                      onChange={(e) => updateTrack(track.id, 'previewStartTime', parseInt(e.target.value) || 0)}
-                      placeholder="30" 
-                      className="w-full" 
-                      disabled={isReadOnly}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2 pt-6">
-                    <Checkbox 
-                      id={`explicit-${track.id}`}
-                      checked={track.explicitContent}
-                      onCheckedChange={(checked) => updateTrack(track.id, 'explicitContent', checked === true)}
-                      disabled={isReadOnly}
-                    />
-                    <Label htmlFor={`explicit-${track.id}`} className="text-sm font-medium">
-                      Explicit Content (Track-level)
-                    </Label>
+                  {/* Additional Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Preview Start Time (seconds)
+                      </Label>
+                      <Input
+                        type="number"
+                        value={track.previewStartTime}
+                        onChange={(e) => updateTrack(track.id, 'previewStartTime', parseInt(e.target.value, 10) || 0)}
+                        placeholder="30"
+                        className="w-full"
+                        disabled={isReadOnly}
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2 pt-6">
+                      <Checkbox
+                        id={`explicit-${track.id}`}
+                        checked={track.explicitContent}
+                        onCheckedChange={(checked) => updateTrack(track.id, 'explicitContent', checked === true)}
+                        disabled={isReadOnly}
+                      />
+                      <Label htmlFor={`explicit-${track.id}`} className="text-sm font-medium">
+                        Explicit Content (Track-level)
+                      </Label>
+                    </div>
                   </div>
                 </div>
+              ))}
+
+              <Button
+                onClick={addTrack}
+                variant="outline"
+                className="w-full"
+                disabled={isReadOnly}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Track
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {labelCopyStep === 'review-save' && (
+          <>
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Review Before Save
+                </CardTitle>
+                <CardDescription>
+                  Confirm key details, then save Label Copy to persist your changes.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Release</p>
+                    <p className="font-medium">{releaseData.releaseTitle || 'Untitled Release'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Type / Date</p>
+                    <p className="font-medium">{releaseData.releaseType || 'single'} • {releaseData.releaseDate || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Primary Genre</p>
+                    <p className="font-medium">{releaseData.genre || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Tracks with Metadata</p>
+                    <p className="font-medium">
+                      {tracks.filter((track) => track.songTitle.trim() || track.duration.trim() || track.songwriters.trim()).length}
+                      {' / '}
+                      {tracks.length}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-3 pt-4">
+              <div className="flex gap-4">
+                <Button variant="outline">Export to PDF</Button>
               </div>
-            ))}
 
-            <Button 
-              onClick={addTrack}
-              variant="outline" 
-              className="w-full"
-              disabled={isReadOnly}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Track
-            </Button>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-3 pt-4">
-          <div className="flex gap-4">
-            <Button 
-              onClick={handleSave}
-              disabled={isLoading || isReadOnly}
-              className="flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              {isLoading ? 'Saving...' : 'Save Label Copy'}
-            </Button>
-            <Button variant="outline">Export to PDF</Button>
-          </div>
-          
-          {/* Save Status Feedback */}
-          {saveStatus !== 'idle' && (
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium ${
-              saveStatus === 'saving' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-              saveStatus === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
-              saveStatus === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : ''
-            }`}>
-              <div className={`w-2 h-2 rounded-full ${
-                saveStatus === 'saving' ? 'bg-blue-500 animate-pulse' :
-                saveStatus === 'success' ? 'bg-green-500' :
-                saveStatus === 'error' ? 'bg-red-500' : ''
-              }`}></div>
-              {saveStatus === 'saving' && 'Saving Label Copy to database...'}
-              {saveStatus === 'success' && 'Label Copy saved successfully to database!'}
-              {saveStatus === 'error' && 'Save failed - please try again or contact support at +1(432)640-7688'}
+              {/* Save Status Feedback */}
+              {saveStatus !== 'idle' && (
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium ${
+                  saveStatus === 'saving' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                  saveStatus === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
+                  saveStatus === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : ''
+                }`}>
+                  <div className={`w-2 h-2 rounded-full ${
+                    saveStatus === 'saving' ? 'bg-blue-500 animate-pulse' :
+                    saveStatus === 'success' ? 'bg-green-500' :
+                    saveStatus === 'error' ? 'bg-red-500' : ''
+                  }`}></div>
+                  {saveStatus === 'saving' && 'Saving Label Copy to database...'}
+                  {saveStatus === 'success' && 'Label Copy saved successfully to database!'}
+                  {saveStatus === 'error' && 'Save failed - please try again or contact support at +1(432)640-7688'}
+                </div>
+              )}
             </div>
-          )}
+          </>
+        )}
+
+        {currentLabelCopyStepMissingFields.length > 0 && !isReadOnly && (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <p className="font-medium">Complete these required fields before continuing:</p>
+            <ul className="mt-1 list-disc pl-5 text-xs sm:text-sm">
+              {visibleMissingFields.map((missingField) => (
+                <li key={missingField}>{missingField}</li>
+              ))}
+            </ul>
+            {remainingMissingFieldsCount > 0 && (
+              <p className="mt-1 text-xs">+{remainingMissingFieldsCount} more required field(s).</p>
+            )}
+          </div>
+        )}
+
+        <div className="sticky bottom-0 z-10 -mx-4 border-t border-border/50 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:mx-0 sm:rounded-md sm:border">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Step {normalizedLabelCopyStepIndex + 1} of {LABEL_COPY_STEP_SEQUENCE.length}: {currentLabelCopyStep.label}
+            </p>
+
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveDraft}
+                disabled={isReadOnly || isLoading}
+              >
+                Save Draft
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleLabelCopyBackAction}
+                disabled={isLoading}
+              >
+                {normalizedLabelCopyStepIndex === 0 ? 'Back to Templates' : 'Back'}
+              </Button>
+
+              <Button
+                type="button"
+                onClick={goToNextLabelCopyStep}
+                disabled={!canContinueToNextLabelCopyStep || isLoading}
+              >
+                {nextLabelCopyStep ? `Continue: ${nextLabelCopyStep.label}` : 'Continue'}
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={isLoading || isReadOnly || labelCopyStep !== 'review-save'}
+                className="flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {isLoading ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1413,7 +1680,10 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
             <Button 
               variant="default" 
               className="w-full"
-              onClick={() => setActiveTemplate("labelCopy")}
+              onClick={() => {
+                setLabelCopyStep("release-info");
+                setActiveTemplate("labelCopy");
+              }}
             >
               Create My Label Copy
             </Button>
