@@ -130,7 +130,7 @@ const OnboardingComplete = () => {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      <div className="max-w-md mx-auto px-4 py-16">
+      <div className="max-w-md mx-auto px-4 py-8 sm:py-16">
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardHeader className="text-center space-y-2">
             <div className="flex justify-center mb-4">
@@ -163,6 +163,8 @@ const OnboardingComplete = () => {
                   placeholder="Enter your full name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  autoComplete="name"
+                  enterKeyHint="next"
                   required
                   disabled={loading}
                   className="bg-background/50 border-border/50"
@@ -178,6 +180,12 @@ const OnboardingComplete = () => {
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="next"
                   required
                   disabled={loading}
                   className="bg-background/50 border-border/50"
@@ -193,6 +201,9 @@ const OnboardingComplete = () => {
                   placeholder="Enter your phone number (optional)"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  autoComplete="tel"
+                  inputMode="tel"
+                  enterKeyHint="next"
                   disabled={loading}
                   className="bg-background/50 border-border/50"
                 />
@@ -207,6 +218,8 @@ const OnboardingComplete = () => {
                   placeholder="Enter your artist or band name (optional)"
                   value={artistName}
                   onChange={(e) => setArtistName(e.target.value)}
+                  autoComplete="organization"
+                  enterKeyHint="next"
                   disabled={loading}
                   className="bg-background/50 border-border/50"
                 />
@@ -221,6 +234,11 @@ const OnboardingComplete = () => {
                   placeholder="Enter referral code (optional)"
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="next"
                   disabled={loading}
                   maxLength={6}
                   className="bg-background/50 border-border/50"
@@ -236,6 +254,8 @@ const OnboardingComplete = () => {
                   placeholder="Create a password (min 8 characters)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  enterKeyHint="next"
                   required
                   disabled={loading}
                   minLength={8}
@@ -252,6 +272,8 @@ const OnboardingComplete = () => {
                   placeholder="Confirm your password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  enterKeyHint="go"
                   required
                   disabled={loading}
                   className="bg-background/50 border-border/50"

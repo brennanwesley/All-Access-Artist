@@ -35,7 +35,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      <div className="max-w-md mx-auto px-4 py-16">
+      <div className="max-w-md mx-auto px-4 py-8 sm:py-16">
         <div className="mb-8">
           <Link to="/">
             <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
@@ -76,6 +76,12 @@ const LoginPage = () => {
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="next"
                   required
                   disabled={loading}
                   className="bg-background/50 border-border/50"
@@ -90,6 +96,8 @@ const LoginPage = () => {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  enterKeyHint="go"
                   required
                   disabled={loading}
                   className="bg-background/50 border-border/50"
