@@ -2,10 +2,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  DollarSign, 
-  TrendingUp, 
-  Download, 
+import {
+  DollarSign,
+  TrendingUp,
+  Download,
   Calendar,
   Music,
   Play,
@@ -16,8 +16,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ComingSoonOverlay } from "@/components/ComingSoonOverlay";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const RoyaltyDashboard = () => {
+  const isMobile = useIsMobile();
   const [tooltipContent, setTooltipContent] = useState("");
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
@@ -88,23 +90,103 @@ export const RoyaltyDashboard = () => {
   ];
 
   const totalEarnings = platforms.reduce((sum, platform) => sum + platform.earnings, 0);
+  const totalSixMonthStreams = monthlyEarnings.reduce((sum, month) => sum + month.streams, 0);
+  const latestMonth = monthlyEarnings[monthlyEarnings.length - 1];
+  const previousMonth = monthlyEarnings[monthlyEarnings.length - 2] ?? latestMonth;
+  const monthOverMonthGrowth = previousMonth.amount === 0
+    ? 0
+    : ((latestMonth.amount - previousMonth.amount) / previousMonth.amount) * 100;
+  const topMarket = topCountries[0];
+
+  const renderGlobalMap = (heightClass: string) => (
+    <div className={`relative w-full ${heightClass} bg-secondary/20 rounded-lg border border-border/50 overflow-hidden`}>
+      {/* Simple SVG World Map */}
+      <svg viewBox="0 0 1000 500" className="w-full h-full">
+        {/* Simplified world map paths */}
+        <g fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth="0.5">
+          {/* North America */}
+          <path d="M150 150 L200 120 L280 130 L320 160 L300 200 L250 220 L180 200 Z" fill="hsl(var(--primary))" />
+          {/* South America */}
+          <path d="M220 280 L250 250 L280 270 L290 350 L270 400 L240 380 L210 350 Z" fill="hsl(var(--primary))" />
+          {/* Europe */}
+          <path d="M450 120 L480 110 L520 120 L540 140 L520 160 L480 150 L450 140 Z" fill="hsl(var(--primary))" />
+          {/* Africa */}
+          <path d="M460 200 L500 190 L530 220 L540 280 L520 350 L480 360 L450 340 L440 280 L450 220 Z" fill="hsl(var(--muted))" />
+          {/* Asia */}
+          <path d="M550 100 L650 90 L750 110 L780 140 L770 180 L720 200 L650 190 L580 170 L550 140 Z" fill="hsl(var(--primary))" />
+          {/* Australia */}
+          <path d="M720 320 L780 310 L800 340 L790 360 L750 370 L720 350 Z" fill="hsl(var(--primary))" />
+        </g>
+
+        {/* Data visualization circles for top countries */}
+        {topCountries.map(({ name, coordinates, listeners }) => {
+          const x = (coordinates[0] + 180) * (1000 / 360);
+          const y = (90 - coordinates[1]) * (500 / 180);
+          const radius = Math.max(3, Math.min(15, Math.sqrt(listeners / 1000)));
+
+          return (
+            <circle
+              key={name}
+              cx={x}
+              cy={y}
+              r={radius}
+              fill="hsl(var(--primary))"
+              fillOpacity={0.8}
+              stroke="hsl(var(--background))"
+              strokeWidth={2}
+              className="cursor-pointer hover:fillOpacity-100 transition-opacity"
+              onMouseEnter={(e) => {
+                const data = countryData[name];
+                if (data) {
+                  setTooltipContent(`${name}
+${data.listeners.toLocaleString()} listeners
+${data.streams.toLocaleString()} streams
+${data.socialViews.toLocaleString()} social views
+$${data.earnings.toFixed(2)} earnings`);
+                  setTooltipPosition({ x: e.clientX, y: e.clientY });
+                  setShowTooltip(true);
+                }
+              }}
+              onMouseLeave={() => setShowTooltip(false)}
+            />
+          );
+        })}
+      </svg>
+
+      {/* Tooltip */}
+      {showTooltip && (
+        <div
+          className="absolute z-50 bg-popover border border-border rounded-lg p-3 text-sm shadow-lg pointer-events-none"
+          style={{
+            left: tooltipPosition.x - 100,
+            top: tooltipPosition.y - 120,
+            transform: "translate(-50%, 0)",
+          }}
+        >
+          <div className="whitespace-pre-line text-popover-foreground">
+            {tooltipContent}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="relative space-y-8">
       <ComingSoonOverlay feature="Royalties & Analytics" />
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-3xl font-bold">Royalties & Analytics</h2>
           <p className="text-muted-foreground mt-2">
             Track your music earnings, streaming performance, and global audience insights
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <Button variant="outline" className="w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
             Export Report
           </Button>
-          <Button variant="hero">
+          <Button variant="hero" className="w-full sm:w-auto">
             <FileText className="mr-2 h-4 w-4" />
             Tax Documents
           </Button>
@@ -242,18 +324,62 @@ export const RoyaltyDashboard = () => {
             Your monthly earnings and streaming growth over time
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-6 gap-4">
-            {monthlyEarnings.map((month, index) => (
-              <div key={index} className="text-center space-y-2">
-                <div className="bg-secondary/20 rounded-lg p-4 hover:bg-secondary/30 transition-colors">
-                  <div className="text-sm font-medium text-muted-foreground">{month.month}</div>
-                  <div className="text-lg font-bold text-primary">${month.amount}</div>
-                  <div className="text-xs text-muted-foreground">{month.streams.toLocaleString()}</div>
+        <CardContent className="space-y-4">
+          {isMobile ? (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
+                  <p className="text-xs text-muted-foreground">Latest Month</p>
+                  <p className="text-lg font-semibold text-primary">${latestMonth.amount}</p>
+                  <p className="text-[11px] text-muted-foreground">{latestMonth.month}</p>
+                </div>
+                <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
+                  <p className="text-xs text-muted-foreground">MoM Earnings</p>
+                  <p className="text-lg font-semibold text-primary">
+                    {monthOverMonthGrowth >= 0 ? "+" : ""}
+                    {monthOverMonthGrowth.toFixed(1)}%
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">vs {previousMonth.month}</p>
+                </div>
+                <div className="col-span-2 rounded-lg border border-border/50 bg-secondary/20 p-3">
+                  <p className="text-xs text-muted-foreground">6-Month Streams</p>
+                  <p className="text-lg font-semibold">{totalSixMonthStreams.toLocaleString()}</p>
                 </div>
               </div>
-            ))}
-          </div>
+
+              <details className="rounded-lg border border-border/50 bg-background/40 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-foreground">
+                  View monthly breakdown
+                </summary>
+                <div className="mt-3 space-y-2">
+                  {monthlyEarnings.map((month) => (
+                    <div
+                      key={month.month}
+                      className="flex items-center justify-between rounded-md border border-border/40 bg-secondary/20 px-3 py-2"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{month.month}</p>
+                        <p className="text-xs text-muted-foreground">{month.streams.toLocaleString()} streams</p>
+                      </div>
+                      <p className="text-sm font-semibold text-primary">${month.amount}</p>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </>
+          ) : (
+            <div className="grid grid-cols-6 gap-4">
+              {monthlyEarnings.map((month, index) => (
+                <div key={index} className="text-center space-y-2">
+                  <div className="bg-secondary/20 rounded-lg p-4 hover:bg-secondary/30 transition-colors">
+                    <div className="text-sm font-medium text-muted-foreground">{month.month}</div>
+                    <div className="text-lg font-bold text-primary">${month.amount}</div>
+                    <div className="text-xs text-muted-foreground">{month.streams.toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -269,58 +395,114 @@ export const RoyaltyDashboard = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium mb-3">Upcoming Payments</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/20 border border-border/50">
-                  <div>
-                    <div className="font-medium">Spotify</div>
-                    <div className="text-sm text-muted-foreground">Payment for June</div>
+          {isMobile ? (
+            <div className="space-y-3">
+              <details className="rounded-lg border border-border/50 bg-background/40 p-3" open>
+                <summary className="cursor-pointer text-sm font-medium text-foreground">Upcoming Payments</summary>
+                <div className="mt-3 space-y-3">
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/20 border border-border/50">
+                    <div>
+                      <div className="font-medium">Spotify</div>
+                      <div className="text-sm text-muted-foreground">Payment for June</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">$678.45</div>
+                      <div className="text-xs text-muted-foreground">Aug 15</div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold">$678.45</div>
-                    <div className="text-xs text-muted-foreground">Aug 15</div>
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/20 border border-border/50">
+                    <div>
+                      <div className="font-medium">Apple Music</div>
+                      <div className="text-sm text-muted-foreground">Payment for June</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">$345.23</div>
+                      <div className="text-xs text-muted-foreground">Aug 20</div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/20 border border-border/50">
-                  <div>
-                    <div className="font-medium">Apple Music</div>
-                    <div className="text-sm text-muted-foreground">Payment for June</div>
+              </details>
+
+              <details className="rounded-lg border border-border/50 bg-background/40 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-foreground">Recent Payments</summary>
+                <div className="mt-3 space-y-3">
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <div>
+                      <div className="font-medium">Spotify</div>
+                      <div className="text-sm text-muted-foreground">Payment for May</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-green-500">$623.12</div>
+                      <div className="text-xs text-muted-foreground">Paid Jul 15</div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold">$345.23</div>
-                    <div className="text-xs text-muted-foreground">Aug 20</div>
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <div>
+                      <div className="font-medium">Apple Music</div>
+                      <div className="text-sm text-muted-foreground">Payment for May</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-green-500">$298.67</div>
+                      <div className="text-xs text-muted-foreground">Paid Jul 20</div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium mb-3">Upcoming Payments</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/20 border border-border/50">
+                    <div>
+                      <div className="font-medium">Spotify</div>
+                      <div className="text-sm text-muted-foreground">Payment for June</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">$678.45</div>
+                      <div className="text-xs text-muted-foreground">Aug 15</div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/20 border border-border/50">
+                    <div>
+                      <div className="font-medium">Apple Music</div>
+                      <div className="text-sm text-muted-foreground">Payment for June</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">$345.23</div>
+                      <div className="text-xs text-muted-foreground">Aug 20</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-3">Recent Payments</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <div>
+                      <div className="font-medium">Spotify</div>
+                      <div className="text-sm text-muted-foreground">Payment for May</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-green-500">$623.12</div>
+                      <div className="text-xs text-muted-foreground">Paid Jul 15</div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <div>
+                      <div className="font-medium">Apple Music</div>
+                      <div className="text-sm text-muted-foreground">Payment for May</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-green-500">$298.67</div>
+                      <div className="text-xs text-muted-foreground">Paid Jul 20</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div>
-              <h4 className="font-medium mb-3">Recent Payments</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <div>
-                    <div className="font-medium">Spotify</div>
-                    <div className="text-sm text-muted-foreground">Payment for May</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-green-500">$623.12</div>
-                    <div className="text-xs text-muted-foreground">Paid Jul 15</div>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <div>
-                    <div className="font-medium">Apple Music</div>
-                    <div className="text-sm text-muted-foreground">Payment for May</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-green-500">$298.67</div>
-                    <div className="text-xs text-muted-foreground">Paid Jul 20</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -335,78 +517,35 @@ export const RoyaltyDashboard = () => {
             Interactive world map showing your audience distribution and engagement
           </CardDescription>
         </CardHeader>
-        <CardContent className="relative">
-          <div className="relative w-full h-96 bg-secondary/20 rounded-lg border border-border/50 overflow-hidden">
-            {/* Simple SVG World Map */}
-            <svg viewBox="0 0 1000 500" className="w-full h-full">
-              {/* Simplified world map paths */}
-              <g fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth="0.5">
-                {/* North America */}
-                <path d="M150 150 L200 120 L280 130 L320 160 L300 200 L250 220 L180 200 Z" fill="hsl(var(--primary))" />
-                {/* South America */}
-                <path d="M220 280 L250 250 L280 270 L290 350 L270 400 L240 380 L210 350 Z" fill="hsl(var(--primary))" />
-                {/* Europe */}
-                <path d="M450 120 L480 110 L520 120 L540 140 L520 160 L480 150 L450 140 Z" fill="hsl(var(--primary))" />
-                {/* Africa */}
-                <path d="M460 200 L500 190 L530 220 L540 280 L520 350 L480 360 L450 340 L440 280 L450 220 Z" fill="hsl(var(--muted))" />
-                {/* Asia */}
-                <path d="M550 100 L650 90 L750 110 L780 140 L770 180 L720 200 L650 190 L580 170 L550 140 Z" fill="hsl(var(--primary))" />
-                {/* Australia */}
-                <path d="M720 320 L780 310 L800 340 L790 360 L750 370 L720 350 Z" fill="hsl(var(--primary))" />
-              </g>
-              
-              {/* Data visualization circles for top countries */}
-              {topCountries.map(({ name, coordinates, listeners }, index) => {
-                const x = (coordinates[0] + 180) * (1000 / 360);
-                const y = (90 - coordinates[1]) * (500 / 180);
-                const radius = Math.max(3, Math.min(15, Math.sqrt(listeners / 1000)));
-                
-                return (
-                  <circle
-                    key={name}
-                    cx={x}
-                    cy={y}
-                    r={radius}
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.8}
-                    stroke="hsl(var(--background))"
-                    strokeWidth={2}
-                    className="cursor-pointer hover:fillOpacity-100 transition-opacity"
-                    onMouseEnter={(e) => {
-                      const data = countryData[name];
-                      if (data) {
-                        setTooltipContent(`${name}
-${data.listeners.toLocaleString()} listeners
-${data.streams.toLocaleString()} streams
-${data.socialViews.toLocaleString()} social views
-$${data.earnings.toFixed(2)} earnings`);
-                        setTooltipPosition({ x: e.clientX, y: e.clientY });
-                        setShowTooltip(true);
-                      }
-                    }}
-                    onMouseLeave={() => setShowTooltip(false)}
-                  />
-                );
-              })}
-            </svg>
-            
-            {/* Tooltip */}
-            {showTooltip && (
-              <div
-                className="absolute z-50 bg-popover border border-border rounded-lg p-3 text-sm shadow-lg pointer-events-none"
-                style={{
-                  left: tooltipPosition.x - 100,
-                  top: tooltipPosition.y - 120,
-                  transform: 'translate(-50%, 0)'
-                }}
-              >
-                <div className="whitespace-pre-line text-popover-foreground">
-                  {tooltipContent}
+        <CardContent className="relative space-y-6">
+          {isMobile ? (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
+                  <p className="text-xs text-muted-foreground">Top Market</p>
+                  <p className="text-sm font-semibold">{topMarket?.name ?? "N/A"}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {topMarket ? `${topMarket.listeners.toLocaleString()} listeners` : "No listener data"}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
+                  <p className="text-xs text-muted-foreground">Global Reach</p>
+                  <p className="text-sm font-semibold">47 countries</p>
+                  <p className="text-[11px] text-muted-foreground">8.2M streams</p>
                 </div>
               </div>
-            )}
-          </div>
-          
+
+              <details className="rounded-lg border border-border/50 bg-background/40 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-foreground">
+                  Open interactive map
+                </summary>
+                <div className="mt-3">{renderGlobalMap("h-64")}</div>
+              </details>
+            </>
+          ) : (
+            renderGlobalMap("h-96")
+          )}
+
           {/* Stats Grid */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-secondary/20 rounded-lg p-4 border border-border/50">
