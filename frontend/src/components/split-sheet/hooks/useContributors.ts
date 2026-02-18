@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Contributor } from '../types';
 
+type ContributorFieldValue = Contributor[keyof Contributor];
+
 const createEmptyContributor = (): Contributor => ({
   legal_name: '',
   stage_name: undefined,
@@ -26,7 +28,7 @@ export const useContributors = (initialContributors: Contributor[] = []) => {
     ];
   });
 
-  const updateContributor = useCallback((index: number, field: keyof Contributor, value: any) => {
+  const updateContributor = useCallback((index: number, field: keyof Contributor, value: ContributorFieldValue) => {
     setContributors(prev => {
       const updated = [...prev];
       

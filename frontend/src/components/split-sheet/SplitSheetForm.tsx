@@ -283,9 +283,13 @@ export const SplitSheetForm = ({ songId, songTitle, releaseId, onBack }: SplitSh
               <Percent className="h-5 w-5" />
               <Label className="text-base font-semibold">Writer Credits & Splits</Label>
             </div>
+
+            <p className="text-xs text-muted-foreground md:hidden">
+              Contributor rows are stacked as cards for easier mobile editing.
+            </p>
             
             {/* Column Headers */}
-            <div className="grid grid-cols-12 gap-2 text-sm font-medium text-muted-foreground px-3">
+            <div className="hidden grid-cols-12 gap-2 px-3 text-sm font-medium text-muted-foreground md:grid">
               <div className="col-span-3">Legal Name</div>
               <div className="col-span-2">Role</div>
               <div className="col-span-2">Writer %</div>
@@ -311,7 +315,7 @@ export const SplitSheetForm = ({ songId, songTitle, releaseId, onBack }: SplitSh
             
             {/* Add Writer Button */}
             {!isReadOnly && canAddMore && (
-              <Button variant="outline" size="sm" onClick={addContributor}>
+              <Button variant="outline" size="sm" onClick={addContributor} className="w-full sm:w-fit">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Writer
               </Button>
