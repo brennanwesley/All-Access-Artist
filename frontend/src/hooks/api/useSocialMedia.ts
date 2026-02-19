@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
-import { toast } from 'sonner'
-import type { Artist, BackendResponse } from '../../types/api'
+import { toast } from '@/components/ui/sonner'
+import { logger } from '@/lib/logger'
+import type { Artist, BackendResponse, UpdateSocialMediaData } from '../../types/api'
 
 // Types for Instagram metrics
 export interface InstagramMetrics {
@@ -47,12 +48,12 @@ export interface TwitterMetrics {
 
 // Types for social media data
 export interface SocialMediaUrls {
-  instagram_url?: string | undefined
-  tiktok_url?: string | undefined
-  twitter_url?: string | undefined
-  youtube_url?: string | undefined
-  spotify_url?: string | undefined
-  apple_music_url?: string | undefined
+  instagram_url?: string
+  tiktok_url?: string
+  twitter_url?: string
+  youtube_url?: string
+  spotify_url?: string
+  apple_music_url?: string
 }
 
 // Hook to get current user's social media URLs from artist profile
@@ -78,7 +79,9 @@ export const useSocialMediaUrls = () => {
       } else if (Array.isArray(response.data)) {
         artists = response.data as Artist[]
       } else {
-        console.error('Unexpected response structure:', response.data)
+        logger.warn('Unexpected social media response structure', {
+          responseData: response.data,
+        })
         return null
       }
       
@@ -91,12 +94,12 @@ export const useSocialMediaUrls = () => {
       
       // Extract social media URLs
       const socialMediaUrls: SocialMediaUrls = {
-        instagram_url: userProfile.instagram_url || undefined,
-        tiktok_url: userProfile.tiktok_url || undefined,
-        twitter_url: userProfile.twitter_url || undefined,
-        youtube_url: userProfile.youtube_url || undefined,
-        spotify_url: userProfile.spotify_url || undefined,
-        apple_music_url: userProfile.apple_music_url || undefined
+        ...(userProfile.instagram_url ? { instagram_url: userProfile.instagram_url } : {}),
+        ...(userProfile.tiktok_url ? { tiktok_url: userProfile.tiktok_url } : {}),
+        ...(userProfile.twitter_url ? { twitter_url: userProfile.twitter_url } : {}),
+        ...(userProfile.youtube_url ? { youtube_url: userProfile.youtube_url } : {}),
+        ...(userProfile.spotify_url ? { spotify_url: userProfile.spotify_url } : {}),
+        ...(userProfile.apple_music_url ? { apple_music_url: userProfile.apple_music_url } : {})
       }
       
       return socialMediaUrls
@@ -113,7 +116,7 @@ export const useUpdateSocialMedia = () => {
   const { user } = useAuth()
   
   return useMutation({
-    mutationFn: async (socialMediaData: Partial<SocialMediaUrls>) => {
+    mutationFn: async (socialMediaData: UpdateSocialMediaData) => {
       const response = await apiClient.updateSocialMediaUrls(socialMediaData)
       if (response.status !== 200) {
         throw new Error(response.error || 'Failed to update social media URLs')
@@ -129,8 +132,11 @@ export const useUpdateSocialMedia = () => {
       toast.success('Social media profile updated successfully!')
     },
     onError: (error) => {
-      console.error('Failed to update social media URLs:', error)
-      toast.error(`Failed to update social media profile: ${error.message}`)
+      logger.error('Failed to update social media URLs', {
+        userId: user?.id,
+        error,
+      })
+      toast.error('Unable to update social media links right now. Please try again.')
     }
   })
 }
@@ -158,8 +164,11 @@ export const useUpdateSinglePlatform = () => {
       toast.success('Social media profile connected successfully!')
     },
     onError: (error) => {
-      console.error('Failed to update social media URL:', error)
-      toast.error(`Failed to update social media profile: ${error.message}`)
+      logger.error('Failed to update single social media URL', {
+        userId: user?.id,
+        error,
+      })
+      toast.error('Unable to connect this social media profile right now. Please try again.')
     }
   })
 }

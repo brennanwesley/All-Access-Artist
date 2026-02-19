@@ -10,7 +10,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Calendar, CalendarDays, Loader2 } from "lucide-react"
 import { ReleaseDetails } from "@/hooks/api/useReleaseDetails"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/sonner"
+import { logger } from "@/lib/logger"
 
 interface EditReleaseModalProps {
   isOpen: boolean
@@ -123,7 +124,10 @@ export const EditReleaseModal = ({ isOpen, onClose, release, onUpdate }: EditRel
       
       closeModal()
     } catch (error) {
-      console.error('Failed to update release:', error)
+      logger.error('Failed to update release from modal', {
+        releaseId: release.id,
+        error,
+      })
       toast.error('Failed to update release. Please try again.')
     } finally {
       setIsLoading(false)

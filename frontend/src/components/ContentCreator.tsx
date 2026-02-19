@@ -24,11 +24,12 @@ import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSocialMediaUrls, useInstagramMetrics, useTikTokMetrics, useYouTubeMetrics, useTwitterMetrics } from '../hooks/api/useSocialMedia'
 import { SocialConnectionModal } from "@/components/SocialConnectionModal";
 import { apiClient } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
 type PlatformMetric = {
   label: string;
@@ -41,7 +42,6 @@ type PlatformMetricValue = {
 };
 
 export const ContentCreator = () => {
-  const { toast } = useToast();
   const isMobile = useIsMobile();
   const [brandPillars] = useState([
     "Upcoming Release",
@@ -167,8 +167,7 @@ export const ContentCreator = () => {
 
   // Handle professional content generation
   const handleProfessionalGenerate = () => {
-    toast({
-      title: "Generating content...",
+    toast.success("Generating content...", {
       description: "Your AI-generated content will be ready shortly!",
     });
   };
@@ -216,7 +215,10 @@ export const ContentCreator = () => {
     try {
       await handleSocialConnected(platformId, usernameOrUrl);
     } catch (e) {
-      console.error('Webhook call failed', e);
+      logger.warn('Social platform webhook call failed', {
+        platformId,
+        error: e,
+      });
     }
   }, [handleSocialConnected]);
 

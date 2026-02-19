@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, FileText, Music, Save, Globe, Clock, Plus, Trash2, Edit } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { ReleaseDetails, Song } from "@/hooks/api/useReleaseDetails";
 import { SplitSheetTemplate } from "@/components/split-sheet";
 import { apiClient } from "@/lib/api";
@@ -171,7 +171,6 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [isLoadingLabelCopy, setIsLoadingLabelCopy] = useState(false);
   const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
 
   const formatDraftTimestamp = useCallback((timestamp: string) => {
     const parsedDate = new Date(timestamp);
@@ -646,8 +645,7 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
       // Set success status for immediate feedback
       setSaveStatus('success');
       
-      toast({
-        title: "Label Copy Saved Successfully",
+      toast.success("Label Copy Saved Successfully", {
         description: `Label Copy saved successfully to database. Release "${releaseData.releaseTitle}" with ${tracks.length} track${tracks.length !== 1 ? 's' : ''} has been ${isUpdate ? 'updated' : 'saved'}.`,
       });
       
@@ -698,10 +696,8 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
     } catch {
       setSaveStatus('error');
       
-      toast({
-        title: "Save Failed",
+      toast.error("Save Failed", {
         description: "Label Copy not saved, please try again or contact customer support at +1(432)640-7688.",
-        variant: "destructive"
       });
       
       // Clear error status after 5 seconds
@@ -796,11 +792,10 @@ export const MetadataPrep = ({ releaseId, existingRelease, existingSongs, onBack
     saveToSessionStorage();
     const savedAt = new Date().toISOString();
 
-    toast({
-      title: "Draft Saved",
+    toast.success("Draft Saved", {
       description: `Saved locally at ${formatDraftTimestamp(savedAt)}.`
     });
-  }, [formatDraftTimestamp, isReadOnly, saveToSessionStorage, toast]);
+  }, [formatDraftTimestamp, isReadOnly, saveToSessionStorage]);
 
   const handleLabelCopyBackAction = useCallback(() => {
     if (normalizedLabelCopyStepIndex === 0) {

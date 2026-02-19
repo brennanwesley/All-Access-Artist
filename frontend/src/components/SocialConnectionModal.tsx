@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useUpdateSinglePlatform, type SocialMediaUrls } from '../hooks/api/useSocialMedia';
+import { logger } from '@/lib/logger';
 
 interface SocialConnectionModalProps {
   isOpen: boolean;
@@ -94,13 +95,19 @@ export const SocialConnectionModal: React.FC<SocialConnectionModalProps> = ({
       try {
         await onConnected?.(platform.id, normalizedUrl);
       } catch (err) {
-        console.error('onConnected webhook failed', err);
+        logger.warn('Social platform webhook callback failed', {
+          platformId: platform.id,
+          error: err,
+        });
       }
       
       onClose();
       setInputValue("");
     } catch (error) {
-      console.error('Failed to update platform:', error);
+      logger.error('Failed to update social platform connection', {
+        platformId: platform.id,
+        error,
+      });
     }
   };
 
@@ -118,7 +125,10 @@ export const SocialConnectionModal: React.FC<SocialConnectionModalProps> = ({
       onClose();
       setInputValue("");
     } catch (error) {
-      console.error('Failed to disconnect platform:', error);
+      logger.error('Failed to disconnect social platform', {
+        platformId: platform.id,
+        error,
+      });
     }
   };
 

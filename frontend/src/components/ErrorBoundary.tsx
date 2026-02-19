@@ -2,6 +2,7 @@ import { Component, ErrorInfo, ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 interface Props {
   children: ReactNode
@@ -10,34 +11,38 @@ interface Props {
 
 interface State {
   hasError: boolean
-  error?: Error
-  errorInfo?: ErrorInfo
+  error: Error | null
+  errorInfo: ErrorInfo | null
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { hasError: false }
+    this.state = { hasError: false, error: null, errorInfo: null }
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error, errorInfo: null }
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    logger.error('React error boundary triggered', {
+      errorName: error.name,
+      errorMessage: error.message,
+      componentStack: errorInfo.componentStack,
+    })
     this.setState({ error, errorInfo })
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false })
+    this.setState({ hasError: false, error: null, errorInfo: null })
   }
 
   handleGoHome = () => {
     window.location.href = '/dashboard'
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       // Custom fallback UI
       if (this.props.fallback) {
@@ -69,7 +74,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </Button>
               </div>
               
-              {process.env['NODE_ENV'] === 'development' && this.state.error && (
+              {import.meta.env.DEV && this.state.error && (
                 <details className="mt-4 p-3 bg-muted rounded-md text-sm">
                   <summary className="cursor-pointer font-medium">Error Details (Development)</summary>
                   <pre className="mt-2 whitespace-pre-wrap text-xs">

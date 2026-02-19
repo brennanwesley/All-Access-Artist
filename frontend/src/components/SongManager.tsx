@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Music, Plus, Loader2, Edit2, Trash2 } from 'lucide-react'
 import { useAddSong, useUpdateSong, useDeleteSong, Song } from '@/hooks/api/useReleaseDetails'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
 
 interface SongManagerProps {

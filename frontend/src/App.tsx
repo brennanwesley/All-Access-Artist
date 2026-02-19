@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Toaster } from 'react-hot-toast'
+import { Toaster } from './components/ui/sonner'
 import { AuthProvider } from './contexts/AuthContext'
 import { NavigationProvider } from './contexts/NavigationContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -12,6 +12,7 @@ import OnboardingComplete from './pages/OnboardingComplete'
 import Index from './pages/Index'
 import ReleaseDetail from './pages/ReleaseDetail'
 import NotFound from './pages/NotFound'
+import { RuntimeCrashRoute } from './components/dev/RuntimeCrashRoute'
 import './App.css'
 
 const queryClient = new QueryClient({
@@ -23,6 +24,27 @@ const queryClient = new QueryClient({
   },
 })
 
+function AppRoutes() {
+  const location = useLocation()
+
+  return (
+    <ErrorBoundary key={location.pathname}>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/plans" element={<PlanSelection />} />
+        <Route path="/onboarding/:sessionId" element={<OnboardingComplete />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/dashboard/:section" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/releases/:id" element={<ProtectedRoute><ReleaseDetail /></ProtectedRoute>} />
+        {import.meta.env.DEV && <Route path="/__qa/runtime-crash" element={<RuntimeCrashRoute />} />}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+    </ErrorBoundary>
+  )
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -30,19 +52,7 @@ function App() {
         <Router>
           <NavigationProvider>
             <div className="App">
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/plans" element={<PlanSelection />} />
-                  <Route path="/onboarding/:sessionId" element={<OnboardingComplete />} />
-                  <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                  <Route path="/dashboard/:section" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                  <Route path="/releases/:id" element={<ProtectedRoute><ReleaseDetail /></ProtectedRoute>} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </ErrorBoundary>
-              <Toaster position="top-right" />
+              <AppRoutes />
             </div>
           </NavigationProvider>
         </Router>

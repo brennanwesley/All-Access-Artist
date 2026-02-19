@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api'
+import { logger } from '@/lib/logger'
+import type { BackendResponse } from '../../types/api'
 
 interface UpdateTaskData {
   is_completed: boolean
@@ -21,6 +23,11 @@ interface UpdateTaskResponse {
   updated_at: string
 }
 
+interface ReleaseDetailsCacheShape {
+  release_tasks: UpdateTaskResponse[]
+  [key: string]: unknown
+}
+
 // Mutation hook for updating task completion status
 export const useUpdateTask = () => {
   const queryClient = useQueryClient()
@@ -28,10 +35,17 @@ export const useUpdateTask = () => {
   return useMutation({
     mutationFn: async ({ taskId, data }: { taskId: string; data: UpdateTaskData }) => {
       const response = await apiClient.updateTask(taskId, data)
-      if (response.status !== 200) {
-        throw new Error(response.error || 'Failed to update task')
+      const backendResponse = response.data as BackendResponse<UpdateTaskResponse> | undefined
+      const errorMessage =
+        backendResponse && !backendResponse.success
+          ? backendResponse.error.message
+          : response.error
+
+      if (response.status !== 200 || !backendResponse || !backendResponse.success) {
+        throw new Error(errorMessage || 'Failed to update task')
       }
-      return response.data as UpdateTaskResponse
+
+      return backendResponse.data
     },
     onSuccess: (data) => {
       // Invalidate and refetch the release details query to trigger automatic refresh
@@ -40,19 +54,26 @@ export const useUpdateTask = () => {
       })
       
       // Optionally update the cache directly for immediate UI feedback
-      queryClient.setQueryData(['release-details', data.release_id], (oldData: any) => {
-        if (!oldData) return oldData
-        
+      queryClient.setQueryData(['release-details', data.release_id], (oldData: unknown) => {
+        if (!oldData || typeof oldData !== 'object') {
+          return oldData
+        }
+
+        const cachedData = oldData as ReleaseDetailsCacheShape
+        if (!Array.isArray(cachedData.release_tasks)) {
+          return oldData
+        }
+
         return {
-          ...oldData,
-          release_tasks: oldData.release_tasks.map((task: any) => 
+          ...cachedData,
+          release_tasks: cachedData.release_tasks.map((task) =>
             task.id === data.id ? data : task
-          )
+          ),
         }
       })
     },
     onError: (error) => {
-      console.error('Failed to update task:', error)
+      logger.error('Failed to update task', { error })
     }
   })
 }

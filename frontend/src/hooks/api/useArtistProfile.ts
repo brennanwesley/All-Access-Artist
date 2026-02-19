@@ -1,24 +1,9 @@
-import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
-import { toast } from 'sonner'
-
-// Types for artist profile data
-interface ArtistProfile {
-  id: string
-  user_id: string
-  artist_name: string
-  email: string
-  bio?: string
-  genre?: string
-  location?: string
-  profile_image_url?: string
-  is_public?: boolean
-  social_media_links?: Record<string, string>
-  created_at: string
-  updated_at: string
-}
+import { toast } from '@/components/ui/sonner'
+import { logger } from '@/lib/logger'
+import type { Artist, BackendResponse } from '../../types/api'
 
 interface CreateArtistProfileData {
   artist_name: string
@@ -39,22 +24,26 @@ export const useArtistProfile = () => {
     queryKey: ['artist-profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null
-      
-      console.log('Fetching artist profile for user:', user.id)
-      
+
       const response = await apiClient.getArtists()
-      console.log('Artist profile API response:', { status: response.status, error: response.error })
-      
-      if (response.status !== 200) {
-        console.error('Failed to fetch artists:', response.error)
-        throw new Error(response.error || 'Failed to fetch artist profile')
+      const backendResponse = response.data as BackendResponse<Artist[]> | undefined
+      const errorMessage =
+        backendResponse && !backendResponse.success
+          ? backendResponse.error.message
+          : response.error
+
+      if (response.status !== 200 || !backendResponse || !backendResponse.success) {
+        logger.error('Failed to fetch artist profiles', {
+          userId: user.id,
+          status: response.status,
+          error: errorMessage,
+        })
+        throw new Error(errorMessage || 'Failed to fetch artist profile')
       }
       
       // Find the artist profile for the current user
-      const artists = response.data as ArtistProfile[]
-      console.log('All artists:', artists?.length || 0)
+      const artists = backendResponse.data
       const userProfile = artists?.find(artist => artist.user_id === user.id)
-      console.log('User artist profile found:', !!userProfile)
       
       return userProfile || null
     },
@@ -88,10 +77,17 @@ export const useCreateArtistProfile = () => {
       }
       
       const response = await apiClient.createArtist(defaultData)
-      if (response.status !== 201) {
-        throw new Error(response.error || 'Failed to create artist profile')
+      const backendResponse = response.data as BackendResponse<Artist> | undefined
+      const errorMessage =
+        backendResponse && !backendResponse.success
+          ? backendResponse.error.message
+          : response.error
+
+      if (response.status !== 201 || !backendResponse || !backendResponse.success) {
+        throw new Error(errorMessage || 'Failed to create artist profile')
       }
-      return response.data as ArtistProfile
+
+      return backendResponse.data
     },
     onSuccess: () => {
       // Invalidate artist profile cache
@@ -101,8 +97,11 @@ export const useCreateArtistProfile = () => {
       toast.success('Artist profile created successfully!')
     },
     onError: (error) => {
-      console.error('Failed to create artist profile:', error)
-      toast.error(`Failed to create artist profile: ${error.message}`)
+      logger.error('Failed to create artist profile', {
+        userId: user?.id,
+        error,
+      })
+      toast.error('Unable to create your artist profile right now. Please try again.')
     }
   })
 }
@@ -113,78 +112,30 @@ export const useEnsureArtistProfile = () => {
   const createProfile = useCreateArtistProfile()
   const { user } = useAuth()
   
-  // Log initial state
-  console.log('useEnsureArtistProfile - Initial state:', {
-    hasUser: !!user,
-    userId: user?.id,
-    hasProfile: !!profile,
-    profileId: profile?.id,
-    isLoading,
-    error: error?.message,
-    isCreating: createProfile.isPending
-  })
-  
-  // Log when profile data changes
-  React.useEffect(() => {
-    console.log('useEnsureArtistProfile - Profile data changed:', {
-      hasProfile: !!profile,
-      profileId: profile?.id,
-      profileName: profile?.artist_name
-    })
-  }, [profile])
-  
-  // Log when create state changes
-  React.useEffect(() => {
-    if (createProfile.isPending) {
-      console.log('useEnsureArtistProfile - Profile creation started')
-    }
-    
-    if (createProfile.isSuccess) {
-      console.log('useEnsureArtistProfile - Profile creation successful:', {
-        profile: createProfile.data
-      })
-    }
-    
-    if (createProfile.isError) {
-      console.error('useEnsureArtistProfile - Profile creation failed:', {
-        error: createProfile.error
-      })
-    }
-  }, [createProfile.isPending, createProfile.isSuccess, createProfile.isError, createProfile.data, createProfile.error])
-  
   const ensureProfile = async () => {
-    console.log('ensureProfile - Starting profile check/creation')
-    
     if (!user) {
       const errorMsg = 'User must be authenticated to ensure artist profile'
-      console.error(errorMsg)
+      logger.error(errorMsg)
       throw new Error(errorMsg)
     }
     
     if (profile) {
-      console.log('ensureProfile - Profile already exists, returning existing profile:', {
-        profileId: profile.id,
-        name: profile.artist_name
-      })
       return profile
     }
-    
-    console.log('ensureProfile - No existing profile found, creating new one...')
+
     try {
       const newProfile = await createProfile.mutateAsync({
         artist_name: user.email?.split('@')[0] || 'Artist',
         email: user.email || '',
         is_public: true
       })
-      
-      console.log('ensureProfile - Successfully created new profile:', {
-        profileId: newProfile.id,
-        name: newProfile.artist_name
-      })
-      
+
       return newProfile
     } catch (err) {
-      console.error('ensureProfile - Error creating profile:', err)
+      logger.error('Error ensuring artist profile', {
+        userId: user.id,
+        error: err,
+      })
       throw err
     }
   }

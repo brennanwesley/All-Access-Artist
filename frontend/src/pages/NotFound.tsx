@@ -3,16 +3,16 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, ArrowLeft } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 const NotFound = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
+    logger.warn("404 route requested", {
+      pathname: location.pathname,
+    });
   }, [location.pathname]);
 
   const handleGoHome = () => {
@@ -44,7 +44,7 @@ const NotFound = () => {
             </Button>
           </div>
           
-          {process.env['NODE_ENV'] === 'development' && (
+          {import.meta.env.DEV && (
             <div className="mt-4 p-3 bg-muted rounded-md text-sm">
               <p className="font-medium">Attempted Route (Development):</p>
               <code className="text-xs">{location.pathname}</code>

@@ -1,13 +1,85 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { SplitSheetData } from "../types";
+import { toast } from "@/components/ui/sonner";
+import { Contributor, SplitSheetData } from "../types";
 import { apiClient } from "@/lib/api";
+import { logger } from "@/lib/logger";
+import type {
+  BackendResponse,
+  CreateSplitSheetData,
+  SplitSheet,
+  SplitSheetContributor,
+} from "@/types/api";
 
 interface UseSplitSheetProps {
   songId: string;
   songTitle: string;
   releaseId?: string | undefined;
 }
+
+const mapContributorToApi = (contributor: Contributor): SplitSheetContributor => ({
+  legal_name: contributor.legal_name,
+  role: contributor.role,
+  writer_share_percent: contributor.writer_share_percent,
+  publisher_share_percent: contributor.publisher_share_percent,
+  ...(contributor.stage_name ? { stage_name: contributor.stage_name } : {}),
+  ...(contributor.contribution ? { contribution: contributor.contribution } : {}),
+  ...(contributor.pro_affiliation ? { pro_affiliation: contributor.pro_affiliation } : {}),
+  ...(contributor.ipi_number ? { ipi_number: contributor.ipi_number } : {}),
+  ...(contributor.publisher
+    ? {
+        publisher: {
+          ...(contributor.publisher.company_name
+            ? { company_name: contributor.publisher.company_name }
+            : {}),
+          ...(contributor.publisher.pro_affiliation
+            ? { pro_affiliation: contributor.publisher.pro_affiliation }
+            : {}),
+          ...(contributor.publisher.ipi_number
+            ? { ipi_number: contributor.publisher.ipi_number }
+            : {}),
+        },
+      }
+    : {}),
+});
+
+const mapApiContributorToLocal = (contributor: SplitSheetContributor): Contributor => ({
+  legal_name: contributor.legal_name,
+  role: contributor.role,
+  writer_share_percent: contributor.writer_share_percent,
+  publisher_share_percent: contributor.publisher_share_percent,
+  ...(contributor.stage_name ? { stage_name: contributor.stage_name } : {}),
+  ...(contributor.contribution ? { contribution: contributor.contribution } : {}),
+  ...(contributor.pro_affiliation ? { pro_affiliation: contributor.pro_affiliation } : {}),
+  ...(contributor.ipi_number ? { ipi_number: contributor.ipi_number } : {}),
+  ...(contributor.publisher
+    ? {
+        publisher: {
+          ...(contributor.publisher.company_name
+            ? { company_name: contributor.publisher.company_name }
+            : {}),
+          ...(contributor.publisher.pro_affiliation
+            ? { pro_affiliation: contributor.publisher.pro_affiliation }
+            : {}),
+          ...(contributor.publisher.ipi_number
+            ? { ipi_number: contributor.publisher.ipi_number }
+            : {}),
+        },
+      }
+    : {}),
+});
+
+const mapSplitSheetToCreatePayload = (data: SplitSheetData): CreateSplitSheetData => ({
+  song_title: data.song_title,
+  artist_name: data.artist_name,
+  album_project: data.album_project,
+  date_created: data.date_created,
+  contributors: data.contributors.map(mapContributorToApi),
+  ...(data.song_aka ? { song_aka: data.song_aka } : {}),
+  ...(data.song_length ? { song_length: data.song_length } : {}),
+  ...(data.studio_location ? { studio_location: data.studio_location } : {}),
+  ...(data.additional_notes ? { additional_notes: data.additional_notes } : {}),
+  ...(data.release_id ? { release_id: data.release_id } : {}),
+});
 
 export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetProps) => {
   const [splitSheetData, setSplitSheetData] = useState<SplitSheetData | null>(null);
@@ -16,14 +88,13 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<SplitSheetData | null>(null);
   const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
 
   const sessionStorageKey = `splitSheet_${songId || 'unknown'}`;
 
   // Load existing split sheet data
   const loadSplitSheet = useCallback(async () => {
     if (!songId) {
-      console.warn('No songId provided to loadSplitSheet');
+      logger.warn('No songId provided to load split sheet');
       return;
     }
     
@@ -31,13 +102,22 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
     try {
       // Try to load existing split sheet from API
       const response = await apiClient.getSplitSheet(songId);
+      const backendResponse = response.data as BackendResponse<SplitSheet> | undefined;
       
-      if (response.data && response.status === 200) {
-        // Backend returns { success: true, data: splitSheetData }
-        const splitSheetData = response.data.data;
-        if (splitSheetData) {
-          setSplitSheetData(splitSheetData);
-          setLastSavedData(splitSheetData);
+      if (response.status === 200 && backendResponse?.success) {
+        const splitSheet = backendResponse.data;
+
+        if (splitSheet) {
+          const hydratedSplitSheet: SplitSheetData = {
+            ...splitSheet,
+            album_project: splitSheet.album_project ?? '',
+            date_created: splitSheet.date_created ?? new Date().toISOString().substring(0, 10),
+            contributors: splitSheet.contributors.map(mapApiContributorToLocal),
+            ...(splitSheet.release_id ? { release_id: splitSheet.release_id } : {}),
+          };
+
+          setSplitSheetData(hydratedSplitSheet);
+          setLastSavedData(hydratedSplitSheet);
           return;
         }
       }
@@ -58,35 +138,36 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
       setSplitSheetData(emptyData);
       setLastSavedData(emptyData);
     } catch (error) {
-      console.error('Error loading split sheet:', error);
-      toast({
-        title: "Load Failed",
+      logger.error('Error loading split sheet', { songId, error });
+      toast.error("Load Failed", {
         description: "Split Sheet data could not be loaded, please try again or contact customer support at +1(432)640-7688.",
-        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  }, [songId, songTitle, releaseId, toast]);
+  }, [songId, songTitle, releaseId]);
 
   // Save split sheet data
   const saveSplitSheet = useCallback(async (data: SplitSheetData) => {
     if (!songId) {
-      console.error('No songId provided to saveSplitSheet');
-      toast({
-        title: "Error",
+      logger.error('No songId provided to save split sheet');
+      toast.error("Error", {
         description: "No song ID available for saving",
-        variant: "destructive",
       });
       return;
     }
     
     try {
       // Save to backend API
-      const response = await apiClient.saveSplitSheet(songId, data);
+      const payload = mapSplitSheetToCreatePayload(data);
+      const response = await apiClient.saveSplitSheet(songId, payload);
       
       if (response.error || response.status !== 200) {
-        console.error('Split Sheet API Error:', response);
+        logger.error('Split sheet API returned an error', {
+          songId,
+          status: response.status,
+          error: response.error,
+        });
         const errorMessage = typeof response.error === 'string' 
           ? response.error 
           : JSON.stringify(response.error) || 'Failed to save split sheet';
@@ -100,19 +181,16 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
       // Clear session storage
       sessionStorage.removeItem(sessionStorageKey);
       
-      toast({
-        title: "Split Sheet Saved Successfully",
+      toast.success("Split Sheet Saved Successfully", {
         description: `Split Sheet saved successfully to database. Song "${data.song_title}" split sheet has been saved.`,
       });
     } catch (error) {
-      console.error('Error saving split sheet:', error);
-      toast({
-        title: "Save Failed",
+      logger.error('Error saving split sheet', { songId, error });
+      toast.error("Save Failed", {
         description: "Split Sheet not saved, please try again or contact customer support at +1(432)640-7688.",
-        variant: "destructive",
       });
     }
-  }, [songId, sessionStorageKey, toast]);
+  }, [songId, sessionStorageKey]);
 
   // Auto-save to session storage
   const autoSave = useCallback((data: SplitSheetData) => {
@@ -130,7 +208,7 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
         const parsedData = JSON.parse(savedData);
         setSplitSheetData(parsedData);
       } catch (error) {
-        console.error('Error parsing session storage data:', error);
+        logger.warn('Error parsing split sheet session storage data', { songId, error });
       }
     }
 
@@ -140,7 +218,7 @@ export const useSplitSheet = ({ songId, songTitle, releaseId }: UseSplitSheetPro
         autoSave(splitSheetData);
       }
     }, 3000); // 3 seconds
-  }, [sessionStorageKey, splitSheetData, autoSave]);
+  }, [sessionStorageKey, splitSheetData, autoSave, songId]);
 
   // Stop editing mode
   const stopEditing = useCallback(() => {

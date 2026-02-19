@@ -2,10 +2,10 @@
  * Toast Notification System
  * All Access Artist - Frontend v2.0.0
  * 
- * Global toast notification component using react-hot-toast
+ * Global toast notification component using sonner
  * Configured to match application theme and shadcn/ui styling
  */
-import { Toaster as HotToaster, toast } from 'react-hot-toast'
+import { Toaster as SonnerToaster, toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 interface ToasterProps {
@@ -14,63 +14,34 @@ interface ToasterProps {
 
 const Toaster = ({ className }: ToasterProps) => {
   return (
-    <HotToaster
+    <SonnerToaster
       position="top-right"
-      reverseOrder={false}
-      gutter={8}
-      containerClassName={cn('', className)}
-      containerStyle={{}}
       toastOptions={{
-        // Default options for all toasts
         duration: 4000,
-        style: {
-          background: 'hsl(var(--background))',
-          color: 'hsl(var(--foreground))',
-          border: '1px solid hsl(var(--border))',
-          borderRadius: 'calc(var(--radius) - 2px)',
-          fontSize: '14px',
-          padding: '12px 16px',
-          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-        },
-        // Success toast styling
-        success: {
-          style: {
-            background: 'hsl(var(--background))',
-            color: 'hsl(var(--foreground))',
-            border: '1px solid hsl(var(--border))',
-          },
-          iconTheme: {
-            primary: 'hsl(var(--primary))',
-            secondary: 'hsl(var(--primary-foreground))',
-          },
-        },
-        // Error toast styling
-        error: {
-          style: {
-            background: 'hsl(var(--background))',
-            color: 'hsl(var(--foreground))',
-            border: '1px solid hsl(var(--destructive))',
-          },
-          iconTheme: {
-            primary: 'hsl(var(--destructive))',
-            secondary: 'hsl(var(--destructive-foreground))',
-          },
-        },
-        // Loading toast styling
-        loading: {
-          style: {
-            background: 'hsl(var(--background))',
-            color: 'hsl(var(--foreground))',
-            border: '1px solid hsl(var(--border))',
-          },
-          iconTheme: {
-            primary: 'hsl(var(--muted-foreground))',
-            secondary: 'hsl(var(--muted))',
-          },
+        classNames: {
+          toast: cn(
+            'border border-border bg-background text-foreground shadow-lg',
+            className
+          ),
+          title: 'text-foreground',
+          description: 'text-muted-foreground',
+          actionButton: 'bg-primary text-primary-foreground',
+          cancelButton: 'bg-muted text-muted-foreground',
+          success: 'border-primary/40',
+          error: 'border-destructive',
+          info: 'border-border',
+          warning: 'border-amber-500',
+          loading: 'border-border',
+          closeButton: 'border-border bg-background text-foreground',
+          default: 'border-border',
+          content: 'text-foreground',
+          icon: 'text-foreground',
+          loader: 'text-muted-foreground',
         },
       }}
     />
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- this module intentionally exports the shared toast helper alongside the toaster component.
 export { Toaster, toast }

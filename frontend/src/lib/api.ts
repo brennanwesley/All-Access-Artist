@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { logger } from './logger'
 import type {
   ApiResponse,
   BackendResponse,
@@ -46,7 +47,7 @@ import type {
 const API_BASE_URL = import.meta.env['VITE_API_URL'] || 'https://all-access-artist.onrender.com'
 
 if (!import.meta.env['VITE_API_URL']) {
-  console.warn('VITE_API_URL environment variable not set. Using fallback URL.')
+  logger.warn('VITE_API_URL environment variable not set. Using fallback URL.')
 }
 
 class ApiClient {
@@ -81,12 +82,15 @@ class ApiClient {
       const data = await response.json()
 
       return {
-        data: response.ok ? data : undefined,
-        error: response.ok ? undefined : data.error || 'Request failed',
+        ...(response.ok ? { data } : {}),
+        ...(!response.ok ? { error: data.error || 'Request failed' } : {}),
         status: response.status,
       }
     } catch (error) {
-      console.error('API request failed:', error)
+      logger.error('Authenticated API request failed', {
+        endpoint,
+        error,
+      })
       return {
         error: error instanceof Error ? error.message : 'Network error',
         status: 0,
@@ -110,12 +114,15 @@ class ApiClient {
       const data = await response.json()
 
       return {
-        data: response.ok ? data : undefined,
-        error: response.ok ? undefined : data.error || 'Request failed',
+        ...(response.ok ? { data } : {}),
+        ...(!response.ok ? { error: data.error || 'Request failed' } : {}),
         status: response.status,
       }
     } catch (error) {
-      console.error('API request failed:', error)
+      logger.error('Public API request failed', {
+        endpoint,
+        error,
+      })
       return {
         error: error instanceof Error ? error.message : 'Network error',
         status: 0,
@@ -129,8 +136,8 @@ class ApiClient {
       const response = await fetch(`${API_BASE_URL}/health`)
       const data = await response.json()
       return {
-        data: response.ok ? data : undefined,
-        error: response.ok ? undefined : 'Health check failed',
+        ...(response.ok ? { data } : {}),
+        ...(!response.ok ? { error: 'Health check failed' } : {}),
         status: response.status,
       }
     } catch {

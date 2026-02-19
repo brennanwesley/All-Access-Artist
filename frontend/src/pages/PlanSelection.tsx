@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Check, Crown, Star, ArrowLeft } from 'lucide-react'
-import { toast } from 'react-hot-toast'
+import { toast } from '@/components/ui/sonner'
+import { logger } from '@/lib/logger'
 import api from '@/lib/api'
 
 const PlanSelection = () => {
@@ -35,7 +36,7 @@ const PlanSelection = () => {
         throw new Error('Failed to create checkout session')
       }
     } catch (error) {
-      console.error('Error creating checkout session:', error)
+      logger.error('Failed to create checkout session', { error })
       toast.error('Failed to start checkout. Please try again.')
     } finally {
       setLoading(false)

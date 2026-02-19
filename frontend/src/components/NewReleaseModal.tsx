@@ -12,7 +12,8 @@ import { Calendar, Music, Loader2, AlertCircle } from "lucide-react";
 import { useCreateRelease } from '@/hooks/api/useReleases';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
+import { logger } from '@/lib/logger';
 
 // Schema for form validation - simplified to use user_id directly
 const createReleaseSchema = z.object({
@@ -77,7 +78,7 @@ export const NewReleaseModal = ({ open, onOpenChange }: NewReleaseModalProps) =>
       reset();
       onOpenChange(false);
     } catch (error) {
-      console.error('Form submission error:', error);
+      logger.error('New release form submission failed', { error });
       
       let errorMessage = 'Failed to create release. Please try again.';
       

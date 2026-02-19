@@ -1,20 +1,22 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
+import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { useQueryClient } from '@tanstack/react-query'
+import { logger } from '../lib/logger'
 
 interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string, metadata?: Record<string, unknown>) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
   getAccessToken: () => Promise<string | null>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// eslint-disable-next-line react-refresh/only-export-components -- context hook is intentionally co-located with provider for module cohesion.
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (context === undefined) {
@@ -38,7 +40,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const getInitialSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession()
       if (error) {
-        console.error('Error getting session:', error)
+        logger.error('Failed to get initial auth session', { error })
       } else {
         setSession(session)
         setUser(session?.user ?? null)
@@ -51,12 +53,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
+        logger.debug('Auth state changed', {
+          event,
+          email: session?.user?.email,
+        })
         
         // Clear all cached data when user changes or signs out
         // Only clear on actual user changes, not on session refresh events
         if (event === 'SIGNED_OUT' || (event === 'SIGNED_IN' && user?.id && user?.id !== session?.user?.id)) {
-          console.log('Clearing React Query cache due to auth state change')
+          logger.info('Clearing React Query cache due to auth state change', { event })
           queryClient.clear()
         }
         
@@ -77,12 +82,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return { error }
   }
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, metadata?: Record<string, unknown>) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: metadata
+        ...(metadata ? { data: metadata } : {})
       }
     })
     return { error }
@@ -91,7 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) {
-      console.error('Error signing out:', error)
+      logger.error('Failed to sign out user', { error })
     }
   }
 

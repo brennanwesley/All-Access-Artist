@@ -15,7 +15,7 @@ import {
   useUpdateLyricSection, 
   useDeleteLyricSection
 } from '@/hooks/api/useReleaseDetails'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 
 interface LyricEditorProps {
   songs: Song[]

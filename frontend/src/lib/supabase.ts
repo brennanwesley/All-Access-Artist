@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { logger } from './logger'
 
 // Environment variables (fail fast in production)
 const supabaseUrl = import.meta.env['VITE_SUPABASE_URL'] ?? ''
@@ -9,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in production.')
   }
 
-  console.warn(
+  logger.warn(
     'Supabase environment variables not configured. Using placeholder values. Authentication will not work until proper credentials are set.'
   )
 }

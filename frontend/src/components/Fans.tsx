@@ -6,14 +6,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Upload, Mail, Users, Download, Send } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { ComingSoonOverlay } from "@/components/ComingSoonOverlay";
 
+type FanRecord = {
+  name: string;
+  email: string;
+  location: string;
+  source: string;
+};
+
 export const Fans = () => {
-  const [fanData, setFanData] = useState(null);
+  const [fanData, setFanData] = useState<FanRecord[] | null>(null);
   const [emailSubject, setEmailSubject] = useState("");
   const [emailContent, setEmailContent] = useState("");
-  const { toast } = useToast();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -24,25 +30,22 @@ export const Fans = () => {
         { name: "Mike Chen", email: "mike@email.com", location: "Los Angeles, CA", source: "feature.fm" },
         { name: "Emma Davis", email: "emma@email.com", location: "New York, NY", source: "feature.fm" },
       ]);
-      toast({
-        title: "Fan data uploaded",
+      toast.success("Fan data uploaded", {
         description: `Imported ${3} fans from ${file.name}`,
       });
+
     }
   };
 
   const handleSendEmail = () => {
     if (!emailSubject || !emailContent) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Please fill in both subject and content fields",
-        variant: "destructive",
       });
       return;
     }
     
-    toast({
-      title: "Email sent!",
+    toast.success("Email sent!", {
       description: `Mass email sent to ${fanData?.length || 0} fans`,
     });
   };

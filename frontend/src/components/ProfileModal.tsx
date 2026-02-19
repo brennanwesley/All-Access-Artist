@@ -11,7 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, CreditCard, Users, Loader2, AlertCircle, Copy, Check } from "lucide-react";
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
+import { logger } from '@/lib/logger';
 import { 
   useProfile, 
   useUpdateProfile, 
@@ -96,7 +97,7 @@ export const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
       await updateProfileMutation.mutateAsync(profileData);
       toast.success('Profile updated successfully!');
     } catch (error) {
-      console.error('Profile update error:', error);
+      logger.error('Profile update error', { error });
       const errorMessage = error instanceof Error ? error.message : 'Failed to update profile. Please try again.';
       toast.error(errorMessage);
     }
@@ -108,7 +109,7 @@ export const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
       toast.success(`Referral code applied! You earned ${result.credits_awarded} credits.`);
       referralForm.reset();
     } catch (error) {
-      console.error('Referral application error:', error);
+      logger.error('Referral application error', { error });
       const errorMessage = error instanceof Error ? error.message : 'Failed to apply referral code. Please try again.';
       toast.error(errorMessage);
     }

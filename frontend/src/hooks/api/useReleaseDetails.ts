@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
-import { toast } from 'sonner'
+import { toast } from '@/components/ui/sonner'
 import { useAuth } from '@/contexts/AuthContext'
 import type {
   ReleaseTask,
@@ -76,8 +76,8 @@ export const useUpdateTask = () => {
       const action = variables.completed ? 'completed' : 'reopened'
       toast.success(`Task ${action} successfully!`)
     },
-    onError: (error) => {
-      toast.error(`Failed to update task: ${error.message}`)
+    onError: () => {
+      toast.error('Unable to update task right now. Please try again.')
     }
   })
 }
@@ -106,8 +106,8 @@ export const useUpdateRelease = () => {
       
       toast.success('Release updated successfully!')
     },
-    onError: (error) => {
-      toast.error(`Failed to update release: ${error.message}`)
+    onError: () => {
+      toast.error('Unable to update this release right now. Please try again.')
     }
   })
 }
@@ -135,8 +135,8 @@ export const useAddSong = () => {
       
       toast.success('Song added successfully!')
     },
-    onError: (error) => {
-      toast.error(`Failed to add song: ${error.message}`)
+    onError: () => {
+      toast.error('Unable to add this song right now. Please try again.')
     }
   })
 }
@@ -164,8 +164,8 @@ export const useUpdateSong = () => {
       
       toast.success('Song updated successfully!')
     },
-    onError: (error) => {
-      toast.error(`Failed to update song: ${error.message}`)
+    onError: () => {
+      toast.error('Unable to update this song right now. Please try again.')
     }
   })
 }
@@ -190,8 +190,8 @@ export const useDeleteSong = () => {
       
       toast.success('Song deleted successfully!')
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete song')
+    onError: () => {
+      toast.error('Unable to delete this song right now. Please try again.')
     }
   })
 }
@@ -248,8 +248,8 @@ export const useCreateLyricSheet = () => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
       toast.success('Lyric section updated successfully')
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to create lyric sheet')
+    onError: () => {
+      toast.error('Unable to create a lyric sheet right now. Please try again.')
     }
   })
 }
@@ -275,8 +275,8 @@ export const useAddLyricSection = () => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
       toast.success('Lyric section added successfully')
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to add lyric section')
+    onError: () => {
+      toast.error('Unable to add this lyric section right now. Please try again.')
     }
   })
 }
@@ -303,8 +303,8 @@ export const useUpdateLyricSection = () => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
       toast.success('Lyric section updated successfully')
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to update lyric section')
+    onError: () => {
+      toast.error('Unable to update this lyric section right now. Please try again.')
     }
   })
 }
@@ -327,8 +327,8 @@ export const useDeleteLyricSection = () => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
       toast.success('Lyric section deleted successfully')
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete lyric section')
+    onError: () => {
+      toast.error('Unable to delete this lyric section right now. Please try again.')
     }
   })
 }
