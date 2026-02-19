@@ -1,0 +1,59 @@
+
+> all-access-artist@2.0.0 build
+> vite build
+
+[36mvite v5.4.10 [32mbuilding for production...[36m[39m
+transforming...
+Browserslist: browsers data (caniuse-lite) is 17 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[32m✓[39m 1882 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                             [39m[1m[2m  1.03 kB[22m[1m[22m[2m │ gzip:   0.43 kB[22m
+[2mdist/[22m[35massets/index-Habgh7LN.css              [39m[1m[2m 86.25 kB[22m[1m[22m[2m │ gzip:  14.77 kB[22m
+[2mdist/[22m[36massets/chevron-right-DEc0RzMA.js       [39m[1m[2m  0.30 kB[22m[1m[22m[2m │ gzip:   0.25 kB[22m
+[2mdist/[22m[36massets/play-C8vrZ75a.js                [39m[1m[2m  0.30 kB[22m[1m[22m[2m │ gzip:   0.25 kB[22m
+[2mdist/[22m[36massets/plus-zyHrfrqn.js                [39m[1m[2m  0.32 kB[22m[1m[22m[2m │ gzip:   0.25 kB[22m
+[2mdist/[22m[36massets/use-mobile-C0N4W5HX.js          [39m[1m[2m  0.33 kB[22m[1m[22m[2m │ gzip:   0.24 kB[22m
+[2mdist/[22m[36massets/arrow-left-DJhIUpGb.js          [39m[1m[2m  0.33 kB[22m[1m[22m[2m │ gzip:   0.26 kB[22m
+[2mdist/[22m[36massets/circle-check-big-Cpot34sR.js    [39m[1m[2m  0.36 kB[22m[1m[22m[2m │ gzip:   0.28 kB[22m
+[2mdist/[22m[36massets/music-Cq58nDjj.js               [39m[1m[2m  0.38 kB[22m[1m[22m[2m │ gzip:   0.28 kB[22m
+[2mdist/[22m[36massets/globe-xYWPOuhN.js               [39m[1m[2m  0.41 kB[22m[1m[22m[2m │ gzip:   0.29 kB[22m
+[2mdist/[22m[36massets/upload-D0-4kaAD.js              [39m[1m[2m  0.43 kB[22m[1m[22m[2m │ gzip:   0.32 kB[22m
+[2mdist/[22m[36massets/download-Bxf1ejaw.js            [39m[1m[2m  0.43 kB[22m[1m[22m[2m │ gzip:   0.32 kB[22m
+[2mdist/[22m[36massets/shield-BbpABjPx.js              [39m[1m[2m  0.44 kB[22m[1m[22m[2m │ gzip:   0.33 kB[22m
+[2mdist/[22m[36massets/users-m7iD8jC-.js               [39m[1m[2m  0.47 kB[22m[1m[22m[2m │ gzip:   0.32 kB[22m
+[2mdist/[22m[36massets/textarea-C7y5YMRZ.js            [39m[1m[2m  0.48 kB[22m[1m[22m[2m │ gzip:   0.32 kB[22m
+[2mdist/[22m[36massets/file-text-DZAcC8Mx.js           [39m[1m[2m  0.50 kB[22m[1m[22m[2m │ gzip:   0.32 kB[22m
+[2mdist/[22m[36massets/trash-2-C0QG_Vfi.js             [39m[1m[2m  0.53 kB[22m[1m[22m[2m │ gzip:   0.35 kB[22m
+[2mdist/[22m[36massets/circle-BRtR7Mgw.js              [39m[1m[2m  0.59 kB[22m[1m[22m[2m │ gzip:   0.28 kB[22m
+[2mdist/[22m[36massets/star-1pqGs_Pv.js                [39m[1m[2m  0.64 kB[22m[1m[22m[2m │ gzip:   0.40 kB[22m
+[2mdist/[22m[36massets/index-DXwE4dPc.js               [39m[1m[2m  0.73 kB[22m[1m[22m[2m │ gzip:   0.42 kB[22m
+[2mdist/[22m[36massets/trending-up-Zko9-JyS.js         [39m[1m[2m  0.74 kB[22m[1m[22m[2m │ gzip:   0.38 kB[22m
+[2mdist/[22m[36massets/ComingSoonOverlay-DW2GjTkv.js   [39m[1m[2m  0.78 kB[22m[1m[22m[2m │ gzip:   0.44 kB[22m
+[2mdist/[22m[36massets/badge-2CBESdWN.js               [39m[1m[2m  0.95 kB[22m[1m[22m[2m │ gzip:   0.53 kB[22m
+[2mdist/[22m[36massets/NotFound-DbhHqM2H.js            [39m[1m[2m  1.09 kB[22m[1m[22m[2m │ gzip:   0.55 kB[22m
+[2mdist/[22m[36massets/alert-qxfeyMz7.js               [39m[1m[2m  2.57 kB[22m[1m[22m[2m │ gzip:   1.24 kB[22m
+[2mdist/[22m[36massets/LoginPage-Bw6nWPpO.js           [39m[1m[2m  2.86 kB[22m[1m[22m[2m │ gzip:   1.18 kB[22m
+[2mdist/[22m[36massets/progress-B_KKKjUg.js            [39m[1m[2m  2.92 kB[22m[1m[22m[2m │ gzip:   1.37 kB[22m
+[2mdist/[22m[36massets/dateTime-CQRYeLkS.js            [39m[1m[2m  3.25 kB[22m[1m[22m[2m │ gzip:   0.76 kB[22m
+[2mdist/[22m[36massets/Dashboard-C7SnkMES.js           [39m[1m[2m  3.85 kB[22m[1m[22m[2m │ gzip:   1.77 kB[22m
+[2mdist/[22m[36massets/Index-BampNyXd.js               [39m[1m[2m  4.90 kB[22m[1m[22m[2m │ gzip:   1.88 kB[22m
+[2mdist/[22m[36massets/Settings-D613D96A.js            [39m[1m[2m  5.70 kB[22m[1m[22m[2m │ gzip:   2.11 kB[22m
+[2mdist/[22m[36massets/Fans-LFjp3muc.js                [39m[1m[2m  5.72 kB[22m[1m[22m[2m │ gzip:   2.29 kB[22m
+[2mdist/[22m[36massets/PlanSelection-CZFGMv4y.js       [39m[1m[2m  5.96 kB[22m[1m[22m[2m │ gzip:   2.11 kB[22m
+[2mdist/[22m[36massets/api-fBtzPcKb.js                 [39m[1m[2m  6.41 kB[22m[1m[22m[2m │ gzip:   1.56 kB[22m
+[2mdist/[22m[36massets/Onboarding-I_abXGBV.js          [39m[1m[2m  6.88 kB[22m[1m[22m[2m │ gzip:   2.38 kB[22m
+[2mdist/[22m[36massets/LandingPage-D-a9PW8U.js         [39m[1m[2m  7.13 kB[22m[1m[22m[2m │ gzip:   1.87 kB[22m
+[2mdist/[22m[36massets/Community-BnKArJHj.js           [39m[1m[2m  7.85 kB[22m[1m[22m[2m │ gzip:   2.95 kB[22m
+[2mdist/[22m[36massets/OnboardingComplete-CVdGJr3y.js  [39m[1m[2m 11.45 kB[22m[1m[22m[2m │ gzip:   3.31 kB[22m
+[2mdist/[22m[36massets/ReleaseCalendar-B69LOwAT.js     [39m[1m[2m 12.55 kB[22m[1m[22m[2m │ gzip:   3.88 kB[22m
+[2mdist/[22m[36massets/AdminDashboard-B7-gnwoS.js      [39m[1m[2m 15.22 kB[22m[1m[22m[2m │ gzip:   3.68 kB[22m
+[2mdist/[22m[36massets/RoyaltyDashboard-C3sCq7L4.js    [39m[1m[2m 21.88 kB[22m[1m[22m[2m │ gzip:   4.29 kB[22m
+[2mdist/[22m[36massets/ContentCreator-vkK6XChq.js      [39m[1m[2m 27.97 kB[22m[1m[22m[2m │ gzip:   7.84 kB[22m
+[2mdist/[22m[36massets/drawer-C0Z1lakv.js              [39m[1m[2m 79.03 kB[22m[1m[22m[2m │ gzip:  26.11 kB[22m
+[2mdist/[22m[36massets/ReleaseDetail-CQuzPXsf.js       [39m[1m[2m102.11 kB[22m[1m[22m[2m │ gzip:  23.72 kB[22m
+[2mdist/[22m[36massets/AppShell-BMdhjplu.js            [39m[1m[2m163.92 kB[22m[1m[22m[2m │ gzip:  47.53 kB[22m
+[2mdist/[22m[36massets/index--ZAkcxI_.js               [39m[1m[2m376.35 kB[22m[1m[22m[2m │ gzip: 114.32 kB[22m
+[32m✓ built in 8.24s[39m

@@ -1,23 +1,30 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/AppShell";
-import { Dashboard } from "@/components/Dashboard";
-import { AdminDashboard } from "@/components/AdminDashboard";
-import { ReleaseCalendar } from "@/components/ReleaseCalendar";
-import { ContentCreator } from "@/components/ContentCreator";
-import { RoyaltyDashboard } from "@/components/RoyaltyDashboard";
-import { Fans } from "@/components/Fans";
-import { Community } from "@/components/Community";
-import { Settings } from "@/components/Settings";
-import { Onboarding } from "@/components/Onboarding";
 import { useNavigation } from "@/contexts/NavigationContext";
 import { useProfile } from "@/hooks/api/useProfile";
 import { DEFAULT_SECTION } from "@/lib/sectionRoutes";
+
+const Dashboard = lazy(() => import("@/components/Dashboard").then((module) => ({ default: module.Dashboard })));
+const AdminDashboard = lazy(() => import("@/components/AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
+const ReleaseCalendar = lazy(() => import("@/components/ReleaseCalendar").then((module) => ({ default: module.ReleaseCalendar })));
+const ContentCreator = lazy(() => import("@/components/ContentCreator").then((module) => ({ default: module.ContentCreator })));
+const RoyaltyDashboard = lazy(() => import("@/components/RoyaltyDashboard").then((module) => ({ default: module.RoyaltyDashboard })));
+const Fans = lazy(() => import("@/components/Fans").then((module) => ({ default: module.Fans })));
+const Community = lazy(() => import("@/components/Community").then((module) => ({ default: module.Community })));
+const Settings = lazy(() => import("@/components/Settings").then((module) => ({ default: module.Settings })));
+const Onboarding = lazy(() => import("@/components/Onboarding").then((module) => ({ default: module.Onboarding })));
 
 const Index = () => {
   const { activeSection, setActiveSection } = useNavigation();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { data: userProfile } = useProfile();
+
+  const renderSectionFallback = (label: string) => (
+    <div className="flex min-h-[30vh] items-center justify-center text-sm text-muted-foreground">
+      Loading {label}...
+    </div>
+  );
 
   const renderActiveSection = () => {
     switch (activeSection) {
@@ -71,10 +78,14 @@ const Index = () => {
 
   // Onboarding view
   if (showOnboarding) {
-    return <Onboarding onComplete={() => {
-      setShowOnboarding(false);
-      setActiveSection(DEFAULT_SECTION);
-    }} />;
+    return (
+      <Suspense fallback={renderSectionFallback("onboarding")}>
+        <Onboarding onComplete={() => {
+          setShowOnboarding(false);
+          setActiveSection(DEFAULT_SECTION);
+        }} />
+      </Suspense>
+    );
   }
 
   // Landing page view
@@ -110,7 +121,9 @@ const Index = () => {
   // Dashboard view
   return (
     <AppShell>
-      {renderActiveSection()}
+      <Suspense fallback={renderSectionFallback("section")}>
+        {renderActiveSection()}
+      </Suspense>
     </AppShell>
   );
 };

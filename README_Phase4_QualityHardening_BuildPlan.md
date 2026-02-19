@@ -1,6 +1,6 @@
 # Phase 4 Quality Hardening Build Plan (Execution Readme)
 
-Last updated: 2026-02-18  
+Last updated: 2026-02-19  
 Owner: CTO + Engineering + Security  
 Phase window: 2-3 weeks (target)
 
@@ -68,12 +68,14 @@ Status: Complete
 Deploy checkpoint: WCAG-oriented mobile usability baseline satisfied in priority flows.
 
 ### P4-04 - Frontend Performance Budgeting (Risk: Medium)
-Status: Not started
+Status: Complete
 
-- [ ] Define route-level JS bundle and render-time budgets for priority screens.
-- [ ] Apply route-level lazy loading/code splitting where highest impact.
-- [ ] Measure before/after route performance.
-- [ ] Record budgets + results in engineering notes.
+- [x] Define route-level JS bundle and render-time budgets for priority screens.
+- [x] Apply route-level lazy loading/code splitting where highest impact.
+- [x] Measure before/after route performance.
+- [x] Record budgets + results in engineering notes.
+
+Evidence: `qa-evidence/phase4/p4-04/2026-02-19/frontend-performance-budgeting.md`
 
 Deploy checkpoint: Measurable route performance improvement and budget tracking established.
 
@@ -145,31 +147,30 @@ To ensure security recommendations are not hand-wavy, each control is bound to a
 
 ## 5) Active Step and Scope
 
-### Active step: P4-03 (Complete)
+### Active step: P4-04 (Complete)
 
 ### Why now
 
-P4-03 improves baseline usability in mobile-critical flows by increasing touch target reliability, strengthening semantic accessibility signals, and making validation feedback clearer for end users.
+P4-04 reduces initial route payload and startup parse/execute pressure by introducing lazy loading at route and heavy dashboard section boundaries.
 
-### P4-03 Deliverables
+### P4-04 Deliverables
 
-1. Audit and improve touch target sizing for mobile-first interactive controls.
-2. Add or refine semantic accessibility metadata (labels, invalid state, described-by linkage).
-3. Improve field-level inline error presentation for critical onboarding inputs.
-4. Re-verify priority mobile screens with targeted runtime checks.
+1. Define route-level bundle budgets for entry and heavy dashboard surfaces.
+2. Apply lazy loading to app routes and high-impact dashboard modules.
+3. Capture before/after chunk-size measurements from production builds.
+4. Record budget outcomes and implementation notes in evidence docs.
 
-### P4-03 Out of Scope
+### P4-04 Out of Scope
 
-- No backend authorization or validation refactors (P4-05/P4-06).
-- No global performance budget work (P4-04).
-- No design-system overhaul beyond targeted accessibility/readability fixes.
+- No API/RLS migration changes (P4-05/P4-06).
+- No design-system or accessibility overhaul beyond previously completed P4-03 scope.
 
-### P4-03 Definition of Done
+### P4-04 Definition of Done
 
-- Priority mobile forms present clear inline validation states.
-- Icon-only actions in touched flows meet improved mobile touch target expectations.
-- Critical fields include semantic invalid/error metadata for assistive technologies.
-- Frontend build/typecheck/lint pass for touched files.
+- Entry bundle and heavy route chunks meet defined size budgets.
+- Priority route and dashboard modules are lazy-loaded behind suspense boundaries.
+- Before/after metrics are documented in QA evidence.
+- Frontend build/typecheck/lint and backend typecheck pass for touched files.
 
 ---
 
