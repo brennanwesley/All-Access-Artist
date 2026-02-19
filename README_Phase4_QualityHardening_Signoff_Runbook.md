@@ -30,7 +30,7 @@ Provide a single acceptance hardening record for Phase 4 that confirms:
 | P4-06 | Complete | `backend/src/__tests__/authorizationRlsIntegrity.test.ts`, `backend/src/services/calendarService.ts`, `backend/src/services/profileService.ts` |
 | P4-07 | Complete | `phase4: p4-07 secrets runtime config hardening` (`59da6d9`), `qa-evidence/phase4/p4-07/2026-02-19/secrets-runtime-config-hardening.md` |
 | P4-08 | Complete | `phase4: p4-08 data scalability query efficiency` (`dbf0ca0`), `qa-evidence/phase4/p4-08/2026-02-19/data-scalability-query-efficiency.md` |
-| P4-09 | In progress | `qa-evidence/phase4/p4-09/2026-02-19/phase4-acceptance-hardening.md` |
+| P4-09 | Complete | `phase4: p4-09 acceptance hardening runbook` (`c1a0630`), `qa-evidence/phase4/p4-09/2026-02-19/phase4-acceptance-hardening.md` |
 
 ---
 
@@ -72,15 +72,16 @@ Classification: informational optimization backlog, not release-blocking for cur
 - [x] P4-09 validation matrix executed and recorded.
 - [x] No unresolved P0/P1 issues identified in current acceptance scope.
 - [x] Phase 4 sign-off runbook finalized with checkpoint references.
-- [ ] Stakeholder sign-off and release gate close confirmation recorded.
+- [x] Stakeholder sign-off and release gate close confirmation recorded.
 
 ### Engineering sign-off block
 
 ```md
-Sign-off decision: GO (Engineering hardening complete; stakeholder close pending)
+Sign-off decision: GO (Phase 4 release gate closed)
 CTO/Engineering: Signed
+Stakeholder/Governance: GO (Product owner approval recorded)
 Date: 2026-02-19
 Notes:
 - Phase 4 hardening controls are implemented and validated against required gates.
-- Remaining action is stakeholder release-governance acknowledgement for final close.
+- Stakeholder release-governance acknowledgement is recorded in the Phase 4 build plan and acceptance evidence.
 ```

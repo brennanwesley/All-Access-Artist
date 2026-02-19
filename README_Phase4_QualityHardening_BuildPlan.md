@@ -139,14 +139,15 @@ Evidence: `qa-evidence/phase4/p4-08/2026-02-19/data-scalability-query-efficiency
 Deploy checkpoint: Stable response times under realistic load and reduced worker memory pressure.
 
 ### P4-09 - Phase 4 Acceptance Hardening (Risk: Low)
-Status: In progress
+Status: Complete
 
 - [x] Execute full Phase 4 validation matrix and capture evidence.
 - [x] Verify no unresolved P0/P1 security, scalability, or reliability defects.
 - [x] Finalize Phase 4 sign-off runbook with checkpoint references.
-- [ ] Complete stakeholder sign-off and release gate close.
+- [x] Complete stakeholder sign-off and release gate close.
 
 Evidence: `qa-evidence/phase4/p4-09/2026-02-19/phase4-acceptance-hardening.md`, `README_Phase4_QualityHardening_Signoff_Runbook.md`
+Stakeholder/Governance decision: GO (Product owner approval recorded, 2026-02-19)
 
 Deploy checkpoint: Phase 4 ready for production progression.
 
@@ -168,7 +169,7 @@ To ensure security recommendations are not hand-wavy, each control is bound to a
 
 ## 5) Active Step and Scope
 
-### Active step: P4-09 (In progress)
+### Active step: P4-09 (Complete)
 
 ### Why now
 
