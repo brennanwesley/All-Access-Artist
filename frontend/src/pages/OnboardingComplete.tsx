@@ -8,11 +8,19 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { Loader2, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import toast from 'react-hot-toast'
+import { toast } from '@/components/ui/sonner'
+import { logger } from '@/lib/logger'
 import api from '@/lib/api'
 
 const TOTAL_STEPS = 3
 const STEP_LABELS = ['Profile', 'Security', 'Review'] as const
+
+type FieldErrors = {
+  fullName?: string
+  email?: string
+  password?: string
+  confirmPassword?: string
+}
 
 const OnboardingComplete = () => {
   const navigate = useNavigate()
@@ -21,6 +29,7 @@ const OnboardingComplete = () => {
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(1)
   
@@ -44,13 +53,23 @@ const OnboardingComplete = () => {
   }, [searchParams, navigate])
 
   const validateProfileStep = () => {
+    const nextFieldErrors: FieldErrors = {}
+
     if (!fullName.trim()) {
-      setError('Full name is required')
-      return false
+      nextFieldErrors.fullName = 'Full name is required'
     }
 
     if (!email.trim()) {
-      setError('Email is required')
+      nextFieldErrors.email = 'Email is required'
+    }
+
+    setFieldErrors((prev) => ({
+      ...prev,
+      ...nextFieldErrors,
+    }))
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setError('Please correct the highlighted fields.')
       return false
     }
 
@@ -58,13 +77,23 @@ const OnboardingComplete = () => {
   }
 
   const validateSecurityStep = () => {
+    const nextFieldErrors: FieldErrors = {}
+
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long')
-      return false
+      nextFieldErrors.password = 'Password must be at least 8 characters long'
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      nextFieldErrors.confirmPassword = 'Passwords do not match'
+    }
+
+    setFieldErrors((prev) => ({
+      ...prev,
+      ...nextFieldErrors,
+    }))
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setError('Please correct the highlighted fields.')
       return false
     }
 
@@ -73,6 +102,7 @@ const OnboardingComplete = () => {
 
   const handleNextStep = () => {
     setError(null)
+    setFieldErrors({})
 
     if (currentStep === 1) {
       if (!validateProfileStep()) {
@@ -92,6 +122,7 @@ const OnboardingComplete = () => {
 
   const handlePreviousStep = () => {
     setError(null)
+    setFieldErrors({})
     setCurrentStep((prev) => Math.max(1, prev - 1))
   }
 
@@ -99,6 +130,7 @@ const OnboardingComplete = () => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setFieldErrors({})
 
     // Validation
     if (!validateProfileStep() || !validateSecurityStep()) {
@@ -119,7 +151,10 @@ const OnboardingComplete = () => {
           await api.createFallbackAccount(sessionId)
         } catch (fallbackError) {
           // Fallback creation failed, but continue - account might already exist
-          console.log('Fallback account creation not needed or failed:', fallbackError)
+          logger.warn('Fallback account creation not needed or failed', {
+            sessionId,
+            error: fallbackError,
+          })
         }
       }
 
@@ -149,7 +184,11 @@ const OnboardingComplete = () => {
         setError(errorMessage)
       }
     } catch (error) {
-      console.error('Error completing onboarding:', error)
+      logger.error('Error completing onboarding', {
+        sessionId,
+        email,
+        error,
+      })
       setError('Failed to complete onboarding. Please try again.')
     } finally {
       setLoading(false)
@@ -201,7 +240,7 @@ const OnboardingComplete = () => {
                 <span>{STEP_LABELS[currentStep - 1]}</span>
               </div>
               <Progress value={(currentStep / TOTAL_STEPS) * 100} className="h-2" />
-              <div className="grid grid-cols-3 gap-2 text-[11px] sm:text-xs">
+              <div className="grid grid-cols-3 gap-2 text-xs">
                 {STEP_LABELS.map((stepLabel, index) => {
                   const stepNumber = index + 1
                   const isActive = currentStep === stepNumber
@@ -238,7 +277,7 @@ const OnboardingComplete = () => {
               className="space-y-4"
             >
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" role="alert" aria-live="assertive">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -252,13 +291,31 @@ const OnboardingComplete = () => {
                       type="text"
                       placeholder="Enter your full name"
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      onChange={(e) => {
+                        setFullName(e.target.value)
+                        if (fieldErrors.fullName) {
+                          setFieldErrors((prev) => {
+                            const next = { ...prev }
+                            delete next.fullName
+                            return next
+                          })
+                        }
+                      }}
                       autoComplete="name"
                       enterKeyHint="next"
+                      aria-invalid={Boolean(fieldErrors.fullName)}
+                      aria-describedby={fieldErrors.fullName ? 'fullName-error' : undefined}
                       required
                       disabled={loading}
-                      className="bg-background/50 border-border/50"
+                      className={`bg-background/50 border-border/50 ${
+                        fieldErrors.fullName ? 'border-destructive focus-visible:ring-destructive' : ''
+                      }`}
                     />
+                    {fieldErrors.fullName && (
+                      <p id="fullName-error" className="text-sm text-destructive" role="alert">
+                        {fieldErrors.fullName}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -268,17 +325,35 @@ const OnboardingComplete = () => {
                       type="email"
                       placeholder="Enter your email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        if (fieldErrors.email) {
+                          setFieldErrors((prev) => {
+                            const next = { ...prev }
+                            delete next.email
+                            return next
+                          })
+                        }
+                      }}
                       autoComplete="email"
                       inputMode="email"
                       autoCapitalize="none"
                       autoCorrect="off"
                       spellCheck={false}
                       enterKeyHint="next"
+                      aria-invalid={Boolean(fieldErrors.email)}
+                      aria-describedby={fieldErrors.email ? 'email-error' : undefined}
                       required
                       disabled={loading}
-                      className="bg-background/50 border-border/50"
+                      className={`bg-background/50 border-border/50 ${
+                        fieldErrors.email ? 'border-destructive focus-visible:ring-destructive' : ''
+                      }`}
                     />
+                    {fieldErrors.email && (
+                      <p id="email-error" className="text-sm text-destructive" role="alert">
+                        {fieldErrors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -346,14 +421,32 @@ const OnboardingComplete = () => {
                       type="password"
                       placeholder="Create a password (min 8 characters)"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value)
+                        if (fieldErrors.password) {
+                          setFieldErrors((prev) => {
+                            const next = { ...prev }
+                            delete next.password
+                            return next
+                          })
+                        }
+                      }}
                       autoComplete="new-password"
                       enterKeyHint="next"
+                      aria-invalid={Boolean(fieldErrors.password)}
+                      aria-describedby={fieldErrors.password ? 'password-error' : undefined}
                       required
                       disabled={loading}
                       minLength={8}
-                      className="bg-background/50 border-border/50"
+                      className={`bg-background/50 border-border/50 ${
+                        fieldErrors.password ? 'border-destructive focus-visible:ring-destructive' : ''
+                      }`}
                     />
+                    {fieldErrors.password && (
+                      <p id="password-error" className="text-sm text-destructive" role="alert">
+                        {fieldErrors.password}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -363,13 +456,31 @@ const OnboardingComplete = () => {
                       type="password"
                       placeholder="Confirm your password"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value)
+                        if (fieldErrors.confirmPassword) {
+                          setFieldErrors((prev) => {
+                            const next = { ...prev }
+                            delete next.confirmPassword
+                            return next
+                          })
+                        }
+                      }}
                       autoComplete="new-password"
                       enterKeyHint="go"
+                      aria-invalid={Boolean(fieldErrors.confirmPassword)}
+                      aria-describedby={fieldErrors.confirmPassword ? 'confirm-password-error' : undefined}
                       required
                       disabled={loading}
-                      className="bg-background/50 border-border/50"
+                      className={`bg-background/50 border-border/50 ${
+                        fieldErrors.confirmPassword ? 'border-destructive focus-visible:ring-destructive' : ''
+                      }`}
                     />
+                    {fieldErrors.confirmPassword && (
+                      <p id="confirm-password-error" className="text-sm text-destructive" role="alert">
+                        {fieldErrors.confirmPassword}
+                      </p>
+                    )}
                   </div>
                 </>
               )}

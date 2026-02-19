@@ -37,7 +37,8 @@ export const ContributorRow = ({
             variant="ghost"
             size="sm"
             onClick={() => onRemove(index)}
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+            className="h-11 w-11 p-0 text-muted-foreground hover:text-destructive md:h-8 md:w-8"
+            aria-label={`Remove contributor ${index + 1}`}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -128,7 +129,8 @@ export const ContributorRow = ({
             variant="ghost"
             size="sm"
             onClick={() => onRemove(index)}
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+            className="h-11 w-11 p-0 text-muted-foreground hover:text-destructive md:h-8 md:w-8"
+            aria-label={`Remove contributor ${index + 1}`}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

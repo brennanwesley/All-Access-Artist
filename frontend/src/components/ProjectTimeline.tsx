@@ -158,7 +158,8 @@ export const ProjectTimeline = ({ releaseDate, tasks }: ProjectTimelineProps) =>
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                            className="h-11 w-11 p-0 text-muted-foreground hover:text-foreground md:h-8 md:w-8"
+                            aria-label="Mark timeline task as incomplete"
                             disabled={isTaskUpdating(task.id)}
                           >
                             <RotateCcw className="h-4 w-4" />
