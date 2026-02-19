@@ -139,12 +139,14 @@ Evidence: `qa-evidence/phase4/p4-08/2026-02-19/data-scalability-query-efficiency
 Deploy checkpoint: Stable response times under realistic load and reduced worker memory pressure.
 
 ### P4-09 - Phase 4 Acceptance Hardening (Risk: Low)
-Status: Not started
+Status: In progress
 
-- [ ] Execute full Phase 4 validation matrix and capture evidence.
-- [ ] Verify no unresolved P0/P1 security, scalability, or reliability defects.
-- [ ] Finalize Phase 4 sign-off runbook with checkpoint references.
+- [x] Execute full Phase 4 validation matrix and capture evidence.
+- [x] Verify no unresolved P0/P1 security, scalability, or reliability defects.
+- [x] Finalize Phase 4 sign-off runbook with checkpoint references.
 - [ ] Complete stakeholder sign-off and release gate close.
+
+Evidence: `qa-evidence/phase4/p4-09/2026-02-19/phase4-acceptance-hardening.md`, `README_Phase4_QualityHardening_Signoff_Runbook.md`
 
 Deploy checkpoint: Phase 4 ready for production progression.
 
@@ -166,30 +168,30 @@ To ensure security recommendations are not hand-wavy, each control is bound to a
 
 ## 5) Active Step and Scope
 
-### Active step: P4-08 (Complete)
+### Active step: P4-09 (In progress)
 
 ### Why now
 
-P4-08 follows security/config hardening by reducing API query fan-out, moving aggregation to SQL boundaries, and validating growth-oriented query/index posture.
+P4-09 closes Phase 4 by running the full acceptance matrix, triaging unresolved P0/P1 risks, and packaging a final sign-off runbook for release governance.
 
-### P4-08 Deliverables
+### P4-09 Deliverables
 
-1. Identify top query hotspots in priority API workflows.
-2. Move filtering/aggregation to SQL boundaries where appropriate.
-3. Validate index coverage and `EXPLAIN` plans for key query paths.
-4. Record before/after query efficiency deltas and worker memory impact.
+1. Execute full Phase 4 validation matrix and capture results.
+2. Verify no unresolved P0/P1 security, scalability, or reliability defects.
+3. Finalize sign-off runbook with checkpoint and evidence references.
+4. Record stakeholder release-gate close once governance approval is complete.
 
-### P4-08 Out of Scope
+### P4-09 Out of Scope
 
-- No additional API auth boundary changes (covered in completed P4-05/P4-06).
-- No secrets/runtime configuration hardening expansion beyond completed P4-07.
+- No new feature delivery beyond Phase 4 acceptance closure scope.
+- No additional architecture refactors unless a P0/P1 blocker is found during acceptance checks.
 
-### P4-08 Definition of Done
+### P4-09 Definition of Done
 
-- Query hotspots and bottleneck patterns are identified with evidence.
-- Aggregation/filtering paths are moved to SQL where impactful.
-- Index coverage and plan posture for hot paths are documented.
-- Build/typecheck/test gates pass for touched files.
+- Validation matrix evidence is recorded and reproducible.
+- No unresolved P0/P1 blockers remain in acceptance scope.
+- Phase 4 sign-off runbook is finalized with checkpoint references.
+- Stakeholder release-gate close is recorded.
 
 ---
 
@@ -218,6 +220,7 @@ Additional gates by chunk:
 - `P4-05/P4-06`: authn/authz negative tests (unauthorized, cross-user access, malformed payloads)
 - `P4-07`: config/secrets scan checklist and deployment binding review
 - `P4-08`: query performance verification (before/after timings, plan checks)
+- `P4-09`: full acceptance matrix + advisory triage + sign-off runbook finalization
 
 ---
 
