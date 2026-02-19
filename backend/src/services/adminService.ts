@@ -5,6 +5,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AdminUserListData } from '../types/schemas.js'
 
+const AUTH_USERS_PAGE_SIZE = 200
+
+type AccountType = 'admin' | 'artist' | 'manager' | 'label'
+
 export class AdminService {
   constructor(private supabaseAdmin: SupabaseClient) {}
 
@@ -13,130 +17,144 @@ export class AdminService {
    * Uses admin client to bypass RLS and access all user data
    */
   async getAllUsers(): Promise<AdminUserListData[]> {
-    console.log('AdminService.getAllUsers called')
-    
-    try {
-      // Query user profiles with auth.users data using admin client
-      const { data: users, error } = await this.supabaseAdmin
-        .from('user_profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          account_type,
-          phone_verified,
-          created_at
-        `)
-        .order('created_at', { ascending: false })
+    // Query user profiles with auth.users data using admin client
+    const { data: users, error } = await this.supabaseAdmin
+      .from('user_profiles')
+      .select(`
+        id,
+        first_name,
+        last_name,
+        account_type,
+        phone_verified,
+        created_at
+      `)
+      .order('created_at', { ascending: false })
 
-      if (error) {
-        console.log('Error fetching user profiles:', error)
-        throw new Error(`Failed to fetch user profiles: ${error.message}`)
-      }
-
-      console.log(`Found ${users?.length || 0} user profiles`)
-
-      // Get corresponding auth.users data for emails
-      const userIds = users?.map(user => user.id) || []
-      if (userIds.length === 0) {
-        return []
-      }
-
-      console.log('Fetching auth user data for', userIds.length, 'users')
-      
-      // Fetch auth users in batches to get email addresses
-      const authUsersPromises = userIds.map(async (userId) => {
-        const { data: authUser, error: authError } = await this.supabaseAdmin.auth.admin.getUserById(userId)
-        if (authError) {
-          console.log(`Error fetching auth data for user ${userId}:`, authError)
-          return null
-        }
-        return {
-          id: userId,
-          email: authUser.user?.email || null
-        }
-      })
-
-      const authUsersResults = await Promise.all(authUsersPromises)
-      const authUsersMap = new Map(
-        authUsersResults
-          .filter(result => result !== null)
-          .map(result => [result!.id, result!.email])
-      )
-
-      console.log('Successfully fetched auth data for', authUsersMap.size, 'users')
-
-      // Combine profile and auth data
-      const combinedUsers: AdminUserListData[] = users.map(user => ({
-        id: user.id,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        email: authUsersMap.get(user.id) || 'unknown@example.com',
-        account_type: user.account_type as 'admin' | 'artist' | 'manager' | 'label',
-        created_at: user.created_at,
-        phone_verified: user.phone_verified
-      }))
-
-      console.log('Combined user data successfully')
-      return combinedUsers
-    } catch (error) {
-      console.log('AdminService.getAllUsers ERROR:', error)
-      throw error
+    if (error) {
+      throw new Error(`Failed to fetch user profiles: ${error.message}`)
     }
+
+    const profiles = users ?? []
+    if (profiles.length === 0) {
+      return []
+    }
+
+    // Fetch auth users in paginated batches (avoids N+1 getUserById calls)
+    const authUsersMap = await this.getAuthEmailMap(profiles.map((profile) => profile.id))
+
+    // Combine profile and auth data
+    return profiles.map((user) => ({
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: authUsersMap.get(user.id) || 'unknown@example.com',
+      account_type: user.account_type as AccountType,
+      created_at: user.created_at,
+      phone_verified: user.phone_verified,
+    }))
   }
 
   /**
    * Get system statistics for admin dashboard
    */
   async getSystemStats() {
-    console.log('AdminService.getSystemStats called')
-    
-    try {
-      // Get user count by account type
-      const { data: userStats, error: userStatsError } = await this.supabaseAdmin
-        .from('user_profiles')
-        .select('account_type')
+    const [
+      totalUsers,
+      adminUsers,
+      artistUsers,
+      managerUsers,
+      labelUsers,
+      releaseCount,
+      taskCount,
+    ] = await Promise.all([
+      this.countUserProfiles(),
+      this.countUserProfiles('admin'),
+      this.countUserProfiles('artist'),
+      this.countUserProfiles('manager'),
+      this.countUserProfiles('label'),
+      this.countTableRows('music_releases'),
+      this.countTableRows('release_tasks'),
+    ])
 
-      if (userStatsError) {
-        throw new Error(`Failed to fetch user stats: ${userStatsError.message}`)
-      }
-
-      // Count users by type
-      const stats = {
-        total_users: userStats?.length || 0,
-        admin_users: userStats?.filter(u => u.account_type === 'admin').length || 0,
-        artist_users: userStats?.filter(u => u.account_type === 'artist').length || 0,
-        manager_users: userStats?.filter(u => u.account_type === 'manager').length || 0,
-        label_users: userStats?.filter(u => u.account_type === 'label').length || 0
-      }
-
-      // Get release count
-      const { count: releaseCount, error: releaseError } = await this.supabaseAdmin
-        .from('releases')
-        .select('id', { count: 'exact' })
-
-      if (releaseError) {
-        console.log('Warning: Could not fetch release count:', releaseError)
-      }
-
-      // Get task count
-      const { count: taskCount, error: taskError } = await this.supabaseAdmin
-        .from('tasks')
-        .select('id', { count: 'exact' })
-
-      if (taskError) {
-        console.log('Warning: Could not fetch task count:', taskError)
-      }
-
-      return {
-        ...stats,
-        total_releases: releaseCount || 0,
-        total_tasks: taskCount || 0,
-        last_updated: new Date().toISOString()
-      }
-    } catch (error) {
-      console.log('AdminService.getSystemStats ERROR:', error)
-      throw error
+    return {
+      total_users: totalUsers,
+      admin_users: adminUsers,
+      artist_users: artistUsers,
+      manager_users: managerUsers,
+      label_users: labelUsers,
+      total_releases: releaseCount,
+      total_tasks: taskCount,
+      last_updated: new Date().toISOString(),
     }
+  }
+
+  private async getAuthEmailMap(userIds: string[]): Promise<Map<string, string | null>> {
+    const remainingUserIds = new Set(userIds)
+    const authUsersMap = new Map<string, string | null>()
+
+    let page = 1
+
+    while (remainingUserIds.size > 0) {
+      const { data, error } = await this.supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage: AUTH_USERS_PAGE_SIZE,
+      })
+
+      if (error) {
+        throw new Error(`Failed to fetch auth users: ${error.message}`)
+      }
+
+      const authUsers = data.users ?? []
+      if (authUsers.length === 0) {
+        break
+      }
+
+      for (const authUser of authUsers) {
+        if (!remainingUserIds.has(authUser.id)) {
+          continue
+        }
+
+        authUsersMap.set(authUser.id, authUser.email ?? null)
+        remainingUserIds.delete(authUser.id)
+      }
+
+      if (authUsers.length < AUTH_USERS_PAGE_SIZE) {
+        break
+      }
+
+      page += 1
+    }
+
+    return authUsersMap
+  }
+
+  private async countUserProfiles(accountType?: AccountType): Promise<number> {
+    let query = this.supabaseAdmin
+      .from('user_profiles')
+      .select('id', { count: 'exact', head: true })
+
+    if (accountType) {
+      query = query.eq('account_type', accountType)
+    }
+
+    const { count, error } = await query
+
+    if (error) {
+      throw new Error(`Failed to fetch user stats: ${error.message}`)
+    }
+
+    return count || 0
+  }
+
+  private async countTableRows(tableName: 'music_releases' | 'release_tasks'): Promise<number> {
+    const { count, error } = await this.supabaseAdmin
+      .from(tableName)
+      .select('id', { count: 'exact', head: true })
+
+    if (error) {
+      throw new Error(`Failed to count rows in ${tableName}: ${error.message}`)
+    }
+
+    return count || 0
   }
 }

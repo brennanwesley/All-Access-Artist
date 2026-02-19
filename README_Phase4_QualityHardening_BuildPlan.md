@@ -127,12 +127,14 @@ Evidence: `qa-evidence/phase4/p4-07/2026-02-19/secrets-runtime-config-hardening.
 Deploy checkpoint: Config posture explicit, least-privilege aligned, deployment-safe.
 
 ### P4-08 - Data Scalability + Query Efficiency (Risk: Medium-High)
-Status: Not started
+Status: Complete
 
-- [ ] Identify top query hotspots in priority API workflows.
-- [ ] Push heavy filtering/aggregation to SQL or RPC where appropriate.
-- [ ] Validate index coverage and query plans for hot paths.
-- [ ] Compare before/after timing and worker memory pressure.
+- [x] Identify top query hotspots in priority API workflows.
+- [x] Push heavy filtering/aggregation to SQL or RPC where appropriate.
+- [x] Validate index coverage and query plans for hot paths.
+- [x] Compare before/after timing and worker memory pressure.
+
+Evidence: `qa-evidence/phase4/p4-08/2026-02-19/data-scalability-query-efficiency.md`, `backend/src/services/adminService.ts`, `backend/src/__tests__/dataScalabilityQueryEfficiency.test.ts`, `database/migrations/13_phase4_query_efficiency_indexes.sql`
 
 Deploy checkpoint: Stable response times under realistic load and reduced worker memory pressure.
 
@@ -164,29 +166,29 @@ To ensure security recommendations are not hand-wavy, each control is bound to a
 
 ## 5) Active Step and Scope
 
-### Active step: P4-07 (Complete)
+### Active step: P4-08 (Complete)
 
 ### Why now
 
-P4-07 follows authorization hardening by tightening secrets/config discipline, confirming runtime boundary rules, and documenting key rotation controls.
+P4-08 follows security/config hardening by reducing API query fan-out, moving aggregation to SQL boundaries, and validating growth-oriented query/index posture.
 
-### P4-07 Deliverables
+### P4-08 Deliverables
 
-1. Audit codebase for hardcoded secrets and high-risk magic config strings.
-2. Validate frontend/backend environment variable boundary rules.
-3. Confirm least-privilege key usage per runtime and route class.
-4. Record operational rotation and rollback procedure for sensitive keys.
+1. Identify top query hotspots in priority API workflows.
+2. Move filtering/aggregation to SQL boundaries where appropriate.
+3. Validate index coverage and `EXPLAIN` plans for key query paths.
+4. Record before/after query efficiency deltas and worker memory impact.
 
-### P4-07 Out of Scope
+### P4-08 Out of Scope
 
-- No query/index scalability optimizations (reserved for P4-08).
-- No frontend UX accessibility scope expansion beyond existing completed controls.
+- No additional API auth boundary changes (covered in completed P4-05/P4-06).
+- No secrets/runtime configuration hardening expansion beyond completed P4-07.
 
-### P4-07 Definition of Done
+### P4-08 Definition of Done
 
-- Hardcoded secret scan is recorded with findings/remediations.
-- Frontend/backend env boundary usage is validated and corrected where required.
-- Least-privilege key usage map is documented for active runtimes.
+- Query hotspots and bottleneck patterns are identified with evidence.
+- Aggregation/filtering paths are moved to SQL where impactful.
+- Index coverage and plan posture for hot paths are documented.
 - Build/typecheck/test gates pass for touched files.
 
 ---
