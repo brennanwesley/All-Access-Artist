@@ -73,6 +73,27 @@ export const CreateTaskSchema = z.object({
 
 export const UpdateTaskSchema = CreateTaskSchema.partial().omit({ release_id: true })
 
+// Route Parameter Schemas
+export const IdParamSchema = z.object({
+  id: z.string().uuid('Invalid ID format')
+})
+
+export const ReleaseIdParamSchema = z.object({
+  releaseId: z.string().uuid('Invalid release ID format')
+})
+
+export const SongIdParamSchema = z.object({
+  songId: z.string().uuid('Invalid song ID format')
+})
+
+export const SectionIdParamSchema = z.object({
+  sectionId: z.string().uuid('Invalid section ID format')
+})
+
+export const TaskIdParamSchema = z.object({
+  taskId: z.string().uuid('Invalid task ID format')
+})
+
 // Song Schemas
 export const CreateSongSchema = z.object({
   // Note: release_id is handled via URL parameter, not request body
@@ -292,6 +313,11 @@ export type CreateArtistData = z.infer<typeof CreateArtistSchema>
 export type UpdateArtistData = z.infer<typeof UpdateArtistSchema>
 export type CreateTaskData = z.infer<typeof CreateTaskSchema>
 export type UpdateTaskData = z.infer<typeof UpdateTaskSchema>
+export type IdParamData = z.infer<typeof IdParamSchema>
+export type ReleaseIdParamData = z.infer<typeof ReleaseIdParamSchema>
+export type SongIdParamData = z.infer<typeof SongIdParamSchema>
+export type SectionIdParamData = z.infer<typeof SectionIdParamSchema>
+export type TaskIdParamData = z.infer<typeof TaskIdParamSchema>
 export type CreateLyricSheetData = z.infer<typeof CreateLyricSheetSchema>
 export type UpdateLyricSheetData = z.infer<typeof UpdateLyricSheetSchema>
 export type CreateLyricSectionData = z.infer<typeof CreateLyricSectionSchema>

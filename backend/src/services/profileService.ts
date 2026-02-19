@@ -12,9 +12,9 @@ export class ProfileService {
   constructor(private supabase: SupabaseClient) {}
 
   /**
-   * Get user profile with email from auth.users
+   * Get user profile with auth contact details from request-scoped auth context
    */
-  async getUserProfile(userId: string, supabaseAdmin: SupabaseClient) {
+  async getUserProfile(userId: string, authContact: { email: string | null; phone: string | null }) {
     profileLogger.debug('getUserProfile called', { userId })
     
     try {
@@ -51,19 +51,11 @@ export class ProfileService {
         throw new Error(`Failed to fetch user profile: ${profileError.message}`)
       }
 
-      // Get user data from Supabase Auth using admin client (no JWT conflicts)
-      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId)
-
-      if (authError) {
-        profileLogger.error('Auth error fetching user data', { userId, error: authError.message })
-        throw new Error(`Failed to fetch user auth data: ${authError.message}`)
-      }
-
       // Combine the data
       const profile = {
         ...profileData,
-        email: authUser.user?.email,
-        phone: authUser.user?.phone
+        email: authContact.email,
+        phone: authContact.phone
       }
 
       profileLogger.debug('Profile retrieved successfully', { userId })

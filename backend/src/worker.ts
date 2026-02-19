@@ -29,6 +29,7 @@ import onboarding from './routes/onboarding.js'
 import type { Bindings, Variables } from './types/bindings.js'
 import { generateRequestId } from './utils/errorHandler.js'
 import { logger, extractErrorInfo } from './utils/logger.js'
+import { errorResponse } from './utils/apiResponse.js'
 
 // NEW: social webhook route
 import social from './routes/social.js'
@@ -136,13 +137,11 @@ app.route('/api/social', social)
 
 // 404 handler
 app.notFound((c) => {
-  return c.json({ 
-    success: false, 
-    error: 'Endpoint not found',
+  return errorResponse(c, 404, 'Endpoint not found', 'ENDPOINT_NOT_FOUND', {
     available_endpoints: [
       'GET /health',
       'GET|POST /api/artists',
-      'GET|POST /api/releases', 
+      'GET|POST /api/releases',
       'GET|POST /api/calendar',
       'GET|POST /api/analytics',
       'GET|PUT /api/profile',
@@ -162,7 +161,7 @@ app.notFound((c) => {
       'GET /api/social/metrics/youtube/:username',
       'GET /api/social/metrics/twitter/:username'
     ]
-  }, 404)
+  })
 })
 
 // Global error handler with standardized responses
@@ -176,11 +175,9 @@ app.onError((err, c) => {
     method: c.req.method
   })
   
-  return c.json({
-    success: false,
-    error: 'Internal server error',
-    requestId
-  }, 500)
+  return errorResponse(c, 500, 'Internal server error', 'INTERNAL_SERVER_ERROR', {
+    requestId,
+  })
 })
 
 export default app

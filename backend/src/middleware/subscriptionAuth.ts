@@ -6,6 +6,7 @@
 import { Context, Next } from 'hono'
 import { Variables } from '../types/bindings.js'
 import { logger, extractErrorInfo } from '../utils/logger.js'
+import { authErrorResponse, errorResponse } from '../utils/apiResponse.js'
 
 const subLogger = logger.child('subscriptionAuth')
 
@@ -18,7 +19,7 @@ export async function subscriptionAuth(c: Context<{ Variables: Variables }>, nex
   const jwtPayload = c.get('jwtPayload')
   
   if (!user || !jwtPayload) {
-    return c.json({ success: false, error: { message: 'Authentication required' } }, 401)
+    return authErrorResponse(c)
   }
 
   try {
@@ -31,7 +32,7 @@ export async function subscriptionAuth(c: Context<{ Variables: Variables }>, nex
 
     if (error) {
       subLogger.error('Error fetching subscription status', { userId: user.id, error: error.message })
-      return c.json({ success: false, error: { message: 'Failed to verify subscription' } }, 500)
+      return errorResponse(c, 500, 'Failed to verify subscription', 'SUBSCRIPTION_VERIFY_FAILED')
     }
 
     // Admin users always have full access (database-driven, not hardcoded)
@@ -64,14 +65,13 @@ export async function subscriptionAuth(c: Context<{ Variables: Variables }>, nex
         subscriptionStatus: profile?.subscription_status,
         trialEnd: profile?.trial_end
       })
-      return c.json({ 
-        success: false, 
-        error: { 
-          message: 'Active subscription or trial required for this action',
-          code: 'SUBSCRIPTION_REQUIRED',
-          upgrade_url: '/profile?tab=pay'
-        } 
-      }, 403)
+      return errorResponse(
+        c,
+        403,
+        'Active subscription or trial required for this action',
+        'SUBSCRIPTION_REQUIRED',
+        { upgrade_url: '/profile?tab=pay' }
+      )
     }
 
     // Allow read operations for all authenticated users
@@ -79,7 +79,7 @@ export async function subscriptionAuth(c: Context<{ Variables: Variables }>, nex
 
   } catch (error) {
     subLogger.error('Subscription auth middleware error', extractErrorInfo(error))
-    return c.json({ success: false, error: { message: 'Subscription verification failed' } }, 500)
+    return errorResponse(c, 500, 'Subscription verification failed', 'SUBSCRIPTION_VERIFY_FAILED')
   }
 }
 
@@ -92,7 +92,7 @@ export async function requireActiveSubscription(c: Context<{ Variables: Variable
   const jwtPayload = c.get('jwtPayload')
   
   if (!user || !jwtPayload) {
-    return c.json({ success: false, error: { message: 'Authentication required' } }, 401)
+    return authErrorResponse(c)
   }
 
   try {
@@ -105,7 +105,7 @@ export async function requireActiveSubscription(c: Context<{ Variables: Variable
 
     if (error) {
       subLogger.error('Error fetching subscription status', { userId: user.id, error: error.message })
-      return c.json({ success: false, error: { message: 'Failed to verify subscription' } }, 500)
+      return errorResponse(c, 500, 'Failed to verify subscription', 'SUBSCRIPTION_VERIFY_FAILED')
     }
 
     // Admin users always have full access (database-driven, not hardcoded)
@@ -128,21 +128,20 @@ export async function requireActiveSubscription(c: Context<{ Variables: Variable
     const hasAccess = hasActiveSubscription || hasActiveTrial
 
     if (!hasAccess) {
-      return c.json({ 
-        success: false, 
-        error: { 
-          message: 'Active subscription or trial required',
-          code: 'SUBSCRIPTION_REQUIRED',
-          upgrade_url: '/profile?tab=pay'
-        } 
-      }, 403)
+      return errorResponse(
+        c,
+        403,
+        'Active subscription or trial required',
+        'SUBSCRIPTION_REQUIRED',
+        { upgrade_url: '/profile?tab=pay' }
+      )
     }
 
     return next()
 
   } catch (error) {
     subLogger.error('Subscription auth middleware error', extractErrorInfo(error))
-    return c.json({ success: false, error: { message: 'Subscription verification failed' } }, 500)
+    return errorResponse(c, 500, 'Subscription verification failed', 'SUBSCRIPTION_VERIFY_FAILED')
   }
 }
 

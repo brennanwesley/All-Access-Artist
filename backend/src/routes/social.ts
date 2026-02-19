@@ -1,11 +1,11 @@
 import { Hono } from 'hono'
-import { createClient } from '@supabase/supabase-js'
+import type { Context } from 'hono'
+import { z } from 'zod'
+import { validateRequest } from '../middleware/validation.js'
+import { errorResponse } from '../utils/apiResponse.js'
+import type { Variables } from '../types/bindings.js'
 
-const social = new Hono()
-
-// Supabase client for metrics queries
-const supabaseUrl = process.env.SUPABASE_URL || ''
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || ''
+const social = new Hono<{ Variables: Variables }>()
 
 // One URL per platform (set these in Render → Backend → Environment)
 // Fallback DEFAULT is used if a specific platform var is missing.
@@ -26,7 +26,20 @@ const TOKENS: Record<string, string | undefined> = {
   default:   process.env.N8N_WEBHOOK_TOKEN, // optional global fallback
 }
 
-function setCors(c: any) {
+const ConnectBodySchema = z.object({
+  platform: z.preprocess(
+    (value) => (typeof value === 'string' ? value.toLowerCase() : value),
+    z.enum(['instagram', 'tiktok', 'youtube', 'twitter'])
+  ),
+  usernameOrUrl: z.string().min(1, 'usernameOrUrl is required'),
+  userId: z.string().optional(),
+})
+
+const UsernameParamSchema = z.object({
+  username: z.string().min(1, 'Username is required'),
+})
+
+function setCors(c: Context) {
   const origin = c.req.header('Origin') ?? '*'
   c.header('Access-Control-Allow-Origin', origin)
   c.header('Vary', 'Origin')
@@ -45,7 +58,7 @@ function pickWebhook(platform: string) {
 // Parse any input (URL or handle) into:
 //   handle: '@user' (always with '@')
 //   plain:  'user'   (no '@', no slashes)
-function parseHandle(input: string, platform: string) {
+function parseHandle(input: string) {
   const ensureAt = (s: string) => (s.startsWith('@') ? s : `@${s}`)
   const stripAt  = (s: string) => s.replace(/^@/, '')
   let raw = (input || '').trim()
@@ -67,63 +80,64 @@ function parseHandle(input: string, platform: string) {
   }
 }
 
-async function handler(c: any) {
-  const method = c.req.method
-  if (method === 'OPTIONS' || method === 'HEAD') {
-    setCors(c); return c.body(null, 204)
-  }
-  if (method === 'GET') {
-    setCors(c); return c.json({ ok: true, info: 'POST here to forward to n8n' })
-  }
-
-  // POST → forward to the platform-specific webhook
-  try {
-    const body = (await c.req.json().catch(() => null)) as any
-    const platform = (body?.platform || '').toLowerCase()
-    const usernameOrUrl = body?.usernameOrUrl as string | undefined
-    const userId = body?.userId as string | undefined
-
-    if (!platform || !usernameOrUrl) {
-      setCors(c); return c.json({ error: 'platform and usernameOrUrl required' }, 400)
-    }
-
-    const { handle, plain } = parseHandle(usernameOrUrl, platform)
-
-    const { url, token } = pickWebhook(platform)
-    if (!url) {
-      setCors(c); return c.json({ error: `No webhook configured for platform '${platform}'` }, 500)
-    }
-
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({
-        platform,             // "instagram" | "tiktok" | "youtube" | "twitter"
-        username: handle,     // e.g. "@breakoutcards"
-        usernamePlain: plain, // e.g. "breakoutcards"
-        rawInput: usernameOrUrl,
-        userId: userId ?? null,
-        triggeredAt: new Date().toISOString(),
-      }),
-    })
-
-    if (!resp.ok) {
-      const detail = await resp.text()
-      setCors(c); return c.json({ error: 'n8n webhook failed', detail }, 502)
-    }
-
-    setCors(c); return c.json({ ok: true, platform, username: handle })
-  } catch (e: any) {
-    setCors(c); return c.json({ error: 'server error', detail: e?.message }, 500)
-  }
-}
-
 // Support both /connect and /connect/
 for (const path of ['/connect', '/connect/']) {
-  social.on(['OPTIONS', 'HEAD', 'GET', 'POST'], path, handler)
+  social.options(path, (c) => {
+    setCors(c)
+    return c.body(null, 204)
+  })
+
+  social.on('HEAD', path, (c: Context) => {
+    setCors(c)
+    return c.body(null, 204)
+  })
+
+  social.get(path, (c) => {
+    setCors(c)
+    return c.json({ ok: true, info: 'POST here to forward to n8n' })
+  })
+
+  social.post(path, validateRequest('json', ConnectBodySchema), async (c) => {
+    try {
+      const { platform, usernameOrUrl, userId } = c.req.valid('json')
+      const { handle, plain } = parseHandle(usernameOrUrl)
+      const { url, token } = pickWebhook(platform)
+
+      if (!url) {
+        setCors(c)
+        return errorResponse(c, 500, `No webhook configured for platform '${platform}'`, 'SOCIAL_WEBHOOK_NOT_CONFIGURED')
+      }
+
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          platform,
+          username: handle,
+          usernamePlain: plain,
+          rawInput: usernameOrUrl,
+          userId: userId ?? null,
+          triggeredAt: new Date().toISOString(),
+        }),
+      })
+
+      if (!resp.ok) {
+        const detail = await resp.text()
+        setCors(c)
+        return errorResponse(c, 502, 'n8n webhook failed', 'SOCIAL_WEBHOOK_FAILED', { detail })
+      }
+
+      setCors(c)
+      return c.json({ ok: true, platform, username: handle })
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'Unknown error'
+      setCors(c)
+      return errorResponse(c, 500, 'server error', 'SOCIAL_SERVER_ERROR', { detail })
+    }
+  })
 }
 
 // ============================================================================
@@ -182,24 +196,16 @@ interface TwitterMetrics {
 // GET /metrics/instagram/:username - Fetch Instagram metrics for a username
 // ============================================================================
 
-social.get('/metrics/instagram/:username', async (c) => {
+social.get('/metrics/instagram/:username', validateRequest('param', UsernameParamSchema), async (c) => {
   setCors(c)
   
-  const username = c.req.param('username')
-  if (!username) {
-    return c.json({ success: false, error: { message: 'Username is required' } }, 400)
-  }
+  const { username } = c.req.valid('param')
+  const supabase = c.get('supabase')
 
   // Strip @ prefix if present
   const cleanUsername = username.replace(/^@/, '')
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return c.json({ success: false, error: { message: 'Database configuration error' } }, 500)
-  }
-
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-    
     // Get the most recent metrics for this username
     const { data, error } = await supabase
       .from('instagram_metrics')
@@ -218,7 +224,7 @@ social.get('/metrics/instagram/:username', async (c) => {
           message: 'No metrics found for this username'
         })
       }
-      return c.json({ success: false, error: { message: error.message } }, 500)
+      return errorResponse(c, 500, error.message, 'SOCIAL_METRICS_FETCH_FAILED')
     }
 
     const metrics = data as InstagramMetrics
@@ -236,31 +242,23 @@ social.get('/metrics/instagram/:username', async (c) => {
     })
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-    return c.json({ success: false, error: { message: errorMessage } }, 500)
+    return errorResponse(c, 500, errorMessage, 'SOCIAL_METRICS_FETCH_FAILED')
   }
 })
 
 // ============================================================================
 // GET /metrics/tiktok/:username - Fetch TikTok metrics for a username
 // ============================================================================
-social.get('/metrics/tiktok/:username', async (c) => {
+social.get('/metrics/tiktok/:username', validateRequest('param', UsernameParamSchema), async (c) => {
   setCors(c)
   
-  const username = c.req.param('username')
-  if (!username) {
-    return c.json({ success: false, error: { message: 'Username is required' } }, 400)
-  }
+  const { username } = c.req.valid('param')
+  const supabase = c.get('supabase')
 
   // Strip @ prefix if present
   const cleanUsername = username.replace(/^@/, '')
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return c.json({ success: false, error: { message: 'Database configuration error' } }, 500)
-  }
-
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-    
     // Get the most recent metrics for this username (TikTok uses 'name' column)
     const { data, error } = await supabase
       .from('tiktok_metrics')
@@ -278,7 +276,7 @@ social.get('/metrics/tiktok/:username', async (c) => {
           message: 'No metrics found for this username'
         })
       }
-      return c.json({ success: false, error: { message: error.message } }, 500)
+      return errorResponse(c, 500, error.message, 'SOCIAL_METRICS_FETCH_FAILED')
     }
 
     const metrics = data as TikTokMetrics
@@ -297,31 +295,23 @@ social.get('/metrics/tiktok/:username', async (c) => {
     })
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-    return c.json({ success: false, error: { message: errorMessage } }, 500)
+    return errorResponse(c, 500, errorMessage, 'SOCIAL_METRICS_FETCH_FAILED')
   }
 })
 
 // ============================================================================
 // GET /metrics/youtube/:username - Fetch YouTube metrics for a username
 // ============================================================================
-social.get('/metrics/youtube/:username', async (c) => {
+social.get('/metrics/youtube/:username', validateRequest('param', UsernameParamSchema), async (c) => {
   setCors(c)
   
-  const username = c.req.param('username')
-  if (!username) {
-    return c.json({ success: false, error: { message: 'Username is required' } }, 400)
-  }
+  const { username } = c.req.valid('param')
+  const supabase = c.get('supabase')
 
   // Strip @ prefix if present
   const cleanUsername = username.replace(/^@/, '')
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return c.json({ success: false, error: { message: 'Database configuration error' } }, 500)
-  }
-
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-    
     const { data, error } = await supabase
       .from('youtube_metrics')
       .select('id, date_ingested, username, videos_30d, views_30d, likes_30d, profile_url')
@@ -338,7 +328,7 @@ social.get('/metrics/youtube/:username', async (c) => {
           message: 'No metrics found for this username'
         })
       }
-      return c.json({ success: false, error: { message: error.message } }, 500)
+      return errorResponse(c, 500, error.message, 'SOCIAL_METRICS_FETCH_FAILED')
     }
 
     const metrics = data as YouTubeMetrics
@@ -356,31 +346,23 @@ social.get('/metrics/youtube/:username', async (c) => {
     })
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-    return c.json({ success: false, error: { message: errorMessage } }, 500)
+    return errorResponse(c, 500, errorMessage, 'SOCIAL_METRICS_FETCH_FAILED')
   }
 })
 
 // ============================================================================
 // GET /metrics/twitter/:username - Fetch Twitter/X metrics for a username
 // ============================================================================
-social.get('/metrics/twitter/:username', async (c) => {
+social.get('/metrics/twitter/:username', validateRequest('param', UsernameParamSchema), async (c) => {
   setCors(c)
   
-  const username = c.req.param('username')
-  if (!username) {
-    return c.json({ success: false, error: { message: 'Username is required' } }, 400)
-  }
+  const { username } = c.req.valid('param')
+  const supabase = c.get('supabase')
 
   // Strip @ prefix if present
   const cleanUsername = username.replace(/^@/, '')
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return c.json({ success: false, error: { message: 'Database configuration error' } }, 500)
-  }
-
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-    
     const { data, error } = await supabase
       .from('twitter_metrics')
       .select('id, date_ingested, username, like_30d, retweet_30d, reply_30d, quote_30d, profile_url, followers')
@@ -397,7 +379,7 @@ social.get('/metrics/twitter/:username', async (c) => {
           message: 'No metrics found for this username'
         })
       }
-      return c.json({ success: false, error: { message: error.message } }, 500)
+      return errorResponse(c, 500, error.message, 'SOCIAL_METRICS_FETCH_FAILED')
     }
 
     const metrics = data as TwitterMetrics
@@ -415,7 +397,7 @@ social.get('/metrics/twitter/:username', async (c) => {
     })
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-    return c.json({ success: false, error: { message: errorMessage } }, 500)
+    return errorResponse(c, 500, errorMessage, 'SOCIAL_METRICS_FETCH_FAILED')
   }
 })
 

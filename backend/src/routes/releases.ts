@@ -3,10 +3,16 @@
  * All Access Artist - Backend API v2.0.0
  */
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
 import { ReleasesService } from '../services/releasesService.js'
-import { CreateReleaseSchema, CreateSongSchema } from '../types/schemas.js'
+import {
+  CreateReleaseSchema,
+  CreateSongSchema,
+  IdParamSchema,
+  ReleaseIdParamSchema,
+} from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
+import { validateRequest } from '../middleware/validation.js'
+import { authErrorResponse, errorResponse } from '../utils/apiResponse.js'
 
 const releases = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -18,39 +24,38 @@ releases.get('/', async (c) => {
     const releasesService = new ReleasesService(supabase)
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     const data = await releasesService.getAllReleases(user.id)
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch releases' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to fetch releases',
+      'RELEASE_LIST_FAILED'
+    )
   }
 })
 
 // GET /api/releases/:id - Get release by ID with tasks and songs
-releases.get('/:id', async (c) => {
+releases.get('/:id', validateRequest('param', IdParamSchema), async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const supabase = c.get('supabase')
     const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     // Get release details (user-scoped)
     const release = await releasesService.getReleaseById(id, user.id)
     
     if (!release) {
-      return c.json({ 
-        success: false, 
-        error: 'Release not found' 
-      }, 404)
+      return errorResponse(c, 404, 'Release not found', 'RELEASE_NOT_FOUND')
     }
     
     // Get release tasks
@@ -107,15 +112,17 @@ releases.get('/:id', async (c) => {
     
     return c.json({ success: true, data: releaseWithDetails })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch release' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to fetch release',
+      'RELEASE_FETCH_FAILED'
+    )
   }
 })
 
 // POST /api/releases - Create new release
-releases.post('/', zValidator('json', CreateReleaseSchema), async (c) => {
+releases.post('/', validateRequest('json', CreateReleaseSchema), async (c) => {
   try {
     const releaseData = c.req.valid('json')
     const supabase = c.get('supabase')
@@ -123,7 +130,7 @@ releases.post('/', zValidator('json', CreateReleaseSchema), async (c) => {
     const releasesService = new ReleasesService(supabase)
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     // Ensure the release is created for the authenticated user
@@ -135,118 +142,138 @@ releases.post('/', zValidator('json', CreateReleaseSchema), async (c) => {
     const data = await releasesService.createRelease(validatedReleaseData)
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to create release' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to create release',
+      'RELEASE_CREATE_FAILED'
+    )
   }
 })
 
 // PUT /api/releases/:id - Update release
-releases.put('/:id', zValidator('json', CreateReleaseSchema.partial()), async (c) => {
+releases.put(
+  '/:id',
+  validateRequest('param', IdParamSchema),
+  validateRequest('json', CreateReleaseSchema.partial()),
+  async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const releaseData = c.req.valid('json')
     const supabase = c.get('supabase')
     const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     const data = await releasesService.updateRelease(id, releaseData, user.id)
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update release' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to update release',
+      'RELEASE_UPDATE_FAILED'
+    )
   }
 })
 
 // PATCH /api/releases/:id - Partial update release
-releases.patch('/:id', zValidator('json', CreateReleaseSchema.partial()), async (c) => {
+releases.patch(
+  '/:id',
+  validateRequest('param', IdParamSchema),
+  validateRequest('json', CreateReleaseSchema.partial()),
+  async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const releaseData = c.req.valid('json')
     const supabase = c.get('supabase')
     const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     const data = await releasesService.updateRelease(id, releaseData, user.id)
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update release' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to update release',
+      'RELEASE_PATCH_FAILED'
+    )
   }
 })
 
 // DELETE /api/releases/:id - Delete release
-releases.delete('/:id', async (c) => {
+releases.delete('/:id', validateRequest('param', IdParamSchema), async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const supabase = c.get('supabase')
     const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     const data = await releasesService.deleteRelease(id, user.id)
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete release' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to delete release',
+      'RELEASE_DELETE_FAILED'
+    )
   }
 })
 
 // POST /api/releases/:releaseId/generate-tasks - Generate tasks for existing release
-releases.post('/:releaseId/generate-tasks', async (c) => {
+releases.post(
+  '/:releaseId/generate-tasks',
+  validateRequest('param', ReleaseIdParamSchema),
+  async (c) => {
   try {
-    const releaseId = c.req.param('releaseId')
+    const { releaseId } = c.req.valid('param')
     const supabase = c.get('supabase')
     const user = c.get('user')
     const releasesService = new ReleasesService(supabase)
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     const result = await releasesService.generateTasksForExistingRelease(releaseId, user.id)
     return c.json({ success: true, data: result })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to generate tasks' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to generate tasks',
+      'TASK_GENERATION_FAILED'
+    )
   }
 })
 
 // POST /api/releases/:releaseId/songs - Add song to release
-releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (c) => {
+releases.post(
+  '/:releaseId/songs',
+  validateRequest('param', ReleaseIdParamSchema),
+  validateRequest('json', CreateSongSchema),
+  async (c) => {
   try {
-    const releaseId = c.req.param('releaseId')
+    const { releaseId } = c.req.valid('param')
     const songData = c.req.valid('json')
     const supabase = c.get('supabase')
     const user = c.get('user')
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
-    }
-    
-    // Validate releaseId format
-    if (!releaseId || typeof releaseId !== 'string') {
-      return c.json({ success: false, error: 'Invalid release ID format' }, 400)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     // Verify the release belongs to the authenticated user
@@ -258,7 +285,7 @@ releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (
       .single()
     
     if (releaseError || !release) {
-      return c.json({ success: false, error: 'Release not found or access denied' }, 404)
+      return errorResponse(c, 404, 'Release not found or access denied', 'RELEASE_NOT_FOUND')
     }
     
     // Prepare song data with release_id from URL parameter
@@ -275,18 +302,17 @@ releases.post('/:releaseId/songs', zValidator('json', CreateSongSchema), async (
       .single()
     
     if (error) {
-      return c.json({ 
-        success: false, 
-        error: `Database error: ${error.message}` 
-      }, 400)
+      return errorResponse(c, 400, `Database error: ${error.message}`, 'SONG_CREATE_FAILED')
     }
     
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to create song' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to create song',
+      'SONG_CREATE_FAILED'
+    )
   }
 })
 

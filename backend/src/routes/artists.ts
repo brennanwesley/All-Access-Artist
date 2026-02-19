@@ -3,14 +3,24 @@
  * All Access Artist - Backend API v2.0.0
  */
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
-import { ZodError } from 'zod'
+import { z } from 'zod'
 import { ArtistsService } from '../services/artistsService.js'
-import { CreateArtistSchema } from '../types/schemas.js'
+import { CreateArtistSchema, IdParamSchema } from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
-import { handleValidationError, handleServiceError, handleNotFoundError, handleDatabaseError } from '../utils/errorHandler.js'
+import { handleServiceError } from '../utils/errorHandler.js'
+import { validateRequest } from '../middleware/validation.js'
+import { authErrorResponse, errorResponse } from '../utils/apiResponse.js'
 
 const artists = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+const SocialMediaUpdateSchema = z.object({
+  instagram_url: z.string().optional(),
+  tiktok_url: z.string().optional(),
+  twitter_url: z.string().optional(),
+  youtube_url: z.string().optional(),
+  spotify_url: z.string().optional(),
+  apple_music_url: z.string().optional(),
+})
 
 // GET /api/artists - Get all artists
 artists.get('/', async (c) => {
@@ -33,32 +43,36 @@ artists.get('/', async (c) => {
 })
 
 // GET /api/artists/:id - Get artist by ID
-artists.get('/:id', async (c) => {
+artists.get('/:id', validateRequest('param', IdParamSchema), async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const supabase = c.get('supabase')
     const artistsService = new ArtistsService(supabase)
     
     const data = await artistsService.getArtistById(id)
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch artist' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to fetch artist',
+      'ARTIST_FETCH_FAILED'
+    )
   }
 })
 
 // POST /api/artists - Create new artist
-artists.post('/', async (c) => {
+artists.post('/', validateRequest('json', CreateArtistSchema), async (c) => {
   try {
-    // Manual validation with standardized error handling
-    const body = await c.req.json()
-    const validatedData = CreateArtistSchema.parse(body)
+    const validatedData = c.req.valid('json')
     
     const supabase = c.get('supabase')
     const user = c.get('user')
     const artistsService = new ArtistsService(supabase)
+
+    if (!user?.sub) {
+      return authErrorResponse(c, 'User not authenticated')
+    }
     
     // Check if artist profile already exists for this user
     const { data: existingArtist } = await supabase
@@ -96,17 +110,18 @@ artists.post('/', async (c) => {
       }
     }, 201)
   } catch (error) {
-    if (error instanceof ZodError) {
-      return handleValidationError(error, c)
-    }
     return handleServiceError(error as Error, c, 'create artist')
   }
 })
 
 // PUT /api/artists/:id - Update artist
-artists.put('/:id', zValidator('json', CreateArtistSchema.partial()), async (c) => {
+artists.put(
+  '/:id',
+  validateRequest('param', IdParamSchema),
+  validateRequest('json', CreateArtistSchema.partial()),
+  async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const artistData = c.req.valid('json')
     const supabase = c.get('supabase')
     const artistsService = new ArtistsService(supabase)
@@ -114,37 +129,45 @@ artists.put('/:id', zValidator('json', CreateArtistSchema.partial()), async (c) 
     const data = await artistsService.updateArtist(id, artistData)
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update artist' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to update artist',
+      'ARTIST_UPDATE_FAILED'
+    )
   }
 })
 
 // DELETE /api/artists/:id - Delete artist
-artists.delete('/:id', async (c) => {
+artists.delete('/:id', validateRequest('param', IdParamSchema), async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const supabase = c.get('supabase')
     const artistsService = new ArtistsService(supabase)
     
     const data = await artistsService.deleteArtist(id)
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete artist' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to delete artist',
+      'ARTIST_DELETE_FAILED'
+    )
   }
 })
 
 // PATCH /api/artists/social-media - Update social media URLs for current user
-artists.patch('/social-media', async (c) => {
+artists.patch('/social-media', validateRequest('json', SocialMediaUpdateSchema), async (c) => {
   try {
-    const body = await c.req.json()
+    const body = c.req.valid('json')
     const supabase = c.get('supabase')
     const user = c.get('user')
     const artistsService = new ArtistsService(supabase)
+
+    if (!user?.sub) {
+      return authErrorResponse(c, 'User not authenticated')
+    }
     
     // Validate social media URLs using partial schema
     const socialMediaFields = {
@@ -171,10 +194,12 @@ artists.patch('/social-media', async (c) => {
       }
     })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update social media URLs' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to update social media URLs',
+      'ARTIST_SOCIAL_MEDIA_UPDATE_FAILED'
+    )
   }
 })
 

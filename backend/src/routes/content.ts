@@ -6,43 +6,61 @@
  * Features: CRUD operations, usage tracking, content search, statistics
  */
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
 import { ContentService } from '../services/contentService.js'
 import { 
+  IdParamSchema,
   CreateGeneratedContentSchema, 
   UpdateGeneratedContentSchema 
 } from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
+import { validateRequest } from '../middleware/validation.js'
+import { errorResponse } from '../utils/apiResponse.js'
 
 const content = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
+const ContentListQuerySchema = z.object({
+  type: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+})
+
+const ContentSearchQuerySchema = z.object({
+  q: z.string().min(1, 'Search term is required'),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+})
+
 // GET /api/content - Get all generated content with optional filtering
-content.get('/', async (c) => {
+content.get('/', validateRequest('query', ContentListQuerySchema), async (c) => {
   try {
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
     
     // Query parameters for filtering and pagination
-    const contentType = c.req.query('type')
-    const limit = parseInt(c.req.query('limit') || '50')
-    const offset = parseInt(c.req.query('offset') || '0')
+    const {
+      type: contentType,
+      limit = 50,
+      offset = 0,
+    } = c.req.valid('query')
     
     const contentService = new ContentService(supabase)
     const data = await contentService.getAllContent(userId, contentType, limit, offset)
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch generated content' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to fetch generated content',
+      'CONTENT_LIST_FAILED'
+    )
   }
 })
 
 // GET /api/content/:id - Get generated content by ID
-content.get('/:id', async (c) => {
+content.get('/:id', validateRequest('param', IdParamSchema), async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
     
@@ -51,15 +69,17 @@ content.get('/:id', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch generated content' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to fetch generated content',
+      'CONTENT_FETCH_FAILED'
+    )
   }
 })
 
 // POST /api/content - Create new generated content
-content.post('/', zValidator('json', CreateGeneratedContentSchema), async (c) => {
+content.post('/', validateRequest('json', CreateGeneratedContentSchema), async (c) => {
   try {
     const contentData = c.req.valid('json')
     const userId = c.get('jwtPayload').sub
@@ -70,17 +90,23 @@ content.post('/', zValidator('json', CreateGeneratedContentSchema), async (c) =>
     
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to create generated content' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to create generated content',
+      'CONTENT_CREATE_FAILED'
+    )
   }
 })
 
 // PUT /api/content/:id - Update generated content
-content.put('/:id', zValidator('json', UpdateGeneratedContentSchema), async (c) => {
+content.put(
+  '/:id',
+  validateRequest('param', IdParamSchema),
+  validateRequest('json', UpdateGeneratedContentSchema),
+  async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const contentData = c.req.valid('json')
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
@@ -90,17 +116,19 @@ content.put('/:id', zValidator('json', UpdateGeneratedContentSchema), async (c) 
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update generated content' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to update generated content',
+      'CONTENT_UPDATE_FAILED'
+    )
   }
 })
 
 // DELETE /api/content/:id - Delete generated content
-content.delete('/:id', async (c) => {
+content.delete('/:id', validateRequest('param', IdParamSchema), async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
     
@@ -109,17 +137,19 @@ content.delete('/:id', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete generated content' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to delete generated content',
+      'CONTENT_DELETE_FAILED'
+    )
   }
 })
 
 // POST /api/content/:id/track-usage - Track content usage
-content.post('/:id/track-usage', async (c) => {
+content.post('/:id/track-usage', validateRequest('param', IdParamSchema), async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
     
@@ -128,37 +158,33 @@ content.post('/:id/track-usage', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to track content usage' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to track content usage',
+      'CONTENT_TRACK_USAGE_FAILED'
+    )
   }
 })
 
 // GET /api/content/search - Search generated content
-content.get('/search', async (c) => {
+content.get('/search', validateRequest('query', ContentSearchQuerySchema), async (c) => {
   try {
-    const searchTerm = c.req.query('q')
-    const limit = parseInt(c.req.query('limit') || '20')
+    const { q: searchTerm, limit = 20 } = c.req.valid('query')
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
-    
-    if (!searchTerm) {
-      return c.json({ 
-        success: false, 
-        error: 'Search term is required' 
-      }, 400)
-    }
     
     const contentService = new ContentService(supabase)
     const data = await contentService.searchContent(userId, searchTerm, limit)
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to search generated content' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to search generated content',
+      'CONTENT_SEARCH_FAILED'
+    )
   }
 })
 
@@ -173,10 +199,12 @@ content.get('/stats', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch content statistics' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to fetch content statistics',
+      'CONTENT_STATS_FAILED'
+    )
   }
 })
 

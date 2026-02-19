@@ -4,9 +4,10 @@
  */
 import type { Context } from 'hono'
 import { ZodError } from 'zod'
-import { APIError, CommonErrors, ErrorCategory, ErrorSeverity, type ErrorResponse } from '../types/errors.js'
+import { APIError, type ErrorResponse } from '../types/errors.js'
 import type { Bindings, Variables } from '../types/bindings.js'
 import { logger, extractErrorInfo } from './logger.js'
+import { errorResponse, validationErrorResponse } from './apiResponse.js'
 
 type HonoContext = Context<{ Bindings: Bindings; Variables: Variables }>
 
@@ -43,17 +44,7 @@ export function createErrorResponse(
  * Handle Zod validation errors
  */
 export function handleValidationError(zodError: ZodError, context: HonoContext) {
-  const issues = zodError.issues.map(issue => ({
-    path: issue.path.join('.'),
-    message: issue.message,
-    code: issue.code
-  }))
-
-  return context.json({
-    success: false,
-    error: 'Request validation failed',
-    details: issues
-  }, 400)
+  return validationErrorResponse(context, zodError.issues)
 }
 
 /**
@@ -78,7 +69,10 @@ export function handleDatabaseError(supabaseError: unknown, context: HonoContext
 
   return context.json({
     success: false,
-    error: `Failed to ${operation}`
+    error: {
+      message: `Failed to ${operation}`,
+      code: 'DATABASE_OPERATION_FAILED'
+    }
   }, 500)
 }
 
@@ -86,10 +80,7 @@ export function handleDatabaseError(supabaseError: unknown, context: HonoContext
  * Handle authentication errors
  */
 export function handleAuthError(message: string, context: HonoContext, code?: string) {
-  return context.json({
-    success: false,
-    error: message
-  }, 401)
+  return errorResponse(context, 401, message, code ?? 'AUTH_REQUIRED')
 }
 
 /**
@@ -103,26 +94,27 @@ export function handleServiceError(error: Error, context: HonoContext, operation
     method: context.req.method
   })
 
-  return context.json({
-    success: false,
-    error: error instanceof Error ? error.message : `Failed to ${operation}`
-  }, 500)
+  return errorResponse(
+    context,
+    500,
+    error instanceof Error ? error.message : `Failed to ${operation}`,
+    'SERVICE_OPERATION_FAILED'
+  )
 }
 
 /**
  * Handle not found errors
  */
 export function handleNotFoundError(resource: string, context: HonoContext, id?: string) {
-  return context.json({
-    success: false,
-    error: `${resource} not found`
-  }, 404)
+  return errorResponse(context, 404, `${resource} not found`, 'RESOURCE_NOT_FOUND',
+    id ? { id } : undefined
+  )
 }
 
 /**
  * Async error wrapper for route handlers
  */
-export function asyncErrorHandler<T extends any[], R>(
+export function asyncErrorHandler<T extends unknown[], R>(
   fn: (...args: T) => Promise<R>
 ) {
   return async (...args: T): Promise<R> => {

@@ -4,10 +4,12 @@
  */
 
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { Variables } from '../types/bindings.js'
+import type Stripe from 'stripe'
+import { validateRequest } from '../middleware/validation.js'
+import { errorResponse } from '../utils/apiResponse.js'
 
 const onboarding = new Hono<{ Variables: Variables }>()
 
@@ -29,11 +31,19 @@ const CompleteOnboardingSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters')
 })
 
+const OnboardingStatusParamSchema = z.object({
+  session_id: z.string().min(1, 'Session ID is required')
+})
+
+const CreateFallbackSchema = z.object({
+  session_id: z.string().min(1, 'Session ID is required')
+})
+
 /**
  * POST /api/onboarding/complete
  * Complete user onboarding after successful payment
  */
-onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async (c) => {
+onboarding.post('/complete', validateRequest('json', CompleteOnboardingSchema), async (c) => {
   try {
     const { session_id, full_name, email, phone, artist_name, referral_code, password } = c.req.valid('json')
 
@@ -58,16 +68,10 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
       const existingUser = existingUsers?.users?.find(u => u.email === email)
       
       if (existingUser) {
-        return c.json({ 
-          success: false, 
-          error: { message: 'An account with this email already exists. Please sign in instead.' } 
-        }, 409)
+        return errorResponse(c, 409, 'An account with this email already exists. Please sign in instead.', 'ONBOARDING_EMAIL_EXISTS')
       }
       
-      return c.json({ 
-        success: false, 
-        error: { message: 'Invalid session. Please contact support.' } 
-      }, 404)
+      return errorResponse(c, 404, 'Invalid session. Please contact support.', 'ONBOARDING_SESSION_INVALID')
     }
 
     // Check if onboarding token is still valid
@@ -75,10 +79,7 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
     const expiresAt = new Date(profile.onboarding_token_expires)
     
     if (now > expiresAt) {
-      return c.json({ 
-        success: false, 
-        error: { message: 'Onboarding session expired. Please contact support.' } 
-      }, 400)
+      return errorResponse(c, 400, 'Onboarding session expired. Please contact support.', 'ONBOARDING_SESSION_EXPIRED')
     }
 
     // Update user account with new password and profile info
@@ -94,10 +95,7 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
     })
 
     if (updateError) {
-      return c.json({ 
-        success: false, 
-        error: { message: 'Failed to update account. Please try again.' } 
-      }, 500)
+      return errorResponse(c, 500, 'Failed to update account. Please try again.', 'ONBOARDING_ACCOUNT_UPDATE_FAILED')
     }
 
     // Parse full name into first and last name
@@ -115,10 +113,7 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
         .single()
 
       if (referralError || !referringUser) {
-        return c.json({ 
-          success: false, 
-          error: { message: 'Invalid referral code. Please check and try again.' } 
-        }, 400)
+        return errorResponse(c, 400, 'Invalid referral code. Please check and try again.', 'ONBOARDING_REFERRAL_INVALID')
       }
 
       referredByUserId = referringUser.id
@@ -141,10 +136,7 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
       .eq('id', profile.id)
 
     if (updateProfileError) {
-      return c.json({ 
-        success: false, 
-        error: { message: 'Failed to complete profile setup. Please try again.' } 
-      }, 500)
+      return errorResponse(c, 500, 'Failed to complete profile setup. Please try again.', 'ONBOARDING_PROFILE_UPDATE_FAILED')
     }
 
     // Create artist_profiles record for artist accounts
@@ -173,11 +165,8 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
       }
     })
 
-  } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: { message: 'Internal server error' } 
-    }, 500)
+  } catch (_error) {
+    return errorResponse(c, 500, 'Internal server error', 'ONBOARDING_COMPLETE_FAILED')
   }
 })
 
@@ -185,11 +174,12 @@ onboarding.post('/complete', zValidator('json', CompleteOnboardingSchema), async
  * GET /api/onboarding/status/:session_id
  * Check onboarding status for a session
  */
-onboarding.get('/status/:session_id', async (c) => {
+onboarding.get('/status/:session_id', validateRequest('param', OnboardingStatusParamSchema), async (c) => {
   try {
-    const sessionId = c.req.param('session_id')
+    const { session_id: sessionId } = c.req.valid('param')
+    const supabase = createSupabaseAdmin()
 
-    const { data: profile, error } = await c.get('supabase')
+    const { data: profile, error } = await supabase
       .from('user_profiles')
       .select(`
         id,
@@ -201,10 +191,7 @@ onboarding.get('/status/:session_id', async (c) => {
       .single()
 
     if (error || !profile) {
-      return c.json({ 
-        success: false, 
-        error: { message: 'Session not found' } 
-      }, 404)
+      return errorResponse(c, 404, 'Session not found', 'ONBOARDING_STATUS_NOT_FOUND')
     }
 
     const now = new Date()
@@ -222,11 +209,8 @@ onboarding.get('/status/:session_id', async (c) => {
       }
     })
 
-  } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: { message: 'Internal server error' } 
-    }, 500)
+  } catch (_error) {
+    return errorResponse(c, 500, 'Internal server error', 'ONBOARDING_STATUS_FAILED')
   }
 })
 
@@ -234,9 +218,7 @@ onboarding.get('/status/:session_id', async (c) => {
  * POST /api/onboarding/create-fallback
  * Fallback account creation if webhook failed
  */
-onboarding.post('/create-fallback', zValidator('json', z.object({
-  session_id: z.string().min(1, 'Session ID is required')
-})), async (c) => {
+onboarding.post('/create-fallback', validateRequest('json', CreateFallbackSchema), async (c) => {
   try {
     const { session_id } = c.req.valid('json')
     
@@ -266,25 +248,19 @@ onboarding.post('/create-fallback', zValidator('json', z.object({
     const session = await stripe.checkout.sessions.retrieve(session_id)
     
     if (!session.customer_details?.email) {
-      return c.json({
-        success: false,
-        error: { message: 'Unable to retrieve customer details from Stripe' }
-      }, 400)
+      return errorResponse(c, 400, 'Unable to retrieve customer details from Stripe', 'ONBOARDING_FALLBACK_CUSTOMER_DETAILS_MISSING')
     }
 
     // Create account using the same logic as webhook
-    await stripeService.handleCheckoutCompleted(session as any)
+    await stripeService.handleCheckoutCompleted(session as Stripe.Checkout.Session)
     
     return c.json({
       success: true,
       data: { message: 'Account created successfully via fallback' }
     })
 
-  } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: { message: 'Failed to create account. Please contact support.' } 
-    }, 500)
+  } catch (_error) {
+    return errorResponse(c, 500, 'Failed to create account. Please contact support.', 'ONBOARDING_FALLBACK_FAILED')
   }
 })
 

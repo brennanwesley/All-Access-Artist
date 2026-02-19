@@ -3,15 +3,15 @@
  * All Access Artist - Backend API v2.0.0
  */
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
-import { ZodError } from 'zod'
 import { ProfileService } from '../services/profileService.js'
 import { 
   UpdateUserProfileSchema, 
   ReferralValidationSchema 
 } from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
-import { handleValidationError, handleServiceError } from '../utils/errorHandler.js'
+import { handleServiceError } from '../utils/errorHandler.js'
+import { validateRequest } from '../middleware/validation.js'
+import { authErrorResponse } from '../utils/apiResponse.js'
 
 const profile = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -21,16 +21,15 @@ profile.get('/', async (c) => {
     const jwtPayload = c.get('jwtPayload')
     
     if (!jwtPayload?.sub) {
-      return c.json({ 
-        success: false, 
-        error: 'Authentication required' 
-      }, 401)
+      return authErrorResponse(c)
     }
 
     const supabase = c.get('supabase')
-    const supabaseAdmin = c.get('supabaseAdmin')
     const profileService = new ProfileService(supabase)
-    const profile = await profileService.getUserProfile(jwtPayload.sub, supabaseAdmin)
+    const profile = await profileService.getUserProfile(jwtPayload.sub, {
+      email: jwtPayload.email ?? null,
+      phone: jwtPayload.phone ?? null,
+    })
     
     return c.json({ 
       success: true, 
@@ -46,19 +45,14 @@ profile.get('/', async (c) => {
 })
 
 // PUT /api/profile - Update current user's profile
-profile.put('/', async (c) => {
+profile.put('/', validateRequest('json', UpdateUserProfileSchema), async (c) => {
   try {
     const jwtPayload = c.get('jwtPayload')
     if (!jwtPayload?.sub) {
-      return c.json({ 
-        success: false, 
-        error: 'Authentication required' 
-      }, 401)
+      return authErrorResponse(c)
     }
 
-    // Manual validation with standardized error handling
-    const body = await c.req.json()
-    const validatedData = UpdateUserProfileSchema.parse(body)
+    const validatedData = c.req.valid('json')
     
     const supabase = c.get('supabase')
     const profileService = new ProfileService(supabase)
@@ -73,27 +67,19 @@ profile.put('/', async (c) => {
       }
     })
   } catch (error) {
-    if (error instanceof ZodError) {
-      return handleValidationError(error, c)
-    }
     return handleServiceError(error as Error, c, 'update user profile')
   }
 })
 
 // POST /api/profile/referral - Validate and apply referral code
-profile.post('/referral', async (c) => {
+profile.post('/referral', validateRequest('json', ReferralValidationSchema), async (c) => {
   try {
     const jwtPayload = c.get('jwtPayload')
     if (!jwtPayload?.sub) {
-      return c.json({ 
-        success: false, 
-        error: 'Authentication required' 
-      }, 401)
+      return authErrorResponse(c)
     }
 
-    // Manual validation with standardized error handling
-    const body = await c.req.json()
-    const validatedData = ReferralValidationSchema.parse(body)
+    const validatedData = c.req.valid('json')
     
     const supabase = c.get('supabase')
     const profileService = new ProfileService(supabase)
@@ -112,9 +98,6 @@ profile.post('/referral', async (c) => {
       }
     }, 201)
   } catch (error) {
-    if (error instanceof ZodError) {
-      return handleValidationError(error, c)
-    }
     return handleServiceError(error as Error, c, 'apply referral code')
   }
 })
@@ -124,10 +107,7 @@ profile.get('/referral-stats', async (c) => {
   try {
     const jwtPayload = c.get('jwtPayload')
     if (!jwtPayload?.sub) {
-      return c.json({ 
-        success: false, 
-        error: 'Authentication required' 
-      }, 401)
+      return authErrorResponse(c)
     }
 
     const supabase = c.get('supabase')
@@ -148,19 +128,14 @@ profile.get('/referral-stats', async (c) => {
 })
 
 // POST /api/profile/validate-referral - Validate referral code without applying
-profile.post('/validate-referral', async (c) => {
+profile.post('/validate-referral', validateRequest('json', ReferralValidationSchema), async (c) => {
   try {
     const jwtPayload = c.get('jwtPayload')
     if (!jwtPayload?.sub) {
-      return c.json({ 
-        success: false, 
-        error: 'Authentication required' 
-      }, 401)
+      return authErrorResponse(c)
     }
 
-    // Manual validation with standardized error handling
-    const body = await c.req.json()
-    const validatedData = ReferralValidationSchema.parse(body)
+    const validatedData = c.req.valid('json')
     
     const supabase = c.get('supabase')
     const profileService = new ProfileService(supabase)
@@ -179,9 +154,6 @@ profile.post('/validate-referral', async (c) => {
       }
     })
   } catch (error) {
-    if (error instanceof ZodError) {
-      return handleValidationError(error, c)
-    }
     return handleServiceError(error as Error, c, 'validate referral code')
   }
 })

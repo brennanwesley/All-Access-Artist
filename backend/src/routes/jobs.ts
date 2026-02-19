@@ -6,44 +6,58 @@
  * Features: Job creation, status tracking, webhook handling, retry logic
  */
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
 import { GenerationJobService } from '../services/generationJobService.js'
 import { 
+  IdParamSchema,
   CreateGenerationJobSchema, 
   UpdateGenerationJobSchema 
 } from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
+import { validateRequest } from '../middleware/validation.js'
+import { errorResponse } from '../utils/apiResponse.js'
 
 const jobs = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
+const JobListQuerySchema = z.object({
+  status: z.string().optional(),
+  type: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+})
+
 // GET /api/jobs - Get all generation jobs with optional filtering
-jobs.get('/', async (c) => {
+jobs.get('/', validateRequest('query', JobListQuerySchema), async (c) => {
   try {
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
     
     // Query parameters for filtering and pagination
-    const jobStatus = c.req.query('status')
-    const jobType = c.req.query('type')
-    const limit = parseInt(c.req.query('limit') || '50')
-    const offset = parseInt(c.req.query('offset') || '0')
+    const {
+      status: jobStatus,
+      type: jobType,
+      limit = 50,
+      offset = 0,
+    } = c.req.valid('query')
     
     const jobService = new GenerationJobService(supabase)
     const data = await jobService.getAllJobs(userId, jobStatus, jobType, limit, offset)
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch generation jobs' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to fetch generation jobs',
+      'GENERATION_JOB_LIST_FAILED'
+    )
   }
 })
 
 // GET /api/jobs/:id - Get generation job by ID
-jobs.get('/:id', async (c) => {
+jobs.get('/:id', validateRequest('param', IdParamSchema), async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
     
@@ -52,15 +66,17 @@ jobs.get('/:id', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch generation job' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to fetch generation job',
+      'GENERATION_JOB_FETCH_FAILED'
+    )
   }
 })
 
 // POST /api/jobs - Create new generation job
-jobs.post('/', zValidator('json', CreateGenerationJobSchema), async (c) => {
+jobs.post('/', validateRequest('json', CreateGenerationJobSchema), async (c) => {
   try {
     const jobData = c.req.valid('json')
     const userId = c.get('jwtPayload').sub
@@ -71,17 +87,23 @@ jobs.post('/', zValidator('json', CreateGenerationJobSchema), async (c) => {
     
     return c.json({ success: true, data }, 201)
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to create generation job' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to create generation job',
+      'GENERATION_JOB_CREATE_FAILED'
+    )
   }
 })
 
 // PATCH /api/jobs/:id - Update generation job (typically called by webhooks)
-jobs.patch('/:id', zValidator('json', UpdateGenerationJobSchema), async (c) => {
+jobs.patch(
+  '/:id',
+  validateRequest('param', IdParamSchema),
+  validateRequest('json', UpdateGenerationJobSchema),
+  async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const jobData = c.req.valid('json')
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
@@ -91,17 +113,19 @@ jobs.patch('/:id', zValidator('json', UpdateGenerationJobSchema), async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update generation job' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to update generation job',
+      'GENERATION_JOB_UPDATE_FAILED'
+    )
   }
 })
 
 // POST /api/jobs/:id/cancel - Cancel generation job
-jobs.post('/:id/cancel', async (c) => {
+jobs.post('/:id/cancel', validateRequest('param', IdParamSchema), async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
     
@@ -110,17 +134,19 @@ jobs.post('/:id/cancel', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to cancel generation job' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to cancel generation job',
+      'GENERATION_JOB_CANCEL_FAILED'
+    )
   }
 })
 
 // POST /api/jobs/:id/retry - Retry failed generation job
-jobs.post('/:id/retry', async (c) => {
+jobs.post('/:id/retry', validateRequest('param', IdParamSchema), async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const userId = c.get('jwtPayload').sub
     const supabase = c.get('supabase')
     
@@ -129,10 +155,12 @@ jobs.post('/:id/retry', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to retry generation job' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to retry generation job',
+      'GENERATION_JOB_RETRY_FAILED'
+    )
   }
 })
 
@@ -147,10 +175,12 @@ jobs.get('/stats', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch job statistics' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to fetch job statistics',
+      'GENERATION_JOB_STATS_FAILED'
+    )
   }
 })
 

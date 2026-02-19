@@ -7,6 +7,7 @@ import { jwt } from 'hono/jwt'
 import { createClient } from '@supabase/supabase-js'
 import type { Bindings, Variables } from '../types/bindings.js'
 import { logger, extractErrorInfo } from '../utils/logger.js'
+import { errorResponse } from '../utils/apiResponse.js'
 
 const authLogger = logger.child('auth')
 
@@ -28,7 +29,7 @@ export const createJwtAuth = (getSecret: (c: unknown) => string) => {
       return jwtMiddleware(c as Parameters<typeof jwtMiddleware>[0], next)
     } catch (error) {
       authLogger.error('JWT middleware error', extractErrorInfo(error))
-      return ctx.json({ error: 'JWT validation failed' }, 401)
+      return errorResponse(c as Parameters<typeof errorResponse>[0], 401, 'JWT validation failed', 'AUTH_JWT_FAILED')
     }
   }
 }
@@ -50,7 +51,7 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       authLogger.warn('Missing or invalid authorization header', { path: requestPath })
-      return c.json({ error: 'Missing or invalid authorization header' }, 401)
+      return errorResponse(c, 401, 'Missing or invalid authorization header', 'AUTH_HEADER_INVALID')
     }
 
     const token = authHeader.substring(7)
@@ -66,7 +67,7 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
         hasServiceKey: !!supabaseServiceKey,
         hasAnonKey: !!supabaseAnonKey
       })
-      return c.json({ error: 'Server configuration error' }, 500)
+      return errorResponse(c, 500, 'Server configuration error', 'AUTH_SERVER_CONFIG_ERROR')
     }
 
     // Create user-scoped Supabase client for RLS operations
@@ -86,7 +87,7 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
     
     if (authError || !supabaseUser) {
       authLogger.warn('JWT token validation failed', { error: authError?.message, path: requestPath })
-      return c.json({ error: 'Invalid or expired token' }, 401)
+      return errorResponse(c, 401, 'Invalid or expired token', 'AUTH_TOKEN_INVALID')
     }
     
     authLogger.debug('User authenticated', { userId: supabaseUser.id, email: supabaseUser.email })
@@ -95,6 +96,7 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
       id: supabaseUser.id,
       sub: supabaseUser.id,
       email: supabaseUser.email,
+      phone: supabaseUser.phone,
       user_metadata: supabaseUser.user_metadata,
       app_metadata: supabaseUser.app_metadata
     }
@@ -111,6 +113,6 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
       ...extractErrorInfo(error),
       path: requestPath
     })
-    return c.json({ error: 'Authentication failed' }, 401)
+    return errorResponse(c, 401, 'Authentication failed', 'AUTH_FAILED')
   }
 })

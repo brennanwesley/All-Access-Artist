@@ -2,17 +2,16 @@
  * Calendar Service - Business logic for content calendar management
  * All Access Artist - Backend API v2.0.0
  */
-import { createClient } from '@supabase/supabase-js'
-import type { Bindings } from '../types/bindings.js'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { CreateCalendarData, UpdateContentCalendarData } from '../types/schemas.js'
+
+type CalendarUpdateData = Partial<CreateCalendarData> | UpdateContentCalendarData
 
 export class CalendarService {
-  private supabase
+  private supabase: SupabaseClient
 
-  constructor(bindings: Bindings) {
-    this.supabase = createClient(
-      bindings.SUPABASE_URL,
-      bindings.SUPABASE_SERVICE_KEY
-    )
+  constructor(supabase: SupabaseClient) {
+    this.supabase = supabase
   }
 
   async getAllCalendarEvents(userId: string) {
@@ -29,7 +28,7 @@ export class CalendarService {
     return data
   }
 
-  async createCalendarEvent(userId: string, eventData: any) {
+  async createCalendarEvent(userId: string, eventData: CreateCalendarData) {
     const { data, error } = await this.supabase
       .from('content_calendar')
       .insert({
@@ -62,7 +61,7 @@ export class CalendarService {
     return data
   }
 
-  async updateCalendarEvent(userId: string, eventId: string, eventData: any) {
+  async updateCalendarEvent(userId: string, eventId: string, eventData: CalendarUpdateData) {
     const { data, error } = await this.supabase
       .from('content_calendar')
       .update(eventData)

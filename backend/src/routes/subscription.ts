@@ -4,12 +4,13 @@
  */
 
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { Variables } from '../types/bindings.js'
 import { StripeService } from '../services/stripeService.js'
 import { supabaseAuth } from '../middleware/auth.js'
 import { getSubscriptionStatus } from '../middleware/subscriptionAuth.js'
+import { validateRequest } from '../middleware/validation.js'
+import { authErrorResponse, errorResponse } from '../utils/apiResponse.js'
 
 const subscription = new Hono<{ Variables: Variables }>()
 
@@ -36,7 +37,7 @@ subscription.get('/status', async (c) => {
     const jwtPayload = c.get('jwtPayload')
     
     if (!user || !jwtPayload) {
-      return c.json({ success: false, error: { message: 'Authentication required' } }, 401)
+      return authErrorResponse(c)
     }
 
     // Get subscription status
@@ -60,7 +61,7 @@ subscription.get('/status', async (c) => {
       .single()
 
     if (error) {
-      return c.json({ success: false, error: { message: 'Failed to fetch subscription details' } }, 500)
+      return errorResponse(c, 500, 'Failed to fetch subscription details', 'SUBSCRIPTION_DETAILS_FETCH_FAILED')
     }
 
     // Get account_type for admin check
@@ -83,8 +84,8 @@ subscription.get('/status', async (c) => {
       }
     })
 
-  } catch (error) {
-    return c.json({ success: false, error: { message: 'Failed to get subscription status' } }, 500)
+  } catch (_error) {
+    return errorResponse(c, 500, 'Failed to get subscription status', 'SUBSCRIPTION_STATUS_FETCH_FAILED')
   }
 })
 
@@ -92,7 +93,7 @@ subscription.get('/status', async (c) => {
  * POST /api/subscription/checkout
  * Create Stripe Checkout session for subscription
  */
-subscription.post('/checkout', zValidator('json', CheckoutSessionSchema), async (c) => {
+subscription.post('/checkout', validateRequest('json', CheckoutSessionSchema), async (c) => {
   try {
     const { priceId, successUrl, cancelUrl } = c.req.valid('json')
     
@@ -120,8 +121,8 @@ subscription.post('/checkout', zValidator('json', CheckoutSessionSchema), async 
       }
     })
 
-  } catch (error) {
-    return c.json({ success: false, error: { message: 'Failed to create checkout session' } }, 500)
+  } catch (_error) {
+    return errorResponse(c, 500, 'Failed to create checkout session', 'SUBSCRIPTION_CHECKOUT_CREATE_FAILED')
   }
 })
 
@@ -134,7 +135,7 @@ subscription.post('/cancel', async (c) => {
     const user = c.get('user')
     
     if (!user) {
-      return c.json({ success: false, error: { message: 'Authentication required' } }, 401)
+      return authErrorResponse(c)
     }
 
     // Get user's subscription ID
@@ -145,7 +146,7 @@ subscription.post('/cancel', async (c) => {
       .single()
 
     if (error || !profile?.stripe_subscription_id) {
-      return c.json({ success: false, error: { message: 'No active subscription found' } }, 404)
+      return errorResponse(c, 404, 'No active subscription found', 'SUBSCRIPTION_NOT_FOUND')
     }
 
     const stripeService = new StripeService(c.get('supabase'))
@@ -159,8 +160,8 @@ subscription.post('/cancel', async (c) => {
       }
     })
 
-  } catch (error) {
-    return c.json({ success: false, error: { message: 'Failed to cancel subscription' } }, 500)
+  } catch (_error) {
+    return errorResponse(c, 500, 'Failed to cancel subscription', 'SUBSCRIPTION_CANCEL_FAILED')
   }
 })
 
@@ -192,10 +193,7 @@ subscription.get('/products', async (c) => {
     )
 
     if (!artistProduct) {
-      return c.json({ 
-        success: false, 
-        error: { message: 'Artist Plan product not found in Stripe' } 
-      }, 404)
+      return errorResponse(c, 404, 'Artist Plan product not found in Stripe', 'SUBSCRIPTION_PRODUCT_NOT_FOUND')
     }
 
     // Get all prices for the Artist Plan product
@@ -210,10 +208,7 @@ subscription.get('/products', async (c) => {
     )
 
     if (!recurringPrice) {
-      return c.json({ 
-        success: false, 
-        error: { message: 'No recurring monthly price found for Artist Plan' } 
-      }, 404)
+      return errorResponse(c, 404, 'No recurring monthly price found for Artist Plan', 'SUBSCRIPTION_PRICE_NOT_FOUND')
     }
 
     const productData = [{
@@ -241,8 +236,8 @@ subscription.get('/products', async (c) => {
       data: productData
     })
 
-  } catch (error) {
-    return c.json({ success: false, error: { message: 'Failed to get subscription products' } }, 500)
+  } catch (_error) {
+    return errorResponse(c, 500, 'Failed to get subscription products', 'SUBSCRIPTION_PRODUCTS_FETCH_FAILED')
   }
 })
 
@@ -263,7 +258,7 @@ subscription.post('/setup', async (c) => {
     
     // Only admin can run setup
     if (profile?.account_type !== 'admin') {
-      return c.json({ success: false, error: { message: 'Admin access required' } }, 403)
+      return errorResponse(c, 403, 'Admin access required', 'SUBSCRIPTION_SETUP_ADMIN_REQUIRED')
     }
 
     const stripeService = new StripeService(c.get('supabase'))
@@ -277,8 +272,8 @@ subscription.post('/setup', async (c) => {
       }
     })
 
-  } catch (error) {
-    return c.json({ success: false, error: { message: 'Failed to setup Stripe products' } }, 500)
+  } catch (_error) {
+    return errorResponse(c, 500, 'Failed to setup Stripe products', 'SUBSCRIPTION_SETUP_FAILED')
   }
 })
 

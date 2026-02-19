@@ -4,10 +4,12 @@
  * All Access Artist - Backend API v2.0.0
  */
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import type { Bindings, Variables } from '../types/bindings.js'
 import { LyricSheetService } from '../services/LyricSheetService.js'
+import { SectionIdParamSchema, SongIdParamSchema } from '../types/schemas.js'
+import { validateRequest } from '../middleware/validation.js'
+import { authErrorResponse, errorResponse } from '../utils/apiResponse.js'
 
 const lyrics = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -28,15 +30,24 @@ const UpdateLyricSectionSchema = z.object({
   content: z.string().min(1, 'Content is required').optional()
 })
 
+interface LyricSheetSectionRecord {
+  id: string
+  section_type: string
+  section_lyrics: string
+  section_order: number
+  created_at: string
+  updated_at: string
+}
+
 // GET /api/lyrics/:songId - Get lyric sheet for a song
-lyrics.get('/:songId', async (c) => {
+lyrics.get('/:songId', validateRequest('param', SongIdParamSchema), async (c) => {
   try {
-    const songId = c.req.param('songId')
+    const { songId } = c.req.valid('param')
     const supabase = c.get('supabase')
     const user = c.get('jwtPayload')
     
     if (!user?.sub) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     // Get lyric sheet with sections (filtered by user_id)
@@ -49,10 +60,7 @@ lyrics.get('/:songId', async (c) => {
     
     if (sheetError) {
       if (sheetError.code === 'PGRST116') { // No rows returned
-        return c.json({
-          success: false,
-          error: 'No lyric sheet found for this song'
-        }, 404)
+        return errorResponse(c, 404, 'No lyric sheet found for this song', 'LYRIC_SHEET_NOT_FOUND')
       }
       throw new Error(`Database error: ${sheetError.message}`)
     }
@@ -70,7 +78,7 @@ lyrics.get('/:songId', async (c) => {
     }
     
     // Map sections to frontend format
-    const mappedSections = sections?.map((section: any) => ({
+    const mappedSections = (sections as LyricSheetSectionRecord[] | null)?.map((section) => ({
       id: section.id,
       section_type: section.section_type,
       content: section.section_lyrics,
@@ -89,20 +97,30 @@ lyrics.get('/:songId', async (c) => {
       data: lyricSheetWithSections
     })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch lyric sheet'
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to fetch lyric sheet',
+      'LYRIC_SHEET_FETCH_FAILED'
+    )
   }
 })
 
 // POST /api/lyrics/:songId - Create new lyric sheet for a song
-lyrics.post('/:songId', zValidator('json', CreateLyricSheetSchema), async (c) => {
+lyrics.post(
+  '/:songId',
+  validateRequest('param', SongIdParamSchema),
+  validateRequest('json', CreateLyricSheetSchema),
+  async (c) => {
   try {
-    const songId = c.req.param('songId')
+    const { songId } = c.req.valid('param')
     const lyricSheetData = c.req.valid('json')
     const supabase = c.get('supabase')
     const user = c.get('jwtPayload')
+
+    if (!user?.sub) {
+      return authErrorResponse(c, 'User not authenticated')
+    }
     
     // Get song details to verify user ownership
     const { data: song, error: songError } = await supabase
@@ -135,23 +153,29 @@ lyrics.post('/:songId', zValidator('json', CreateLyricSheetSchema), async (c) =>
       data: { ...data, sections: [] } // Include empty sections array
     }, 201)
   } catch (error) {
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to create lyric sheet'
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to create lyric sheet',
+      'LYRIC_SHEET_CREATE_FAILED'
+    )
   }
 })
 
 // POST /api/lyrics/:songId/sections - Add section to lyric sheet
-lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), async (c) => {
+lyrics.post(
+  '/:songId/sections',
+  validateRequest('param', SongIdParamSchema),
+  validateRequest('json', CreateLyricSectionSchema),
+  async (c) => {
   try {
-    const songId = c.req.param('songId')
+    const { songId } = c.req.valid('param')
     const sectionData = c.req.valid('json')
     const supabase = c.get('supabase')
     const user = c.get('jwtPayload')
     
     if (!user?.sub) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     // Get lyric sheet ID for this song (filtered by user_id)
@@ -185,27 +209,33 @@ lyrics.post('/:songId/sections', zValidator('json', CreateLyricSectionSchema), a
       data: mappedData
     }, 201)
   } catch (error) {
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to create section'
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to create section',
+      'LYRIC_SECTION_CREATE_FAILED'
+    )
   }
 })
 
 // PATCH /api/lyrics/sections/:sectionId - Update section
-lyrics.patch('/sections/:sectionId', zValidator('json', UpdateLyricSectionSchema), async (c) => {
+lyrics.patch(
+  '/sections/:sectionId',
+  validateRequest('param', SectionIdParamSchema),
+  validateRequest('json', UpdateLyricSectionSchema),
+  async (c) => {
   try {
-    const sectionId = c.req.param('sectionId')
+    const { sectionId } = c.req.valid('param')
     const updateData = c.req.valid('json')
     const supabase = c.get('supabase')
     const user = c.get('jwtPayload')
     
     if (!user?.sub) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     // Map frontend fields to database fields
-    const dbUpdateData: any = {}
+    const dbUpdateData: Record<string, string | number> = {}
     if (updateData.section_type) dbUpdateData.section_type = updateData.section_type
     if (updateData.content) dbUpdateData.section_lyrics = updateData.content
     if (updateData.section_order !== undefined) dbUpdateData.section_order = updateData.section_order
@@ -237,22 +267,24 @@ lyrics.patch('/sections/:sectionId', zValidator('json', UpdateLyricSectionSchema
       data: mappedData
     })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to update section'
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to update section',
+      'LYRIC_SECTION_UPDATE_FAILED'
+    )
   }
 })
 
 // DELETE /api/lyrics/sections/:sectionId - Delete section
-lyrics.delete('/sections/:sectionId', async (c) => {
+lyrics.delete('/sections/:sectionId', validateRequest('param', SectionIdParamSchema), async (c) => {
   try {
-    const sectionId = c.req.param('sectionId')
+    const { sectionId } = c.req.valid('param')
     const supabase = c.get('supabase')
     const user = c.get('jwtPayload')
     
     if (!user?.sub) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     const { error } = await supabase
@@ -267,13 +299,15 @@ lyrics.delete('/sections/:sectionId', async (c) => {
     
     return c.json({
       success: true,
-      message: 'Section deleted successfully'
+      data: { message: 'Section deleted successfully' }
     })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete section'
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to delete section',
+      'LYRIC_SECTION_DELETE_FAILED'
+    )
   }
 })
 

@@ -4,31 +4,43 @@
  */
 
 import { Hono } from 'hono'
+import { z } from 'zod'
+import { createClient } from '@supabase/supabase-js'
 import { StripeService } from '../services/stripeService.js'
 import { Variables } from '../types/bindings.js'
 import Stripe from 'stripe'
+import { errorResponse } from '../utils/apiResponse.js'
+import { validateRequest } from '../middleware/validation.js'
 
 const webhooks = new Hono<{ Variables: Variables }>()
+
+const StripeWebhookHeaderSchema = z.object({
+  'stripe-signature': z.string().min(1, 'Missing signature'),
+})
 
 /**
  * POST /api/webhooks/stripe
  * Handle Stripe webhook events
  */
-webhooks.post('/stripe', async (c) => {
+webhooks.post('/stripe', validateRequest('header', StripeWebhookHeaderSchema), async (c) => {
   try {
+    const { ['stripe-signature']: signature } = c.req.valid('header')
     const body = await c.req.text()
-    const signature = c.req.header('stripe-signature')
-
-    if (!signature) {
-      return c.json({ success: false, error: { message: 'Missing signature' } }, 400)
-    }
 
     if (!process.env.STRIPE_WEBHOOK_SECRET) {
-      return c.json({ success: false, error: { message: 'Webhook secret not configured' } }, 500)
+      return errorResponse(c, 500, 'Webhook secret not configured', 'WEBHOOK_SECRET_NOT_CONFIGURED')
+    }
+
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return errorResponse(c, 500, 'Stripe secret key not configured', 'WEBHOOK_STRIPE_KEY_NOT_CONFIGURED')
+    }
+
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+      return errorResponse(c, 500, 'Database configuration error', 'WEBHOOK_DATABASE_CONFIG_ERROR')
     }
 
     // Initialize Stripe for webhook verification
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2025-08-27.basil'
     })
 
@@ -42,17 +54,18 @@ webhooks.post('/stripe', async (c) => {
         process.env.STRIPE_WEBHOOK_SECRET
       )
     } catch (_err) {
-      return c.json({ success: false, error: { message: 'Invalid signature' } }, 400)
+      return errorResponse(c, 400, 'Invalid signature', 'WEBHOOK_SIGNATURE_INVALID')
     }
 
     // Process the webhook event
-    const stripeService = new StripeService(c.get('supabase'))
+    const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+    const stripeService = new StripeService(supabaseAdmin)
     await stripeService.processWebhook(event)
 
     return c.json({ success: true, received: true })
 
-  } catch (error) {
-    return c.json({ success: false, error: { message: 'Webhook processing failed' } }, 500)
+  } catch (_error) {
+    return errorResponse(c, 500, 'Webhook processing failed', 'WEBHOOK_PROCESSING_FAILED')
   }
 })
 

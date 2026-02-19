@@ -5,6 +5,7 @@
 import { createMiddleware } from 'hono/factory'
 import type { Bindings, Variables } from '../types/bindings.js'
 import { logger, extractErrorInfo } from '../utils/logger.js'
+import { errorResponse } from '../utils/apiResponse.js'
 
 const adminLogger = logger.child('adminAuth')
 
@@ -19,19 +20,13 @@ export const adminAuth = createMiddleware<{ Bindings: Bindings; Variables: Varia
     const jwtPayload = c.get('jwtPayload')
     if (!jwtPayload?.sub) {
       adminLogger.warn('No JWT payload found')
-      return c.json({ 
-        success: false, 
-        error: 'Authentication required' 
-      }, 401)
+      return errorResponse(c, 401, 'Authentication required', 'ADMIN_AUTH_REQUIRED')
     }
 
     const supabase = c.get('supabase')
     if (!supabase) {
       adminLogger.error('No supabase client found')
-      return c.json({ 
-        success: false, 
-        error: 'Database connection error' 
-      }, 500)
+      return errorResponse(c, 500, 'Database connection error', 'ADMIN_DATABASE_CONNECTION_ERROR')
     }
 
     const { data: userProfile, error: profileError } = await supabase
@@ -42,27 +37,18 @@ export const adminAuth = createMiddleware<{ Bindings: Bindings; Variables: Varia
 
     if (profileError) {
       adminLogger.error('Failed to fetch user profile', { userId: jwtPayload.sub, error: profileError.message })
-      return c.json({ 
-        success: false, 
-        error: 'Failed to verify account permissions' 
-      }, 500)
+      return errorResponse(c, 500, 'Failed to verify account permissions', 'ADMIN_PROFILE_FETCH_FAILED')
     }
 
     if (!userProfile || userProfile.account_type !== 'admin') {
       adminLogger.warn('Admin access denied', { userId: jwtPayload.sub, accountType: userProfile?.account_type })
-      return c.json({ 
-        success: false, 
-        error: 'Admin access required' 
-      }, 403)
+      return errorResponse(c, 403, 'Admin access required', 'ADMIN_ACCESS_REQUIRED')
     }
 
     adminLogger.debug('Admin access verified', { userId: jwtPayload.sub })
     await next()
   } catch (error) {
     adminLogger.error('Admin auth error', extractErrorInfo(error))
-    return c.json({ 
-      success: false, 
-      error: 'Admin authentication failed' 
-    }, 500)
+    return errorResponse(c, 500, 'Admin authentication failed', 'ADMIN_AUTH_FAILED')
   }
 })

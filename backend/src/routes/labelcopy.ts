@@ -3,48 +3,27 @@
  * All Access Artist - Backend API v2.0.0
  */
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
-import { CreateLabelCopySchema, UpdateLabelCopySchema } from '../types/schemas.js'
+import { ReleaseIdParamSchema, UpdateLabelCopySchema } from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
+import { validateRequest } from '../middleware/validation.js'
+import { authErrorResponse, errorResponse } from '../utils/apiResponse.js'
 
 const labelcopy = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 // PUT /api/labelcopy/:releaseId - Create or update label copy
-labelcopy.put('/:releaseId', async (c) => {
+labelcopy.put(
+  '/:releaseId',
+  validateRequest('param', ReleaseIdParamSchema),
+  validateRequest('json', UpdateLabelCopySchema),
+  async (c) => {
   try {
-    const releaseId = c.req.param('releaseId')
-    const rawData = await c.req.json()
+    const { releaseId } = c.req.valid('param')
+    const labelCopyData = c.req.valid('json')
     const supabase = c.get('supabase')
     const user = c.get('user')
     
-    // Transform payload format to current schema format (handles both legacy and new formats)
-    const transformedData = {
-      version_subtitle: rawData.version_subtitle || rawData.versionSubtitle,
-      phonogram_copyright: rawData.phonogram_copyright || rawData.phonogramCopyright,
-      composition_copyright: rawData.composition_copyright || rawData.compositionCopyright,
-      sub_genre: rawData.sub_genre || rawData.subGenre,
-      territories: rawData.territories || [],
-      explicit_content: rawData.explicit_content ?? rawData.explicitContent ?? false,
-      language_lyrics: rawData.language_lyrics || rawData.languageLyrics || 'en',
-      upc_code: rawData.upc_code || rawData.upc,
-      copyright_year: rawData.copyright_year || (rawData.copyright ? parseInt(rawData.copyright) : undefined),
-      tracks_metadata: rawData.tracks_metadata || []
-    }
-    
-    // Validate the transformed data
-    const validationResult = UpdateLabelCopySchema.safeParse(transformedData)
-    if (!validationResult.success) {
-      return c.json({ 
-        success: false, 
-        error: 'Invalid data format',
-        details: validationResult.error.issues 
-      }, 400)
-    }
-    
-    const labelCopyData = validationResult.data
-    
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     // Upsert label copy data (create or update)
@@ -66,22 +45,24 @@ labelcopy.put('/:releaseId', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to save label copy' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to save label copy',
+      'LABEL_COPY_SAVE_FAILED'
+    )
   }
 })
 
 // GET /api/labelcopy/:releaseId - Get label copy for a release
-labelcopy.get('/:releaseId', async (c) => {
+labelcopy.get('/:releaseId', validateRequest('param', ReleaseIdParamSchema), async (c) => {
   try {
-    const releaseId = c.req.param('releaseId')
+    const { releaseId } = c.req.valid('param')
     const supabase = c.get('supabase')
     const user = c.get('user')
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     const { data, error } = await supabase
@@ -101,22 +82,24 @@ labelcopy.get('/:releaseId', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to get label copy' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to get label copy',
+      'LABEL_COPY_FETCH_FAILED'
+    )
   }
 })
 
 // DELETE /api/labelcopy/:releaseId - Delete label copy
-labelcopy.delete('/:releaseId', async (c) => {
+labelcopy.delete('/:releaseId', validateRequest('param', ReleaseIdParamSchema), async (c) => {
   try {
-    const releaseId = c.req.param('releaseId')
+    const { releaseId } = c.req.valid('param')
     const supabase = c.get('supabase')
     const user = c.get('user')
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     const { error } = await supabase
@@ -129,12 +112,14 @@ labelcopy.delete('/:releaseId', async (c) => {
       throw new Error(`Database error: ${error.message}`)
     }
     
-    return c.json({ success: true, message: 'Label copy deleted successfully' })
+    return c.json({ success: true, data: { message: 'Label copy deleted successfully' } })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete label copy' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to delete label copy',
+      'LABEL_COPY_DELETE_FAILED'
+    )
   }
 })
 

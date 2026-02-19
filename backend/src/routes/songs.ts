@@ -3,22 +3,27 @@
  * All Access Artist - Backend API v2.0.0
  */
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
-import { CreateSongSchema, UpdateSongSchema } from '../types/schemas.js'
+import { SongIdParamSchema, UpdateSongSchema } from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
+import { validateRequest } from '../middleware/validation.js'
+import { authErrorResponse, errorResponse } from '../utils/apiResponse.js'
 
 const songs = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 // PATCH /api/songs/:songId - Update song
-songs.patch('/:songId', zValidator('json', UpdateSongSchema), async (c) => {
+songs.patch(
+  '/:songId',
+  validateRequest('param', SongIdParamSchema),
+  validateRequest('json', UpdateSongSchema),
+  async (c) => {
   try {
-    const songId = c.req.param('songId')
+    const { songId } = c.req.valid('param')
     const songData = c.req.valid('json')
     const supabase = c.get('supabase')
     const user = c.get('user')
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     const { data, error } = await supabase
@@ -35,22 +40,24 @@ songs.patch('/:songId', zValidator('json', UpdateSongSchema), async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update song' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to update song',
+      'SONG_UPDATE_FAILED'
+    )
   }
 })
 
 // DELETE /api/songs/:songId - Delete song
-songs.delete('/:songId', async (c) => {
+songs.delete('/:songId', validateRequest('param', SongIdParamSchema), async (c) => {
   try {
-    const songId = c.req.param('songId')
+    const { songId } = c.req.valid('param')
     const supabase = c.get('supabase')
     const user = c.get('user')
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     const { error } = await supabase
@@ -63,12 +70,14 @@ songs.delete('/:songId', async (c) => {
       throw new Error(`Database error: ${error.message}`)
     }
     
-    return c.json({ success: true, message: 'Song deleted successfully' })
+    return c.json({ success: true, data: { message: 'Song deleted successfully' } })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete song' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to delete song',
+      'SONG_DELETE_FAILED'
+    )
   }
 })
 

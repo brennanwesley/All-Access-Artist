@@ -7,6 +7,7 @@ import { AdminService } from '../services/adminService.js'
 import { adminAuth } from '../middleware/adminAuth.js'
 import type { Bindings, Variables } from '../types/bindings.js'
 import { handleServiceError } from '../utils/errorHandler.js'
+import { errorResponse } from '../utils/apiResponse.js'
 
 const admin = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -18,10 +19,7 @@ admin.get('/users', async (c) => {
   try {
     const supabaseAdmin = c.get('supabaseAdmin')
     if (!supabaseAdmin) {
-      return c.json({ 
-        success: false, 
-        error: 'Database connection error' 
-      }, 500)
+      return errorResponse(c, 500, 'Database connection error', 'ADMIN_DATABASE_CONNECTION_ERROR')
     }
 
     const adminService = new AdminService(supabaseAdmin)
@@ -46,10 +44,7 @@ admin.get('/stats', async (c) => {
   try {
     const supabaseAdmin = c.get('supabaseAdmin')
     if (!supabaseAdmin) {
-      return c.json({ 
-        success: false, 
-        error: 'Database connection error' 
-      }, 500)
+      return errorResponse(c, 500, 'Database connection error', 'ADMIN_DATABASE_CONNECTION_ERROR')
     }
 
     const adminService = new AdminService(supabaseAdmin)

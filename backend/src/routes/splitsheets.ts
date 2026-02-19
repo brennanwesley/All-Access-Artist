@@ -3,21 +3,26 @@
  * All Access Artist - Backend API v2.0.0
  */
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
-import { CreateSplitSheetSchema, UpdateSplitSheetSchema } from '../types/schemas.js'
+import {
+  SongIdParamSchema,
+  UpdateSplitSheetSchema,
+  type UpdateSplitSheetData,
+} from '../types/schemas.js'
 import type { Bindings, Variables } from '../types/bindings.js'
+import { validateRequest } from '../middleware/validation.js'
+import { authErrorResponse, errorResponse } from '../utils/apiResponse.js'
 
 const splitsheets = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 // GET /api/splitsheets/song/:songId - Get split sheet for a song
-splitsheets.get('/song/:songId', async (c) => {
+splitsheets.get('/song/:songId', validateRequest('param', SongIdParamSchema), async (c) => {
   try {
     const supabase = c.get('supabase')
     const user = c.get('user')
-    const { songId } = c.req.param()
+    const { songId } = c.req.valid('param')
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     // First, get the song title from the songs table using the songId
@@ -28,7 +33,7 @@ splitsheets.get('/song/:songId', async (c) => {
       .single()
     
     if (songError) {
-      return c.json({ success: false, error: 'Song not found' }, 404)
+      return errorResponse(c, 404, 'Song not found', 'SONG_NOT_FOUND')
     }
     
     // Now query split_sheets using the actual song title
@@ -53,59 +58,57 @@ splitsheets.get('/song/:songId', async (c) => {
     
     return c.json({ success: true, data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to get split sheet' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to get split sheet',
+      'SPLIT_SHEET_FETCH_FAILED'
+    )
   }
 })
 
 // PUT /api/splitsheets/song/:songId - Create or update split sheet for a song
-splitsheets.put('/song/:songId', async (c) => {
+splitsheets.put(
+  '/song/:songId',
+  validateRequest('param', SongIdParamSchema),
+  validateRequest('json', UpdateSplitSheetSchema),
+  async (c) => {
   try {
-    const songId = c.req.param('songId')
-    const rawData = await c.req.json()
-    
-    // Manual validation with detailed error reporting
-    const validationResult = UpdateSplitSheetSchema.safeParse(rawData)
-    if (!validationResult.success) {
-      return c.json({ 
-        success: false, 
-        error: 'Validation failed', 
-        details: validationResult.error.issues 
-      }, 400)
-    }
-    
-    const splitSheetData = validationResult.data
+    c.req.valid('param')
+    const splitSheetData: UpdateSplitSheetData = c.req.valid('json')
     const supabase = c.get('supabase')
     const user = c.get('user')
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     // Validate percentage totals (application-level validation)
     if (splitSheetData.contributors) {
-      const writerTotal = splitSheetData.contributors.reduce((sum, contributor) => {
+      const writerTotal = splitSheetData.contributors.reduce((sum: number, contributor) => {
         return sum + (contributor.writer_share_percent || 0)
       }, 0)
       
-      const publisherTotal = splitSheetData.contributors.reduce((sum, contributor) => {
+      const publisherTotal = splitSheetData.contributors.reduce((sum: number, contributor) => {
         return sum + (contributor.publisher_share_percent || 0)
       }, 0)
       
       if (Math.abs(writerTotal - 100) > 0.01) {
-        return c.json({ 
-          success: false, 
-          error: `Writer shares must total 100%. Current total: ${writerTotal}%` 
-        }, 400)
+        return errorResponse(
+          c,
+          400,
+          `Writer shares must total 100%. Current total: ${writerTotal}%`,
+          'SPLIT_SHEET_INVALID_WRITER_TOTAL'
+        )
       }
       
       if (Math.abs(publisherTotal - 100) > 0.01) {
-        return c.json({ 
-          success: false, 
-          error: `Publisher shares must total 100%. Current total: ${publisherTotal}%` 
-        }, 400)
+        return errorResponse(
+          c,
+          400,
+          `Publisher shares must total 100%. Current total: ${publisherTotal}%`,
+          'SPLIT_SHEET_INVALID_PUBLISHER_TOTAL'
+        )
       }
     }
     
@@ -153,22 +156,24 @@ splitsheets.put('/song/:songId', async (c) => {
     
     return c.json({ success: true, data: result.data })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to save split sheet' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to save split sheet',
+      'SPLIT_SHEET_SAVE_FAILED'
+    )
   }
 })
 
 // DELETE /api/splitsheets/song/:songId - Delete split sheet for a song
-splitsheets.delete('/song/:songId', async (c) => {
+splitsheets.delete('/song/:songId', validateRequest('param', SongIdParamSchema), async (c) => {
   try {
-    const songId = c.req.param('songId')
+    const { songId } = c.req.valid('param')
     const supabase = c.get('supabase')
     const user = c.get('user')
     
     if (!user?.id) {
-      return c.json({ success: false, error: 'User not authenticated' }, 401)
+      return authErrorResponse(c, 'User not authenticated')
     }
     
     // First get the song title from the songs table
@@ -179,7 +184,7 @@ splitsheets.delete('/song/:songId', async (c) => {
       .single()
     
     if (songError) {
-      return c.json({ success: false, error: 'Song not found' }, 404)
+      return errorResponse(c, 404, 'Song not found', 'SONG_NOT_FOUND')
     }
 
     const { error } = await supabase
@@ -192,12 +197,14 @@ splitsheets.delete('/song/:songId', async (c) => {
       throw new Error(`Database error: ${error.message}`)
     }
     
-    return c.json({ success: true, message: 'Split sheet deleted successfully' })
+    return c.json({ success: true, data: { message: 'Split sheet deleted successfully' } })
   } catch (error) {
-    return c.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete split sheet' 
-    }, 500)
+    return errorResponse(
+      c,
+      500,
+      error instanceof Error ? error.message : 'Failed to delete split sheet',
+      'SPLIT_SHEET_DELETE_FAILED'
+    )
   }
 })
 

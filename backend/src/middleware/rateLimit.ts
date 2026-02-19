@@ -11,6 +11,7 @@ import { createMiddleware } from 'hono/factory'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import type { Bindings, Variables } from '../types/bindings.js'
 import { logger } from '../utils/logger.js'
+import { errorResponse } from '../utils/apiResponse.js'
 
 const rateLimitLogger = logger.child('rateLimit')
 
@@ -188,10 +189,13 @@ export const rateLimitMiddleware = createMiddleware<{ Bindings: Bindings; Variab
     c.header('X-RateLimit-Reset', resetTimeMs.toString())
     c.header('Retry-After', retryAfter.toString())
     
-    return c.json({
-      error: 'Global rate limit exceeded. Please try again later.',
-      retryAfter
-    }, 429)
+    return errorResponse(
+      c,
+      429,
+      'Global rate limit exceeded. Please try again later.',
+      'RATE_LIMIT_GLOBAL_EXCEEDED',
+      { retryAfter }
+    )
   }
   
   // Check per-user rate limit (if user is authenticated)
@@ -221,10 +225,13 @@ export const rateLimitMiddleware = createMiddleware<{ Bindings: Bindings; Variab
     c.header('X-RateLimit-Reset', resetTimeMs.toString())
     c.header('Retry-After', retryAfter.toString())
     
-    return c.json({
-      error: 'Rate limit exceeded. Please try again later.',
-      retryAfter
-    }, 429)
+    return errorResponse(
+      c,
+      429,
+      'Rate limit exceeded. Please try again later.',
+      'RATE_LIMIT_EXCEEDED',
+      { retryAfter }
+    )
   }
   
   // Add rate limit headers to successful responses
