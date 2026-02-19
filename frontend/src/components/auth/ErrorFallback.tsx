@@ -48,7 +48,7 @@ export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps)
             </p>
             
             {/* Development mode: Show error details */}
-            {process.env['NODE_ENV'] === 'development' && error && (
+            {import.meta.env.DEV && error && (
               <details className="text-left">
                 <summary className="text-xs text-red-600 cursor-pointer hover:text-red-800">
                   Show technical details (development only)

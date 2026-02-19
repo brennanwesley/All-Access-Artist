@@ -80,32 +80,49 @@ Evidence: `qa-evidence/phase4/p4-04/2026-02-19/frontend-performance-budgeting.md
 Deploy checkpoint: Measurable route performance improvement and budget tracking established.
 
 ### P4-05 - API Boundary Security Enforcement (Risk: High)
-Status: Not started
+Status: Complete
 
-- [ ] Ensure non-public routes require Supabase JWT middleware.
-- [ ] Validate request body/params/query with Zod at route boundary.
-- [ ] Enforce standardized backend error response shape.
-- [ ] Add negative tests for unauthorized and malformed requests.
+- [x] Ensure non-public routes require Supabase JWT middleware.
+- [x] Validate request body/params/query with Zod at route boundary.
+- [x] Enforce standardized backend error response shape.
+- [x] Add negative tests for unauthorized and malformed requests.
+
+Evidence: `backend/src/__tests__/apiBoundarySecurity.test.ts`, `backend/src/middleware/validation.ts`, `backend/src/utils/apiResponse.ts`
 
 Deploy checkpoint: Auth + validation contract is explicit and consistently enforced.
 
 ### P4-06 - Authorization/RLS Integrity Audit (Risk: High)
-Status: Not started
+Status: Complete
 
-- [ ] Verify user-scoped Supabase clients in all user operations.
-- [ ] Confirm no service-role bypass in user-scoped paths.
-- [ ] Test cross-user access attempts against priority endpoints.
-- [ ] Record route-class authorization outcomes and any remediations.
+- [x] Verify user-scoped Supabase clients in audited priority user operations (`calendar`, `profile`).
+- [x] Confirm no service-role bypass in audited user-scoped paths.
+- [x] Test cross-user access attempts against priority endpoints.
+- [x] Record route-class authorization outcomes and remediations.
+
+Evidence: `backend/src/__tests__/authorizationRlsIntegrity.test.ts`, `backend/src/routes/calendar.ts`, `backend/src/services/calendarService.ts`, `backend/src/routes/profile.ts`, `backend/src/services/profileService.ts`
+
+Current remediations:
+
+- Migrated calendar user operations from service-role client construction to request-scoped user client usage.
+- Removed service-role dependency from profile read path by using request auth context contact fields.
+
+Route-class authorization outcomes:
+
+- User route classes (`/api/calendar`, `/api/profile`) now execute via request-scoped user Supabase clients.
+- Privileged service-role paths retained only where operationally required (`/api/admin`, `/api/onboarding`, `/api/webhooks`, rate limiting middleware).
+- Cross-user read/write/delete attempt patterns are covered in authorization integrity tests for calendar operations.
 
 Deploy checkpoint: Cross-user access controls verified with no policy bypass regressions.
 
 ### P4-07 - Secrets + Runtime Config Hardening (Risk: Medium)
-Status: Not started
+Status: Complete
 
-- [ ] Audit code for hardcoded secrets/magic config strings.
-- [ ] Validate frontend/backend env binding boundaries and exposure rules.
-- [ ] Ensure least-privilege key usage by environment.
-- [ ] Document operational rotation/rollback steps for sensitive keys.
+- [x] Audit code for hardcoded secrets/magic config strings.
+- [x] Validate frontend/backend env binding boundaries and exposure rules.
+- [x] Ensure least-privilege key usage by environment.
+- [x] Document operational rotation/rollback steps for sensitive keys.
+
+Evidence: `qa-evidence/phase4/p4-07/2026-02-19/secrets-runtime-config-hardening.md`, `frontend/src/lib/api.ts`, `frontend/src/components/auth/ErrorFallback.tsx`
 
 Deploy checkpoint: Config posture explicit, least-privilege aligned, deployment-safe.
 
@@ -147,30 +164,30 @@ To ensure security recommendations are not hand-wavy, each control is bound to a
 
 ## 5) Active Step and Scope
 
-### Active step: P4-04 (Complete)
+### Active step: P4-07 (Complete)
 
 ### Why now
 
-P4-04 reduces initial route payload and startup parse/execute pressure by introducing lazy loading at route and heavy dashboard section boundaries.
+P4-07 follows authorization hardening by tightening secrets/config discipline, confirming runtime boundary rules, and documenting key rotation controls.
 
-### P4-04 Deliverables
+### P4-07 Deliverables
 
-1. Define route-level bundle budgets for entry and heavy dashboard surfaces.
-2. Apply lazy loading to app routes and high-impact dashboard modules.
-3. Capture before/after chunk-size measurements from production builds.
-4. Record budget outcomes and implementation notes in evidence docs.
+1. Audit codebase for hardcoded secrets and high-risk magic config strings.
+2. Validate frontend/backend environment variable boundary rules.
+3. Confirm least-privilege key usage per runtime and route class.
+4. Record operational rotation and rollback procedure for sensitive keys.
 
-### P4-04 Out of Scope
+### P4-07 Out of Scope
 
-- No API/RLS migration changes (P4-05/P4-06).
-- No design-system or accessibility overhaul beyond previously completed P4-03 scope.
+- No query/index scalability optimizations (reserved for P4-08).
+- No frontend UX accessibility scope expansion beyond existing completed controls.
 
-### P4-04 Definition of Done
+### P4-07 Definition of Done
 
-- Entry bundle and heavy route chunks meet defined size budgets.
-- Priority route and dashboard modules are lazy-loaded behind suspense boundaries.
-- Before/after metrics are documented in QA evidence.
-- Frontend build/typecheck/lint and backend typecheck pass for touched files.
+- Hardcoded secret scan is recorded with findings/remediations.
+- Frontend/backend env boundary usage is validated and corrected where required.
+- Least-privilege key usage map is documented for active runtimes.
+- Build/typecheck/test gates pass for touched files.
 
 ---
 

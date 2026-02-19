@@ -43,12 +43,28 @@ import type {
   HealthCheckResponse
 } from '../types/api'
 
-// API base URL from environment variables with fallback
-const API_BASE_URL = import.meta.env['VITE_API_URL'] || 'https://all-access-artist.onrender.com'
+// API base URL from environment variables.
+// In production this must be explicitly configured.
+function resolveApiBaseUrl(): string {
+  const configuredUrl = import.meta.env['VITE_API_URL']
 
-if (!import.meta.env['VITE_API_URL']) {
-  logger.warn('VITE_API_URL environment variable not set. Using fallback URL.')
+  if (configuredUrl) {
+    return configuredUrl
+  }
+
+  if (import.meta.env.PROD) {
+    throw new Error('Missing VITE_API_URL environment variable in production')
+  }
+
+  const localDevFallbackUrl = 'http://localhost:3000'
+  logger.warn('VITE_API_URL environment variable not set. Falling back to local development backend URL.', {
+    localDevFallbackUrl,
+  })
+
+  return localDevFallbackUrl
 }
+
+const API_BASE_URL = resolveApiBaseUrl()
 
 class ApiClient {
   private async getAuthHeaders(): Promise<Record<string, string>> {
