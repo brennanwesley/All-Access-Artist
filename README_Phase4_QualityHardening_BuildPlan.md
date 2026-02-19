@@ -148,6 +148,7 @@ Status: Complete
 
 Evidence: `qa-evidence/phase4/p4-09/2026-02-19/phase4-acceptance-hardening.md`, `README_Phase4_QualityHardening_Signoff_Runbook.md`
 Stakeholder/Governance decision: GO (Product owner approval recorded, 2026-02-19)
+Post-close addendum: P4-05/P4-06 security artifacts promoted in `hardening/p4-security-promotion` via `d340d14` with full validation matrix re-run (PASS).
 
 Deploy checkpoint: Phase 4 ready for production progression.
 

@@ -60,3 +60,28 @@ Runbook includes:
 - Approver: Product owner (explicit approval recorded)
 - Date (UTC): 2026-02-19
 - Result: Phase 4 release gate closed.
+
+## 6) Post-close security promotion addendum
+
+- Branch: `hardening/p4-security-promotion`
+- Commit: `d340d14` (`phase4: promote p4-05 p4-06 security hardening`)
+- Purpose: promote previously local P4-05/P4-06 security enforcement artifacts into version-controlled branch history.
+
+### Promoted P4-05/P4-06 artifacts
+
+- `backend/src/middleware/validation.ts`
+- `backend/src/utils/apiResponse.ts`
+- `backend/src/__tests__/apiBoundarySecurity.test.ts`
+- `backend/src/__tests__/authorizationRlsIntegrity.test.ts`
+- Route/middleware/service hardening updates under `backend/src/routes/**`, `backend/src/middleware/**`, `backend/src/services/**`, `backend/src/types/schemas.ts`, `backend/src/utils/errorHandler.ts`, and `backend/src/worker.ts`.
+
+### Re-validation matrix (post-promotion)
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Frontend production build | `npm run build --workspace frontend` | PASS |
+| Frontend typecheck | `npx tsc --noEmit --project frontend/tsconfig.json` | PASS |
+| Backend typecheck | `npm run typecheck:backend` | PASS |
+| Backend regression suite | `npm run test --workspace backend` | PASS (103 tests, 7 files) |
+
+Outcome: Phase 4 acceptance/sign-off records remain GO. This branch is ready for review and merge to align `main` with documented P4-05/P4-06 completion.

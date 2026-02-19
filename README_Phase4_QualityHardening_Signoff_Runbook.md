@@ -26,11 +26,11 @@ Provide a single acceptance hardening record for Phase 4 that confirms:
 | P4-02 | Complete | `e4393b5`, `qa-evidence/phase4/p4-02/2026-02-18/fallback-ui-runtime-verification.md` |
 | P4-03 | Complete | `phase4: p4-03 mobile readability and accessibility pass` (`5ceb5c1`), `qa-evidence/phase4/p4-03/2026-02-18/accessibility-mobile-pass.md` |
 | P4-04 | Complete | `phase4: p4-04 frontend performance budgeting` (`231dbeb`), `qa-evidence/phase4/p4-04/2026-02-19/frontend-performance-budgeting.md` |
-| P4-05 | Complete | `backend/src/__tests__/apiBoundarySecurity.test.ts`, `backend/src/middleware/validation.ts`, `backend/src/utils/apiResponse.ts` |
-| P4-06 | Complete | `backend/src/__tests__/authorizationRlsIntegrity.test.ts`, `backend/src/services/calendarService.ts`, `backend/src/services/profileService.ts` |
+| P4-05 | Complete | `phase4: promote p4-05 p4-06 security hardening` (`d340d14`), `backend/src/__tests__/apiBoundarySecurity.test.ts`, `backend/src/middleware/validation.ts`, `backend/src/utils/apiResponse.ts` |
+| P4-06 | Complete | `phase4: promote p4-05 p4-06 security hardening` (`d340d14`), `backend/src/__tests__/authorizationRlsIntegrity.test.ts`, `backend/src/services/calendarService.ts`, `backend/src/services/profileService.ts` |
 | P4-07 | Complete | `phase4: p4-07 secrets runtime config hardening` (`59da6d9`), `qa-evidence/phase4/p4-07/2026-02-19/secrets-runtime-config-hardening.md` |
 | P4-08 | Complete | `phase4: p4-08 data scalability query efficiency` (`dbf0ca0`), `qa-evidence/phase4/p4-08/2026-02-19/data-scalability-query-efficiency.md` |
-| P4-09 | Complete | `phase4: p4-09 acceptance hardening runbook` (`c1a0630`), `qa-evidence/phase4/p4-09/2026-02-19/phase4-acceptance-hardening.md` |
+| P4-09 | Complete | `phase4: p4-09 acceptance hardening runbook` (`c1a0630`), `phase4: close p4-09 stakeholder sign-off` (`2885343`), `qa-evidence/phase4/p4-09/2026-02-19/phase4-acceptance-hardening.md` |
 
 ---
 
@@ -42,6 +42,12 @@ Provide a single acceptance hardening record for Phase 4 that confirms:
 | Frontend TypeScript gate | `npx tsc --noEmit --project frontend/tsconfig.json` | PASS |
 | Backend TypeScript gate | `npm run typecheck:backend` | PASS |
 | Backend test suite (includes P4-05/P4-06/P4-08 regressions) | `npm run test --workspace backend` | PASS (103 tests) |
+
+Post-close addendum (security promotion branch `hardening/p4-security-promotion`):
+
+- Promoted previously local P4-05/P4-06 artifacts in `d340d14`.
+- Re-ran the full validation matrix listed above; all gates remained PASS.
+- Evidence addendum: `qa-evidence/phase4/p4-09/2026-02-19/phase4-acceptance-hardening.md` (Section 6).
 
 ---
 
