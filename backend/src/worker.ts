@@ -6,7 +6,7 @@
 
 import { Hono } from 'hono'
 import { corsMiddleware } from './middleware/cors.js'
-import { rateLimitMiddleware } from './middleware/rateLimit.js'
+import { rateLimitMiddleware, authenticatedUserRateLimitMiddleware } from './middleware/rateLimit.js'
 import { supabaseAuth } from './middleware/auth.js'
 import { subscriptionAuth } from './middleware/subscriptionAuth.js'
 import artists from './routes/artists.js'
@@ -88,10 +88,14 @@ app.use('/api/social/*', async (c, next) => {
   return supabaseAuth(c, next)
 })
 
+app.use('/api/social/*', authenticatedUserRateLimitMiddleware)
+
 // Supabase authentication middleware for protected API routes
 // Auth-only routes (no subscription required)
 app.use('/api/profile/*', supabaseAuth)
 app.use('/api/admin/*', supabaseAuth)
+app.use('/api/profile/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/admin/*', authenticatedUserRateLimitMiddleware)
 
 // Subscription routes handle their own auth internally
 subscription.use('/status', supabaseAuth)
@@ -112,6 +116,22 @@ app.use('/api/splitsheets/*', supabaseAuth, subscriptionAuth)
 app.use('/api/assets/*', supabaseAuth, subscriptionAuth)
 app.use('/api/content/*', supabaseAuth, subscriptionAuth)
 app.use('/api/jobs/*', supabaseAuth, subscriptionAuth)
+app.use('/api/artists/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/releases/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/calendar/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/analytics/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/lyrics/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/tasks/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/songs/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/labelcopy/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/splitsheets/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/assets/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/content/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/jobs/*', authenticatedUserRateLimitMiddleware)
+
+app.use('/api/subscription/status', supabaseAuth, authenticatedUserRateLimitMiddleware)
+app.use('/api/subscription/cancel', supabaseAuth, authenticatedUserRateLimitMiddleware)
+app.use('/api/subscription/setup', supabaseAuth, authenticatedUserRateLimitMiddleware)
 
 // Mount route modules
 app.route('/api/artists', artists)

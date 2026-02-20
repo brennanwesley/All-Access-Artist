@@ -161,6 +161,14 @@ async function checkRateLimit(
   return checkRateLimitFallback(key, maxRequests, windowMs)
 }
 
+function buildIpRateLimitKey(clientIP: string): string {
+  return `ip:${clientIP}`
+}
+
+function buildUserRateLimitKey(userId: string): string {
+  return `user:${userId}`
+}
+
 // Rate limiting middleware
 export const rateLimitMiddleware = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(async (c, next) => {
   // Skip rate limiting for OPTIONS requests (CORS preflight)
@@ -198,26 +206,15 @@ export const rateLimitMiddleware = createMiddleware<{ Bindings: Bindings; Variab
     )
   }
   
-  // Check per-user rate limit (if user is authenticated)
-  const user = c.get('user')
-  let userKey: string
-  
-  if (user?.id) {
-    // Use user ID for authenticated requests
-    userKey = `user:${user.id}`
-  } else {
-    // Use IP address for unauthenticated requests
-    userKey = `ip:${clientIP}`
-  }
-  
-  const userCheck = await checkRateLimit(
-    userKey,
+  // Check per-client rate limit (IP based in pre-auth middleware)
+  const clientCheck = await checkRateLimit(
+    buildIpRateLimitKey(clientIP),
     RATE_LIMIT_CONFIG.userMaxRequests,
     RATE_LIMIT_CONFIG.userWindow
   )
   
-  if (!userCheck.allowed) {
-    const resetTimeMs = userCheck.resetTime.getTime()
+  if (!clientCheck.allowed) {
+    const resetTimeMs = clientCheck.resetTime.getTime()
     const retryAfter = Math.ceil((resetTimeMs - now) / 1000)
     
     c.header('X-RateLimit-Limit', RATE_LIMIT_CONFIG.userMaxRequests.toString())
@@ -235,6 +232,52 @@ export const rateLimitMiddleware = createMiddleware<{ Bindings: Bindings; Variab
   }
   
   // Add rate limit headers to successful responses
+  c.header('X-RateLimit-Limit', RATE_LIMIT_CONFIG.userMaxRequests.toString())
+  c.header('X-RateLimit-Remaining', clientCheck.remaining.toString())
+  c.header('X-RateLimit-Reset', clientCheck.resetTime.getTime().toString())
+  
+  await next()
+})
+
+// Authenticated user rate limiting middleware (must run after supabaseAuth)
+export const authenticatedUserRateLimitMiddleware = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(async (c, next) => {
+  // Skip rate limiting for OPTIONS requests (CORS preflight)
+  if (c.req.method === 'OPTIONS') {
+    await next()
+    return
+  }
+
+  const user = c.get('user')
+  if (!user?.id) {
+    await next()
+    return
+  }
+
+  const now = Date.now()
+  const userCheck = await checkRateLimit(
+    buildUserRateLimitKey(user.id),
+    RATE_LIMIT_CONFIG.userMaxRequests,
+    RATE_LIMIT_CONFIG.userWindow
+  )
+
+  if (!userCheck.allowed) {
+    const resetTimeMs = userCheck.resetTime.getTime()
+    const retryAfter = Math.ceil((resetTimeMs - now) / 1000)
+
+    c.header('X-RateLimit-Limit', RATE_LIMIT_CONFIG.userMaxRequests.toString())
+    c.header('X-RateLimit-Remaining', '0')
+    c.header('X-RateLimit-Reset', resetTimeMs.toString())
+    c.header('Retry-After', retryAfter.toString())
+
+    return errorResponse(
+      c,
+      429,
+      'Rate limit exceeded. Please try again later.',
+      'RATE_LIMIT_EXCEEDED',
+      { retryAfter }
+    )
+  }
+
   c.header('X-RateLimit-Limit', RATE_LIMIT_CONFIG.userMaxRequests.toString())
   c.header('X-RateLimit-Remaining', userCheck.remaining.toString())
   c.header('X-RateLimit-Reset', userCheck.resetTime.getTime().toString())

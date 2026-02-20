@@ -406,10 +406,16 @@ class ApiClient {
   }
 
   // Onboarding API
-  async createFallbackAccount(sessionId: string): Promise<ApiResponse<BackendResponse<FallbackAccountResponse>>> {
+  async createFallbackAccount(
+    sessionId: string,
+    onboardingToken?: string | null
+  ): Promise<ApiResponse<BackendResponse<FallbackAccountResponse>>> {
     return this.makeRequestPublic('/api/onboarding/create-fallback', {
       method: 'POST',
-      body: JSON.stringify({ session_id: sessionId }),
+      body: JSON.stringify({
+        session_id: sessionId,
+        ...(onboardingToken ? { onboarding_token: onboardingToken } : {}),
+      }),
     })
   }
 

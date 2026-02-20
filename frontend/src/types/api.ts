@@ -536,6 +536,7 @@ export interface AdminStats {
 
 export interface OnboardingData {
   session_id: string
+  onboarding_token?: string | null
   full_name: string
   email: string
   phone?: string | null

@@ -5,6 +5,7 @@
 
 import { Hono } from 'hono'
 import { z } from 'zod'
+import { randomUUID } from 'crypto'
 import { Variables } from '../types/bindings.js'
 import { StripeService } from '../services/stripeService.js'
 import { supabaseAuth } from '../middleware/auth.js'
@@ -50,6 +51,12 @@ function normalizeCheckoutSessionPayload(payload: CheckoutSessionPayload) {
     successUrl: payload.success_url,
     cancelUrl: payload.cancel_url,
   }
+}
+
+function appendQueryParam(urlString: string, key: string, value: string) {
+  const url = new URL(urlString)
+  url.searchParams.set(key, value)
+  return url.toString()
 }
 
 /**
@@ -121,6 +128,8 @@ subscription.get('/status', async (c) => {
 subscription.post('/checkout', validateRequest('json', CheckoutSessionSchema), async (c) => {
   try {
     const { priceId, successUrl, cancelUrl } = normalizeCheckoutSessionPayload(c.req.valid('json'))
+    const onboardingToken = randomUUID().replaceAll('-', '')
+    const successUrlWithOnboardingToken = appendQueryParam(successUrl, 'onboarding_token', onboardingToken)
     
     // Create a minimal Supabase client for StripeService (public endpoint)
     const { createClient } = await import('@supabase/supabase-js')
@@ -135,8 +144,9 @@ subscription.post('/checkout', validateRequest('json', CheckoutSessionSchema), a
     const checkoutUrl = await stripeService.createCheckoutSession(
       null, // No customer ID for public checkout
       priceId,
-      successUrl,
-      cancelUrl
+      successUrlWithOnboardingToken,
+      cancelUrl,
+      onboardingToken
     )
 
     return c.json({

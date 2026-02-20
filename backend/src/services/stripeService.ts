@@ -110,7 +110,8 @@ export class StripeService {
     customerId: string | null, 
     priceId: string, 
     successUrl: string, 
-    cancelUrl: string
+    cancelUrl: string,
+    onboardingToken?: string
   ): Promise<string> {
     try {
       const sessionConfig: any = {
@@ -125,7 +126,8 @@ export class StripeService {
         success_url: successUrl,
         cancel_url: cancelUrl,
         metadata: {
-          customer_id: customerId || 'anonymous'
+          customer_id: customerId || 'anonymous',
+          ...(onboardingToken ? { onboarding_token: onboardingToken } : {})
         }
       }
 
@@ -348,7 +350,9 @@ export class StripeService {
 
       // Generate a temporary password and onboarding token
       const tempPassword = this.generateTempPassword()
-      const onboardingToken = this.generateOnboardingToken()
+      const onboardingToken = typeof session.metadata?.onboarding_token === 'string' && session.metadata.onboarding_token.length > 0
+        ? session.metadata.onboarding_token
+        : this.generateOnboardingToken()
 
       // Create Supabase user account
       const { data: authData, error: authError } = await this.supabase.auth.admin.createUser({
@@ -394,7 +398,7 @@ export class StripeService {
               .update({
                 stripe_session_id: session.id,
                 stripe_customer_id: customerId,
-                onboarding_token: this.generateOnboardingToken(),
+                onboarding_token: onboardingToken,
                 onboarding_token_expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
                 updated_at: new Date().toISOString()
               })
@@ -411,7 +415,7 @@ export class StripeService {
               id: user.id,
               stripe_customer_id: customerId,
               stripe_session_id: session.id,
-              onboarding_token: this.generateOnboardingToken(),
+              onboarding_token: onboardingToken,
               onboarding_token_expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
               subscription_status: 'pending',
               created_at: new Date().toISOString()

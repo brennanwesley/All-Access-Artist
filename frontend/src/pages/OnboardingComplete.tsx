@@ -31,6 +31,7 @@ const OnboardingComplete = () => {
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [sessionId, setSessionId] = useState<string | null>(null)
+  const [onboardingToken, setOnboardingToken] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(1)
   
   // Form fields in specified order
@@ -44,8 +45,11 @@ const OnboardingComplete = () => {
 
   useEffect(() => {
     const sessionIdParam = searchParams.get('session_id')
+    const onboardingTokenParam = searchParams.get('onboarding_token')
+
     if (sessionIdParam) {
       setSessionId(sessionIdParam)
+      setOnboardingToken(onboardingTokenParam)
     } else {
       // No session ID means invalid access
       navigate('/plans')
@@ -148,7 +152,7 @@ const OnboardingComplete = () => {
       // First, try to create fallback account in case webhook failed
       if (sessionId) {
         try {
-          await api.createFallbackAccount(sessionId)
+          await api.createFallbackAccount(sessionId, onboardingToken)
         } catch (fallbackError) {
           // Fallback creation failed, but continue - account might already exist
           logger.warn('Fallback account creation not needed or failed', {
@@ -161,6 +165,7 @@ const OnboardingComplete = () => {
       // Complete onboarding by updating the user account
       const response = await api.completeOnboarding({
         session_id: sessionId,
+        onboarding_token: onboardingToken,
         full_name: fullName,
         email: email,
         phone: phone || null,

@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { Variables } from '../types/bindings.js'
 import type Stripe from 'stripe'
+import { StripeService } from '../services/stripeService.js'
 import { validateRequest } from '../middleware/validation.js'
 import { errorResponse } from '../utils/apiResponse.js'
 
@@ -23,6 +24,7 @@ const createSupabaseAdmin = () => {
 // Validation schema for onboarding completion
 const CompleteOnboardingSchema = z.object({
   session_id: z.string().min(1, 'Session ID is required'),
+  onboarding_token: z.string().min(1, 'Onboarding token is required').optional().nullable(),
   full_name: z.string().min(1, 'Full name is required'),
   email: z.string().email('Valid email is required'),
   phone: z.string().optional().nullable(),
@@ -36,8 +38,22 @@ const OnboardingStatusParamSchema = z.object({
 })
 
 const CreateFallbackSchema = z.object({
-  session_id: z.string().min(1, 'Session ID is required')
+  session_id: z.string().min(1, 'Session ID is required'),
+  onboarding_token: z.string().min(1, 'Onboarding token is required').optional().nullable(),
 })
+
+function normalizeEmailAddress(email: string): string {
+  return email.trim().toLowerCase()
+}
+
+function getCheckoutSessionOnboardingToken(session: Stripe.Checkout.Session): string | null {
+  const token = session.metadata?.onboarding_token
+  if (typeof token !== 'string' || token.length === 0) {
+    return null
+  }
+
+  return token
+}
 
 /**
  * POST /api/onboarding/complete
@@ -45,7 +61,8 @@ const CreateFallbackSchema = z.object({
  */
 onboarding.post('/complete', validateRequest('json', CompleteOnboardingSchema), async (c) => {
   try {
-    const { session_id, full_name, email, phone, artist_name, referral_code, password } = c.req.valid('json')
+    const { session_id, onboarding_token, full_name, email, phone, artist_name, referral_code, password } = c.req.valid('json')
+    const normalizedEmail = normalizeEmailAddress(email)
 
     // Create Supabase admin client for database operations
     const supabase = createSupabaseAdmin()
@@ -57,6 +74,7 @@ onboarding.post('/complete', validateRequest('json', CompleteOnboardingSchema), 
         id,
         onboarding_token,
         onboarding_token_expires,
+        onboarding_completed,
         stripe_session_id
       `)
       .eq('stripe_session_id', session_id)
@@ -65,13 +83,27 @@ onboarding.post('/complete', validateRequest('json', CompleteOnboardingSchema), 
     if (profileError || !profile) {
       // Check if this is an existing user by email
       const { data: existingUsers } = await supabase.auth.admin.listUsers()
-      const existingUser = existingUsers?.users?.find(u => u.email === email)
+      const existingUser = existingUsers?.users?.find((candidate) => {
+        if (!candidate.email) {
+          return false
+        }
+
+        return normalizeEmailAddress(candidate.email) === normalizedEmail
+      })
       
       if (existingUser) {
         return errorResponse(c, 409, 'An account with this email already exists. Please sign in instead.', 'ONBOARDING_EMAIL_EXISTS')
       }
       
       return errorResponse(c, 404, 'Invalid session. Please contact support.', 'ONBOARDING_SESSION_INVALID')
+    }
+
+    if (profile.onboarding_completed) {
+      return errorResponse(c, 409, 'Onboarding has already been completed. Please sign in.', 'ONBOARDING_ALREADY_COMPLETED')
+    }
+
+    if (!profile.onboarding_token_expires) {
+      return errorResponse(c, 400, 'Onboarding session expired. Please contact support.', 'ONBOARDING_SESSION_EXPIRED')
     }
 
     // Check if onboarding token is still valid
@@ -82,9 +114,47 @@ onboarding.post('/complete', validateRequest('json', CompleteOnboardingSchema), 
       return errorResponse(c, 400, 'Onboarding session expired. Please contact support.', 'ONBOARDING_SESSION_EXPIRED')
     }
 
+    const stripeService = new StripeService(supabase)
+    const stripe = stripeService.getStripeInstance()
+
+    let checkoutSession: Stripe.Checkout.Session
+    try {
+      checkoutSession = await stripe.checkout.sessions.retrieve(session_id)
+    } catch {
+      return errorResponse(c, 404, 'Invalid session. Please contact support.', 'ONBOARDING_SESSION_INVALID')
+    }
+
+    const checkoutEmail = checkoutSession.customer_details?.email
+    if (!checkoutEmail || normalizeEmailAddress(checkoutEmail) !== normalizedEmail) {
+      return errorResponse(c, 400, 'Email must match the email used during checkout.', 'ONBOARDING_EMAIL_MISMATCH')
+    }
+
+    const sessionOnboardingToken = getCheckoutSessionOnboardingToken(checkoutSession)
+
+    if (sessionOnboardingToken) {
+      if (!onboarding_token || onboarding_token !== sessionOnboardingToken) {
+        return errorResponse(c, 403, 'Invalid onboarding token. Please use the original onboarding link.', 'ONBOARDING_TOKEN_INVALID')
+      }
+
+      if (profile.onboarding_token && profile.onboarding_token !== sessionOnboardingToken) {
+        return errorResponse(c, 403, 'Invalid onboarding token. Please use the original onboarding link.', 'ONBOARDING_TOKEN_INVALID')
+      }
+    } else if (onboarding_token && profile.onboarding_token && onboarding_token !== profile.onboarding_token) {
+      return errorResponse(c, 403, 'Invalid onboarding token. Please use the original onboarding link.', 'ONBOARDING_TOKEN_INVALID')
+    }
+
+    const { data: authUserData, error: authUserLookupError } = await supabase.auth.admin.getUserById(profile.id)
+
+    if (authUserLookupError || !authUserData?.user.email) {
+      return errorResponse(c, 500, 'Failed to validate account details. Please try again.', 'ONBOARDING_ACCOUNT_LOOKUP_FAILED')
+    }
+
+    if (normalizeEmailAddress(authUserData.user.email) !== normalizedEmail) {
+      return errorResponse(c, 400, 'Email must match the email used during checkout.', 'ONBOARDING_EMAIL_MISMATCH')
+    }
+
     // Update user account with new password and profile info
     const { error: updateError } = await supabase.auth.admin.updateUserById(profile.id, {
-      email: email,
       password: password,
       user_metadata: {
         full_name: full_name,
@@ -161,7 +231,7 @@ onboarding.post('/complete', validateRequest('json', CompleteOnboardingSchema), 
       data: {
         message: 'Onboarding completed successfully',
         user_id: profile.id,
-        email: email
+        email: authUserData.user.email
       }
     })
 
@@ -220,10 +290,26 @@ onboarding.get('/status/:session_id', validateRequest('param', OnboardingStatusP
  */
 onboarding.post('/create-fallback', validateRequest('json', CreateFallbackSchema), async (c) => {
   try {
-    const { session_id } = c.req.valid('json')
+    const { session_id, onboarding_token } = c.req.valid('json')
     
     // Create Supabase admin client for database operations
     const supabase = createSupabaseAdmin()
+
+    // Import StripeService to handle fallback creation
+    const stripeService = new StripeService(supabase)
+    const stripe = stripeService.getStripeInstance()
+
+    let session: Stripe.Checkout.Session
+    try {
+      session = await stripe.checkout.sessions.retrieve(session_id)
+    } catch {
+      return errorResponse(c, 404, 'Invalid session. Please contact support.', 'ONBOARDING_SESSION_INVALID')
+    }
+
+    const sessionOnboardingToken = getCheckoutSessionOnboardingToken(session)
+    if (sessionOnboardingToken && onboarding_token !== sessionOnboardingToken) {
+      return errorResponse(c, 403, 'Invalid onboarding token. Please use the original onboarding link.', 'ONBOARDING_TOKEN_INVALID')
+    }
     
     // Check if account already exists
     const { data: existingProfile } = await supabase
@@ -238,14 +324,6 @@ onboarding.post('/create-fallback', validateRequest('json', CreateFallbackSchema
         data: { message: 'Account already exists', user_id: existingProfile.id }
       })
     }
-
-    // Import StripeService to handle fallback creation
-    const { StripeService } = await import('../services/stripeService.js')
-    const stripeService = new StripeService(supabase)
-    
-    // Retrieve session from Stripe to get customer details
-    const stripe = stripeService.getStripeInstance()
-    const session = await stripe.checkout.sessions.retrieve(session_id)
     
     if (!session.customer_details?.email) {
       return errorResponse(c, 400, 'Unable to retrieve customer details from Stripe', 'ONBOARDING_FALLBACK_CUSTOMER_DETAILS_MISSING')
