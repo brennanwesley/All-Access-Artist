@@ -21,11 +21,36 @@ subscription.use('/cancel', supabaseAuth)
 subscription.use('/setup', supabaseAuth)
 
 // Validation schemas
-const CheckoutSessionSchema = z.object({
+const CheckoutSessionCamelCaseSchema = z.object({
   priceId: z.string().min(1, 'Price ID is required'),
   successUrl: z.string().url('Valid success URL required'),
   cancelUrl: z.string().url('Valid cancel URL required')
 })
+
+const CheckoutSessionSnakeCaseSchema = z.object({
+  price_id: z.string().min(1, 'Price ID is required'),
+  success_url: z.string().url('Valid success URL required'),
+  cancel_url: z.string().url('Valid cancel URL required')
+})
+
+const CheckoutSessionSchema = z.union([
+  CheckoutSessionCamelCaseSchema,
+  CheckoutSessionSnakeCaseSchema,
+])
+
+type CheckoutSessionPayload = z.infer<typeof CheckoutSessionSchema>
+
+function normalizeCheckoutSessionPayload(payload: CheckoutSessionPayload) {
+  if ('priceId' in payload) {
+    return payload
+  }
+
+  return {
+    priceId: payload.price_id,
+    successUrl: payload.success_url,
+    cancelUrl: payload.cancel_url,
+  }
+}
 
 /**
  * GET /api/subscription/status
@@ -95,7 +120,7 @@ subscription.get('/status', async (c) => {
  */
 subscription.post('/checkout', validateRequest('json', CheckoutSessionSchema), async (c) => {
   try {
-    const { priceId, successUrl, cancelUrl } = c.req.valid('json')
+    const { priceId, successUrl, cancelUrl } = normalizeCheckoutSessionPayload(c.req.valid('json'))
     
     // Create a minimal Supabase client for StripeService (public endpoint)
     const { createClient } = await import('@supabase/supabase-js')
@@ -117,7 +142,8 @@ subscription.post('/checkout', validateRequest('json', CheckoutSessionSchema), a
     return c.json({
       success: true,
       data: {
-        checkoutUrl
+        checkoutUrl,
+        url: checkoutUrl,
       }
     })
 

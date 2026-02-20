@@ -53,6 +53,25 @@ describe('P4-05 API boundary security enforcement', () => {
     expect(Array.isArray(body.error.details?.issues)).toBe(true)
   })
 
+  it('accepts snake_case checkout payload shape at API boundary', async () => {
+    const response = await app.request('http://localhost/api/subscription/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        price_id: 'price_test_123',
+        success_url: 'https://example.com/success',
+        cancel_url: 'https://example.com/cancel',
+      }),
+    })
+
+    const body = (await response.json()) as ErrorResponseBody
+
+    expect(response.status).not.toBe(400)
+    expect(body.error?.code).not.toBe('VALIDATION_ERROR')
+  })
+
   it('returns structured validation errors for malformed body payloads', async () => {
     const response = await app.request('http://localhost/api/subscription/checkout', {
       method: 'POST',

@@ -45,7 +45,7 @@ export class ReleasesService {
 
     if (!data) {
       releaseLogger.warn('Release not found or access denied', { releaseId: id, userId })
-      throw new Error('Release not found or access denied')
+      return null
     }
 
     return data
