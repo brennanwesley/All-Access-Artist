@@ -34,8 +34,8 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
         <div className="space-y-8 w-full max-w-4xl px-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={onBack}>
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <Button variant="ghost" onClick={onBack} className="w-full justify-start sm:w-auto">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Releases
             </Button>
@@ -67,8 +67,8 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
   if (isError) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack}>
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <Button variant="ghost" onClick={onBack} className="w-full justify-start sm:w-auto">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Releases
           </Button>
@@ -97,8 +97,8 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
   if (!release) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack}>
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <Button variant="ghost" onClick={onBack} className="w-full justify-start sm:w-auto">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Releases
           </Button>
@@ -121,8 +121,6 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
       </div>
     )
   }
-
-
 
   if (showMetadata) {
     return (
@@ -149,15 +147,15 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
           Back to Releases
         </Button>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold break-words md:text-3xl">{release.title}</h1>
-            <p className="text-muted-foreground">Release Management Dashboard</p>
+            <h1 className="text-xl font-bold leading-tight break-words sm:text-2xl md:text-3xl">{release.title}</h1>
+            <p className="text-sm text-muted-foreground sm:text-base">Release Management Dashboard</p>
           </div>
 
           <Button
             onClick={() => setShowEditModal(true)}
-            className="w-full sm:w-auto"
+            className="w-full md:w-auto md:shrink-0"
           >
             Edit Release
           </Button>
@@ -207,10 +205,13 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
 
       {/* Tabs for different sections */}
       <Tabs defaultValue="checklist" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="checklist">Checklist</TabsTrigger>
-          <TabsTrigger value="songs">Songs</TabsTrigger>
-          <TabsTrigger value="lyrics">Lyric Sheets</TabsTrigger>
+        <TabsList className="grid h-auto w-full grid-cols-3 gap-1">
+          <TabsTrigger value="checklist" className="px-2 text-[11px] sm:text-sm">Checklist</TabsTrigger>
+          <TabsTrigger value="songs" className="px-2 text-[11px] sm:text-sm">Songs</TabsTrigger>
+          <TabsTrigger value="lyrics" className="px-2 text-[11px] sm:text-sm">
+            <span className="sm:hidden">Lyrics</span>
+            <span className="hidden sm:inline">Lyric Sheets</span>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="checklist" className="space-y-6">

@@ -82,30 +82,32 @@ export const ReleaseChecklist = ({ tasks, releaseDate }: ReleaseChecklistProps) 
                 return (
                   <div 
                     key={task.id} 
-                    className="flex items-center gap-4 p-4 rounded-lg bg-secondary/20 border border-border/50"
+                    className="flex flex-col gap-3 rounded-lg border border-border/50 bg-secondary/20 p-4 sm:flex-row sm:items-start"
                   >
-                    <div className="flex-shrink-0">
-                      {isCompleted ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <Circle className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <h4 className={`font-medium ${
-                        isCompleted ? 'text-muted-foreground line-through' : ''
-                      }`}>
-                        {task.task_description}
-                      </h4>
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <div className="flex-shrink-0 pt-0.5">
+                        {isCompleted ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h4 className={`break-words font-medium leading-snug ${
+                          isCompleted ? 'text-muted-foreground line-through' : ''
+                        }`}>
+                          {task.task_description}
+                        </h4>
+                      </div>
                     </div>
 
-                    <div className="flex-shrink-0">
+                    <div className="w-full sm:w-auto sm:flex-shrink-0">
                       {isCompleted ? (
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2 text-sm text-green-600">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                          <div className="flex items-start gap-2 text-xs text-green-600 sm:text-sm">
                             <CheckCircle2 className="h-4 w-4" />
-                            <span>
+                            <span className="break-words leading-snug">
                               Completed {task.completed_at ? formatCompletedDate(task.completed_at) : 'Unknown'}
                             </span>
                           </div>
@@ -114,7 +116,7 @@ export const ReleaseChecklist = ({ tasks, releaseDate }: ReleaseChecklistProps) 
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-11 w-11 p-0 text-muted-foreground hover:text-foreground md:h-8 md:w-8"
+                                className="h-10 w-10 self-start p-0 text-muted-foreground hover:text-foreground sm:self-auto md:h-8 md:w-8"
                                 aria-label="Mark task as incomplete"
                                 disabled={isTaskUpdating(task.id)}
                               >
@@ -142,7 +144,7 @@ export const ReleaseChecklist = ({ tasks, releaseDate }: ReleaseChecklistProps) 
                           size="sm"
                           onClick={() => handleMarkComplete(task.id, isCompleted)}
                           disabled={isTaskUpdating(task.id)}
-                          className="min-w-[120px]"
+                          className="w-full sm:min-w-[120px] sm:w-auto"
                         >
                           {isTaskUpdating(task.id) ? (
                             <>

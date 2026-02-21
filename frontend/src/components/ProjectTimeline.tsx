@@ -124,7 +124,7 @@ export const ProjectTimeline = ({ releaseDate, tasks }: ProjectTimelineProps) =>
             return (
               <div 
                 key={task.id}
-                className="flex items-start justify-between p-4 rounded-lg bg-secondary/20 border border-border/50"
+                className="flex flex-col gap-3 rounded-lg border border-border/50 bg-secondary/20 p-4 sm:flex-row sm:items-start sm:justify-between"
               >
                 <div className="flex-1 min-w-0">
                   <h4 className={`font-medium ${
@@ -144,12 +144,12 @@ export const ProjectTimeline = ({ releaseDate, tasks }: ProjectTimelineProps) =>
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 ml-4">
+                <div className="w-full sm:ml-4 sm:w-auto sm:flex-shrink-0">
                   {isCompleted ? (
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 text-sm text-green-600">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                      <div className="flex items-start gap-2 text-xs text-green-600 sm:text-sm">
                         <CheckCircle2 className="h-4 w-4" />
-                        <span>
+                        <span className="break-words leading-snug">
                           Completed {task.completed_at ? formatCompletedDate(task.completed_at) : 'Unknown'}
                         </span>
                       </div>
@@ -158,7 +158,7 @@ export const ProjectTimeline = ({ releaseDate, tasks }: ProjectTimelineProps) =>
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-11 w-11 p-0 text-muted-foreground hover:text-foreground md:h-8 md:w-8"
+                            className="h-10 w-10 self-start p-0 text-muted-foreground hover:text-foreground sm:self-auto md:h-8 md:w-8"
                             aria-label="Mark timeline task as incomplete"
                             disabled={isTaskUpdating(task.id)}
                           >
@@ -186,7 +186,7 @@ export const ProjectTimeline = ({ releaseDate, tasks }: ProjectTimelineProps) =>
                       size="sm"
                       onClick={() => handleMarkComplete(task.id, isCompleted)}
                       disabled={isTaskUpdating(task.id)}
-                      className="min-w-[120px]"
+                      className="w-full sm:min-w-[120px] sm:w-auto"
                     >
                       {isTaskUpdating(task.id) ? (
                         <>
@@ -212,7 +212,7 @@ export const ProjectTimeline = ({ releaseDate, tasks }: ProjectTimelineProps) =>
             return (
               <div 
                 key={index}
-                className="flex items-start justify-between p-4 rounded-lg bg-secondary/20 border border-border/50"
+                className="flex flex-col gap-3 rounded-lg border border-border/50 bg-secondary/20 p-4 sm:flex-row sm:items-start sm:justify-between"
               >
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium">
@@ -223,7 +223,7 @@ export const ProjectTimeline = ({ releaseDate, tasks }: ProjectTimelineProps) =>
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 ml-4">
+                <div className="w-full sm:ml-4 sm:w-auto sm:flex-shrink-0">
                   <span className={`px-2 py-1 text-xs font-medium rounded-md ${statusColor}`}>
                     {status}
                   </span>
