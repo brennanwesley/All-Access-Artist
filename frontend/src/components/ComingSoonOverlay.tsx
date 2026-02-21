@@ -7,8 +7,8 @@ interface ComingSoonOverlayProps {
 
 export const ComingSoonOverlay: React.FC<ComingSoonOverlayProps> = ({ feature }) => {
   return (
-    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-start justify-center pt-24">
-      <div className="text-center p-8 bg-card rounded-lg border shadow-lg max-w-md">
+    <div className="fixed inset-x-0 top-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 flex items-start justify-center bg-background/80 px-4 pt-20 backdrop-blur-sm md:bottom-0 md:pt-24">
+      <div className="w-full max-w-md rounded-lg border bg-card p-6 text-center shadow-lg sm:p-8">
         <div className="mb-4">
           <h2 className="text-2xl font-bold mb-2">{feature}</h2>
           <p className="text-muted-foreground mb-4">
