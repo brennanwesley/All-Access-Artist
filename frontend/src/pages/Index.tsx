@@ -91,22 +91,22 @@ const Index = () => {
   // Landing page view
   if (!activeSection) {
     return (
-      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4 py-10 sm:py-16">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <div className="space-y-4">
-              <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold bg-gradient-primary bg-clip-text text-transparent leading-tight">
+              <h1 className="text-4xl font-bold leading-tight bg-gradient-primary bg-clip-text text-transparent sm:text-5xl md:text-7xl lg:text-8xl">
                 All Access Artist
               </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              <p className="mx-auto max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg md:text-2xl">
                 Giving you all access to build a career you're proud of.
               </p>
             </div>
             
-            <div className="pt-8">
+            <div className="pt-4 sm:pt-8">
               <Button 
                 size="lg" 
-                className="text-lg px-8 py-6 shadow-elegant hover:shadow-glow transition-all duration-300"
+                className="w-full text-base px-6 py-5 shadow-elegant transition-all duration-300 hover:shadow-glow sm:w-auto sm:text-lg sm:px-8 sm:py-6"
                 onClick={() => setShowOnboarding(true)}
               >
                 Let's Get Started

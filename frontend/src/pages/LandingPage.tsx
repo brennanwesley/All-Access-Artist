@@ -10,28 +10,28 @@ const LandingPage = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0" style={{ background: 'var(--gradient-purple-hero)' }} />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
           <div className="text-center">
             <div 
-              className="inline-block p-8 rounded-2xl backdrop-blur-xl border border-white/10 mb-8"
+              className="mb-8 inline-block rounded-2xl border border-white/10 p-6 backdrop-blur-xl sm:p-8"
               style={{ 
                 background: 'var(--glass-purple-header)',
                 boxShadow: 'var(--shadow-purple-floating)'
               }}
             >
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
+              <h1 className="mb-6 text-3xl font-bold text-foreground sm:text-4xl md:text-6xl">
                 All Access Artist
               </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+              <p className="mx-auto mb-8 max-w-3xl text-base text-muted-foreground sm:text-lg md:text-2xl">
                 The complete platform for independent artists to manage releases, 
                 grow their audience, and maximize their music career potential.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col gap-4 justify-center sm:flex-row">
               <Link to="/plans">
                 <Button 
                   size="lg" 
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  className="w-full bg-primary px-8 py-3 text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 hover:shadow-xl sm:w-auto md:hover:scale-105"
                   style={{ boxShadow: 'var(--shadow-purple-glow)' }}
                 >
                   Get Started
@@ -41,7 +41,7 @@ const LandingPage = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-white/20 text-foreground hover:bg-white/10 px-8 py-3 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                  className="w-full border-white/20 px-8 py-3 text-foreground backdrop-blur-sm transition-all duration-300 hover:bg-white/10 sm:w-auto sm:hover:scale-105"
                 >
                   Sign In
                 </Button>
@@ -52,7 +52,7 @@ const LandingPage = () => {
       </div>
 
       {/* Features Section */}
-      <div className="py-24">
+      <div className="py-16 sm:py-20 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
@@ -64,9 +64,9 @@ const LandingPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             <Card 
-              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              className="backdrop-blur-xl border border-white/10 transition-all duration-300 sm:hover:scale-105 hover:border-white/20"
               style={{ 
                 background: 'var(--glass-purple-card)',
                 boxShadow: 'var(--shadow-purple-glow)'
@@ -84,7 +84,7 @@ const LandingPage = () => {
             </Card>
 
             <Card 
-              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              className="backdrop-blur-xl border border-white/10 transition-all duration-300 sm:hover:scale-105 hover:border-white/20"
               style={{ 
                 background: 'var(--glass-purple-card)',
                 boxShadow: 'var(--shadow-purple-glow)'
@@ -102,7 +102,7 @@ const LandingPage = () => {
             </Card>
 
             <Card 
-              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              className="backdrop-blur-xl border border-white/10 transition-all duration-300 sm:hover:scale-105 hover:border-white/20"
               style={{ 
                 background: 'var(--glass-purple-card)',
                 boxShadow: 'var(--shadow-purple-glow)'
@@ -120,7 +120,7 @@ const LandingPage = () => {
             </Card>
 
             <Card 
-              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              className="backdrop-blur-xl border border-white/10 transition-all duration-300 sm:hover:scale-105 hover:border-white/20"
               style={{ 
                 background: 'var(--glass-purple-card)',
                 boxShadow: 'var(--shadow-purple-glow)'
@@ -138,7 +138,7 @@ const LandingPage = () => {
             </Card>
 
             <Card 
-              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              className="backdrop-blur-xl border border-white/10 transition-all duration-300 sm:hover:scale-105 hover:border-white/20"
               style={{ 
                 background: 'var(--glass-purple-card)',
                 boxShadow: 'var(--shadow-purple-glow)'
@@ -156,7 +156,7 @@ const LandingPage = () => {
             </Card>
 
             <Card 
-              className="backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+              className="backdrop-blur-xl border border-white/10 transition-all duration-300 sm:hover:scale-105 hover:border-white/20"
               style={{ 
                 background: 'var(--glass-purple-card)',
                 boxShadow: 'var(--shadow-purple-glow)'
@@ -177,7 +177,7 @@ const LandingPage = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="py-24">
+      <div className="py-16 sm:py-20 lg:py-24">
         <Card 
           className="max-w-4xl mx-auto backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300"
           style={{ 
@@ -185,18 +185,18 @@ const LandingPage = () => {
             boxShadow: 'var(--shadow-purple-deep)'
           }}
         >
-          <CardContent className="text-center p-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+          <CardContent className="text-center p-8 sm:p-10 md:p-12">
+            <h2 className="mb-6 text-3xl font-bold text-foreground md:text-4xl">
               Ready to Take Your Music Career to the Next Level?
             </h2>
-            <p className="text-xl text-muted-foreground mb-8">
+            <p className="mb-8 text-base text-muted-foreground sm:text-lg md:text-xl">
               Join thousands of independent artists who are already using All Access Artist 
               to grow their careers and connect with fans worldwide.
             </p>
             <Link to="/plans">
               <Button 
                 size="lg" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="w-full bg-primary px-8 py-3 text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 hover:shadow-xl sm:w-auto sm:hover:scale-105"
                 style={{ boxShadow: 'var(--shadow-purple-glow)' }}
               >
                 Start Your Journey Today

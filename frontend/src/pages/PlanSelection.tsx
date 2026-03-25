@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,8 +11,30 @@ import api from '@/lib/api'
 
 const PlanSelection = () => {
   const [loading, setLoading] = useState(false)
-  // Hardcoded pricing - reliable and fast
-  const artistPriceId = 'price_1S2bEJ82fh30nyS6EQYksPx1'
+
+  const {
+    data: subscriptionProducts,
+    isLoading: productsLoading,
+    isError: productsError,
+  } = useQuery({
+    queryKey: ['subscription-products'],
+    queryFn: async () => {
+      const response = await api.getSubscriptionProducts()
+
+      if (!response.data?.success || !response.data.data) {
+        throw new Error('Unable to load subscription plans')
+      }
+
+      return response.data.data
+    },
+    staleTime: 10 * 60 * 1000,
+    retry: 1,
+  })
+
+  const artistPlan = subscriptionProducts?.find((product) =>
+    product.name.toLowerCase().includes('artist')
+  )
+  const artistPriceId = artistPlan?.price_id ?? null
 
   const handleSelectPlan = async () => {
 
@@ -119,10 +142,14 @@ const PlanSelection = () => {
               </ul>
               <Button 
                 onClick={handleArtistPlanSelect}
-                disabled={loading}
+                disabled={loading || productsLoading || productsError || !artistPriceId}
                 className="w-full h-11 sm:h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-base sm:text-lg font-semibold"
               >
-                {loading ? 'Processing...' : 'Select'}
+                {loading
+                  ? 'Processing...'
+                  : productsLoading
+                    ? 'Loading plans...'
+                    : 'Select'}
               </Button>
             </CardContent>
           </Card>

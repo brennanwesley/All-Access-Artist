@@ -369,18 +369,20 @@ export type Database = {
         Row: {
           content_type: string
           created_at: string | null
+          description: string | null
+          file_format: string | null
           file_size_bytes: number | null
           file_url: string | null
-          generation_cost_cents: number | null
-          generation_model: string
+          generation_model: string | null
           generation_settings: Json | null
           id: string
-          input_prompt: string
           is_approved: boolean | null
-          metadata: Json | null
-          output_text: string | null
+          last_used_at: string | null
+          moderation_flags: Json | null
+          prompt_text: string
           quality_score: number | null
-          source_asset_id: string | null
+          tags: string[] | null
+          title: string | null
           updated_at: string | null
           usage_count: number | null
           user_id: string
@@ -388,18 +390,20 @@ export type Database = {
         Insert: {
           content_type: string
           created_at?: string | null
+          description?: string | null
+          file_format?: string | null
           file_size_bytes?: number | null
           file_url?: string | null
-          generation_cost_cents?: number | null
-          generation_model: string
+          generation_model?: string | null
           generation_settings?: Json | null
           id?: string
-          input_prompt: string
           is_approved?: boolean | null
-          metadata?: Json | null
-          output_text?: string | null
+          last_used_at?: string | null
+          moderation_flags?: Json | null
+          prompt_text: string
           quality_score?: number | null
-          source_asset_id?: string | null
+          tags?: string[] | null
+          title?: string | null
           updated_at?: string | null
           usage_count?: number | null
           user_id: string
@@ -407,18 +411,20 @@ export type Database = {
         Update: {
           content_type?: string
           created_at?: string | null
+          description?: string | null
+          file_format?: string | null
           file_size_bytes?: number | null
           file_url?: string | null
-          generation_cost_cents?: number | null
-          generation_model?: string
+          generation_model?: string | null
           generation_settings?: Json | null
           id?: string
-          input_prompt?: string
           is_approved?: boolean | null
-          metadata?: Json | null
-          output_text?: string | null
+          last_used_at?: string | null
+          moderation_flags?: Json | null
+          prompt_text?: string
           quality_score?: number | null
-          source_asset_id?: string | null
+          tags?: string[] | null
+          title?: string | null
           updated_at?: string | null
           usage_count?: number | null
           user_id?: string
@@ -539,63 +545,51 @@ export type Database = {
           copyright_year: number | null
           created_at: string | null
           explicit_content: boolean | null
-          genre: string | null
           id: string
-          isrc: string | null
-          label: string | null
           language_lyrics: string | null
           phonogram_copyright: string | null
-          producers: string | null
           release_id: string
-          songwriters: string | null
           sub_genre: string | null
           territories: string[] | null
-          track_description: string | null
-          upc: string | null
+          tracks_metadata: Json | null
           updated_at: string | null
           version_subtitle: string | null
+          upc_code: string | null
+          user_id: string
         }
         Insert: {
           composition_copyright?: string | null
           copyright_year?: number | null
           created_at?: string | null
           explicit_content?: boolean | null
-          genre?: string | null
           id?: string
-          isrc?: string | null
-          label?: string | null
           language_lyrics?: string | null
           phonogram_copyright?: string | null
-          producers?: string | null
           release_id: string
-          songwriters?: string | null
           sub_genre?: string | null
           territories?: string[] | null
-          track_description?: string | null
-          upc?: string | null
+          tracks_metadata?: Json | null
           updated_at?: string | null
           version_subtitle?: string | null
+          upc_code?: string | null
+          user_id: string
         }
         Update: {
           composition_copyright?: string | null
           copyright_year?: number | null
           created_at?: string | null
           explicit_content?: boolean | null
-          genre?: string | null
           id?: string
-          isrc?: string | null
-          label?: string | null
           language_lyrics?: string | null
           phonogram_copyright?: string | null
-          producers?: string | null
           release_id?: string
-          songwriters?: string | null
           sub_genre?: string | null
           territories?: string[] | null
-          track_description?: string | null
-          upc?: string | null
+          tracks_metadata?: Json | null
           updated_at?: string | null
           version_subtitle?: string | null
+          upc_code?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -604,43 +598,34 @@ export type Database = {
           artist_id: string | null
           created_at: string | null
           id: string
-          lyrics_text: string | null
-          notes: string | null
-          release_id: string | null
-          song_id: string | null
-          status: string | null
-          structure: Json | null
-          title: string
+          additional_notes: string | null
+          song_id: string
+          total_sections: number | null
           updated_at: string | null
-          version: string | null
+          user_id: string
+          written_by: string | null
         }
         Insert: {
           artist_id?: string | null
           created_at?: string | null
           id?: string
-          lyrics_text?: string | null
-          notes?: string | null
-          release_id?: string | null
-          song_id?: string | null
-          status?: string | null
-          structure?: Json | null
-          title: string
+          additional_notes?: string | null
+          song_id: string
+          total_sections?: number | null
           updated_at?: string | null
-          version?: string | null
+          user_id: string
+          written_by?: string | null
         }
         Update: {
           artist_id?: string | null
           created_at?: string | null
           id?: string
-          lyrics_text?: string | null
-          notes?: string | null
-          release_id?: string | null
-          song_id?: string | null
-          status?: string | null
-          structure?: Json | null
-          title?: string
+          additional_notes?: string | null
+          song_id?: string
+          total_sections?: number | null
           updated_at?: string | null
-          version?: string | null
+          user_id?: string
+          written_by?: string | null
         }
         Relationships: []
       }
@@ -851,50 +836,68 @@ export type Database = {
       release_tasks: {
         Row: {
           artist_id: string | null
-          category: string | null
           completed_at: string | null
           created_at: string | null
-          description: string | null
-          due_date: string | null
           id: string
-          is_completed: boolean | null
-          order_index: number | null
-          priority: string | null
           release_id: string | null
-          status: string | null
-          title: string
+          task_category: string
+          task_description: string
+          task_order: number
           updated_at: string | null
+          user_id: string
         }
         Insert: {
           artist_id?: string | null
-          category?: string | null
           completed_at?: string | null
           created_at?: string | null
-          description?: string | null
-          due_date?: string | null
           id?: string
-          is_completed?: boolean | null
-          order_index?: number | null
-          priority?: string | null
-          release_id?: string | null
-          status?: string | null
-          title: string
+          release_id: string
+          task_category?: string
+          task_description: string
+          task_order?: number
           updated_at?: string | null
+          user_id: string
         }
         Update: {
           artist_id?: string | null
-          category?: string | null
           completed_at?: string | null
           created_at?: string | null
-          description?: string | null
-          due_date?: string | null
           id?: string
-          is_completed?: boolean | null
-          order_index?: number | null
-          priority?: string | null
-          release_id?: string | null
-          status?: string | null
-          title?: string
+          release_id?: string
+          task_category?: string
+          task_description?: string
+          task_order?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      task_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          release_type: string
+          tasks: Json
+          template_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          release_type: string
+          tasks: Json
+          template_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          release_type?: string
+          tasks?: Json
+          template_name?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -959,54 +962,63 @@ export type Database = {
       songs: {
         Row: {
           artist_id: string | null
-          audio_url: string | null
-          bpm: number | null
           created_at: string | null
           duration_seconds: number | null
-          explicit: boolean | null
-          genre: string | null
           id: string
           isrc: string | null
-          key_signature: string | null
-          lyrics: string | null
           release_id: string | null
-          title: string
+          song_title: string
           track_number: number | null
           updated_at: string | null
+          user_id: string
+          version_subtitle: string | null
+          featured_artists: string | null
+          explicit_content: boolean | null
+          preview_start_time: number | null
+          mix_engineer: string | null
+          mastering_engineer: string | null
+          remixer: string | null
+          language_lyrics: string | null
         }
         Insert: {
           artist_id?: string | null
-          audio_url?: string | null
-          bpm?: number | null
           created_at?: string | null
           duration_seconds?: number | null
-          explicit?: boolean | null
-          genre?: string | null
           id?: string
           isrc?: string | null
-          key_signature?: string | null
-          lyrics?: string | null
           release_id?: string | null
-          title: string
+          song_title: string
           track_number?: number | null
           updated_at?: string | null
+          user_id: string
+          version_subtitle?: string | null
+          featured_artists?: string | null
+          explicit_content?: boolean | null
+          preview_start_time?: number | null
+          mix_engineer?: string | null
+          mastering_engineer?: string | null
+          remixer?: string | null
+          language_lyrics?: string | null
         }
         Update: {
           artist_id?: string | null
-          audio_url?: string | null
-          bpm?: number | null
           created_at?: string | null
           duration_seconds?: number | null
-          explicit?: boolean | null
-          genre?: string | null
           id?: string
           isrc?: string | null
-          key_signature?: string | null
-          lyrics?: string | null
           release_id?: string | null
-          title?: string
+          song_title?: string
           track_number?: number | null
           updated_at?: string | null
+          user_id?: string
+          version_subtitle?: string | null
+          featured_artists?: string | null
+          explicit_content?: boolean | null
+          preview_start_time?: number | null
+          mix_engineer?: string | null
+          mastering_engineer?: string | null
+          remixer?: string | null
+          language_lyrics?: string | null
         }
         Relationships: []
       }
@@ -1059,33 +1071,48 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          notes: string | null
-          release_id: string
-          song_id: string | null
-          status: string | null
-          title: string
+          additional_notes: string | null
+          album_project: string | null
+          artist_name: string
+          contributors: Json
+          date_created: string | null
+          release_id: string | null
+          song_aka: string | null
+          song_length: string | null
+          song_title: string
+          studio_location: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
-          notes?: string | null
-          release_id: string
-          song_id?: string | null
-          status?: string | null
-          title: string
+          additional_notes?: string | null
+          album_project?: string | null
+          artist_name: string
+          contributors?: Json
+          date_created?: string | null
+          release_id?: string | null
+          song_aka?: string | null
+          song_length?: string | null
+          song_title: string
+          studio_location?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
-          notes?: string | null
-          release_id?: string
-          song_id?: string | null
-          status?: string | null
-          title?: string
+          additional_notes?: string | null
+          album_project?: string | null
+          artist_name?: string
+          contributors?: Json
+          date_created?: string | null
+          release_id?: string | null
+          song_aka?: string | null
+          song_length?: string | null
+          song_title?: string
+          studio_location?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -1536,6 +1563,10 @@ export type MusicReleaseUpdate = TablesUpdate<"music_releases">
 export type ReleaseTask = Tables<"release_tasks">
 export type ReleaseTaskInsert = TablesInsert<"release_tasks">
 export type ReleaseTaskUpdate = TablesUpdate<"release_tasks">
+
+export type TaskTemplate = Tables<"task_templates">
+export type TaskTemplateInsert = TablesInsert<"task_templates">
+export type TaskTemplateUpdate = TablesUpdate<"task_templates">
 
 export type ArtistProfile = Tables<"artist_profiles">
 export type ArtistProfileInsert = TablesInsert<"artist_profiles">

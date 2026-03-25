@@ -249,22 +249,12 @@ subscription.get('/products', async (c) => {
 
     const productData = [{
       id: artistProduct.id,
-      name: artistProduct.name,
-      description: artistProduct.description,
-      prices: [{
-        id: recurringPrice.id,
-        amount: recurringPrice.unit_amount,
-        currency: recurringPrice.currency,
-        interval: recurringPrice.recurring?.interval,
-        type: recurringPrice.type
-      }],
-      features: [
-        'Unlimited releases',
-        'Song and lyric management', 
-        'Analytics and insights',
-        'Label copy generation',
-        'Split sheet management'
-      ]
+      name: artistProduct.name ?? 'Artist Plan',
+      description: artistProduct.description ?? '',
+      price: recurringPrice.unit_amount ?? 0,
+      currency: recurringPrice.currency,
+      interval: recurringPrice.recurring?.interval ?? 'month',
+      price_id: recurringPrice.id
     }]
 
     return c.json({

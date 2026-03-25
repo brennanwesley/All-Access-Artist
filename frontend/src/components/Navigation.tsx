@@ -111,14 +111,13 @@ export const Navigation = () => {
           })}
         </div>
 
-        {/* User Profile at bottom */}
         <div className="mt-auto pt-4">
           <UserProfile />
         </div>
       </nav>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 md:hidden pb-[env(safe-area-inset-bottom)]">
-        <div className="grid h-16 grid-cols-5 px-1">
+        <div className="grid h-[4.5rem] grid-cols-5 px-1">
           {mobilePrimaryNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
@@ -126,8 +125,10 @@ export const Navigation = () => {
             return (
               <Button
                 key={item.id}
+                type="button"
                 variant={isActive ? "default" : "ghost"}
-                className="h-full rounded-none px-1 text-[11px] font-medium flex flex-col gap-1"
+                aria-label={item.label}
+                className="h-full min-w-0 rounded-none px-1 text-[10px] font-medium leading-tight flex flex-col items-center justify-center gap-0.5 touch-manipulation"
                 onClick={() => handleSectionChange(item.id)}
               >
                 <Icon className="h-4 w-4" />
@@ -137,8 +138,10 @@ export const Navigation = () => {
           })}
 
           <Button
+            type="button"
             variant={isMoreSectionActive ? "default" : "ghost"}
-            className="h-full rounded-none px-1 text-[11px] font-medium flex flex-col gap-1"
+            aria-label="Open more navigation options"
+            className="h-full min-w-0 rounded-none px-1 text-[10px] font-medium leading-tight flex flex-col items-center justify-center gap-0.5 touch-manipulation"
             onClick={() => setIsMoreOpen(true)}
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -148,7 +151,8 @@ export const Navigation = () => {
       </nav>
 
       <Sheet open={isMoreOpen} onOpenChange={setIsMoreOpen}>
-        <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-2xl px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+
           <SheetHeader className="mb-2 text-left">
             <SheetTitle>More</SheetTitle>
           </SheetHeader>

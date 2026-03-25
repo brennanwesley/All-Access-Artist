@@ -99,13 +99,13 @@ export const Dashboard = () => {
         {/* Dashboard Content - Full Width */}
         <div className="w-full">
           <Card className="w-full bg-card/50 backdrop-blur-sm border-border/50">
-            <CardContent className="p-12 text-center">
+            <CardContent className="p-6 text-center sm:p-8 md:p-12">
               <div className="space-y-6">
-                <div className="mx-auto w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                  <Music className="h-12 w-12 text-white" />
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-pink-500 sm:h-24 sm:w-24">
+                  <Music className="h-10 w-10 text-white sm:h-12 sm:w-12" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
                     Your Artist Dashboard
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400">
