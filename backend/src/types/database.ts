@@ -872,6 +872,51 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          admin_notes: string | null
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          last_response_at: string | null
+          priority: string
+          resolved_at: string | null
+          status: string
+          subject: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          category: string
+          created_at?: string | null
+          description: string
+          id?: string
+          last_response_at?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          last_response_at?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       task_templates: {
         Row: {
           created_at: string | null
@@ -1575,6 +1620,10 @@ export type ArtistProfileUpdate = TablesUpdate<"artist_profiles">
 export type UserProfile = Tables<"user_profiles">
 export type UserProfileInsert = TablesInsert<"user_profiles">
 export type UserProfileUpdate = TablesUpdate<"user_profiles">
+
+export type SupportTicket = Tables<"support_tickets">
+export type SupportTicketInsert = TablesInsert<"support_tickets">
+export type SupportTicketUpdate = TablesUpdate<"support_tickets">
 
 export type Song = Tables<"songs">
 export type SongInsert = TablesInsert<"songs">

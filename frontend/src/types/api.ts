@@ -525,9 +525,71 @@ export interface AdminUser {
 
 export interface AdminStats {
   total_users: number
-  active_subscriptions: number
+  admin_users: number
+  artist_users: number
+  manager_users: number
+  label_users: number
   total_releases: number
-  total_revenue: number
+  total_tasks: number
+  total_support_tickets?: number
+  open_support_tickets?: number
+  in_progress_support_tickets?: number
+  resolved_support_tickets?: number
+  last_updated?: string
+}
+
+export type SupportTicketCategory = 'billing' | 'onboarding' | 'technical' | 'feature_request' | 'account' | 'other'
+export type SupportTicketStatus = 'open' | 'in_progress' | 'waiting_on_user' | 'resolved' | 'closed'
+export type SupportTicketPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+export interface SupportTicketUserProfile {
+  first_name: string | null
+  last_name: string | null
+  artist_name: string | null
+  account_type: string | null
+}
+
+export interface SupportTicket {
+  id: string
+  user_id: string
+  subject: string
+  category: SupportTicketCategory
+  priority: SupportTicketPriority
+  status: SupportTicketStatus
+  description: string
+  admin_notes: string | null
+  resolved_at: string | null
+  last_response_at: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface SupportTicketAdminItem extends SupportTicket {
+  user_profiles?: SupportTicketUserProfile | SupportTicketUserProfile[] | null
+}
+
+export interface SupportTicketSummary {
+  total_tickets: number
+  open_tickets: number
+  in_progress_tickets: number
+  resolved_tickets: number
+}
+
+export interface SupportTicketOverview {
+  summary: SupportTicketSummary
+  recent_tickets: SupportTicketAdminItem[]
+}
+
+export interface CreateSupportTicketData {
+  subject: string
+  category: SupportTicketCategory
+  priority?: SupportTicketPriority
+  description: string
+}
+
+export interface UpdateSupportTicketStatusData {
+  status: SupportTicketStatus
+  admin_notes?: string | null
 }
 
 // ============================================

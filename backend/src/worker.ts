@@ -23,6 +23,7 @@ import assets from './routes/assets.js'
 import content from './routes/content.js'
 import jobs from './routes/jobs.js'
 import admin from './routes/admin.js'
+import support from './routes/support.js'
 import subscription from './routes/subscription.js'
 import webhooks from './routes/webhooks.js'
 import onboarding from './routes/onboarding.js'
@@ -94,8 +95,10 @@ app.use('/api/social/*', authenticatedUserRateLimitMiddleware)
 // Auth-only routes (no subscription required)
 app.use('/api/profile/*', supabaseAuth)
 app.use('/api/admin/*', supabaseAuth)
+app.use('/api/support/*', supabaseAuth)
 app.use('/api/profile/*', authenticatedUserRateLimitMiddleware)
 app.use('/api/admin/*', authenticatedUserRateLimitMiddleware)
+app.use('/api/support/*', authenticatedUserRateLimitMiddleware)
 
 // Subscription routes handle their own auth internally
 subscription.use('/status', supabaseAuth)
@@ -148,6 +151,7 @@ app.route('/api/assets', assets)
 app.route('/api/content', content)
 app.route('/api/jobs', jobs)
 app.route('/api/admin', admin)
+app.route('/api/support', support)
 app.route('/api/subscription', subscription)
 app.route('/api/webhooks', webhooks)
 app.route('/api/onboarding', onboarding)
@@ -170,6 +174,9 @@ app.notFound((c) => {
       'GET|PUT|DELETE /api/splitsheets/song/:songId',
       'GET /api/admin/users',
       'GET /api/admin/stats',
+      'GET|POST /api/support/tickets',
+      'GET /api/support/admin/overview',
+      'PATCH /api/support/admin/tickets/:id',
       'GET /api/subscription/status',
       'GET /api/subscription/products',
       'POST /api/subscription/checkout',

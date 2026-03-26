@@ -1,4 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, AlertCircle } from "lucide-react";
@@ -6,8 +7,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { MetadataPrep } from "./MetadataPrep";
 import { ReleaseChecklist } from "./ReleaseChecklist";
-import { SongManager } from '@/components/SongManager'
-import { LyricEditor } from '@/components/LyricEditor';
+import { TracksWorkspace } from "./TracksWorkspace";
 import { EditReleaseModal } from "./EditReleaseModal";
 import { useGetReleaseDetails, useUpdateRelease } from "@/hooks/api/useReleaseDetails";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -205,77 +205,24 @@ export const ReleaseDetail = ({ onBack }: ReleaseDetailProps) => {
 
       {/* Tabs for different sections */}
       <Tabs defaultValue="checklist" className="w-full">
-        <TabsList className="grid h-auto w-full grid-cols-3 gap-1">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1">
           <TabsTrigger value="checklist" className="px-2 text-[11px] sm:text-sm">Checklist</TabsTrigger>
-          <TabsTrigger value="songs" className="px-2 text-[11px] sm:text-sm">Songs</TabsTrigger>
-          <TabsTrigger value="lyrics" className="px-2 text-[11px] sm:text-sm">
-            <span className="sm:hidden">Lyrics</span>
-            <span className="hidden sm:inline">Lyric Sheets</span>
-          </TabsTrigger>
+          <TabsTrigger value="tracks" className="px-2 text-[11px] sm:text-sm">Tracks</TabsTrigger>
         </TabsList>
         
         <TabsContent value="checklist" className="space-y-6">
           <ReleaseChecklist tasks={release.release_tasks || []} releaseDate={release.release_date} />
         </TabsContent>
         
-        <TabsContent value="songs" className="space-y-6">
-          <SongManager releaseId={release.id} songs={release.songs || []} />
-        </TabsContent>
-        
-        <TabsContent value="lyrics" className="space-y-6">
-          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-            <CardHeader>
-              <CardTitle>Lyric Sheets</CardTitle>
-              <CardDescription>Create and manage lyric sheets for your tracks</CardDescription>
-            </CardHeader>
-            <LyricEditor songs={release.songs || []} />
-          </Card>
+        <TabsContent value="tracks" className="space-y-6">
+          <TracksWorkspace
+            releaseId={release.id}
+            releaseTitle={release.title}
+            songs={release.songs || []}
+            onPrepareOfficialDocs={() => setShowMetadata(true)}
+          />
         </TabsContent>
       </Tabs>
-
-      {/* Additional Tools */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardHeader>
-            <CardTitle>DSP Pitch Tool</CardTitle>
-            <CardDescription>Submit your track to DSP playlists and curators</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild variant="outline" className="w-full sm:flex-1">
-                <a href="https://artists.apple.com" target="_blank" rel="noopener noreferrer">
-                  Apple Music
-                </a>
-              </Button>
-
-              <Button asChild className="w-full sm:flex-1">
-                <a href="https://artists.spotify.com" target="_blank" rel="noopener noreferrer">
-                  Pitch to Spotify
-                </a>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardHeader>
-            <CardTitle>Metadata</CardTitle>
-            <CardDescription>Manage track metadata and generate label copy</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => setShowMetadata(true)}
-            >
-              Edit Metadata
-            </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Update track information, lyrics, and manage writer splits
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Edit Release Modal */}
       {showEditModal && release && (

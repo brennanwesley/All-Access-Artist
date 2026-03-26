@@ -3,6 +3,15 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+export type AuthenticatedUser = {
+  id: string
+  sub: string
+  email?: string | null
+  phone?: string | null
+  user_metadata?: Record<string, unknown>
+  app_metadata?: Record<string, unknown>
+}
+
 export type Bindings = {
   SUPABASE_URL: string
   SUPABASE_SERVICE_KEY: string
@@ -19,9 +28,5 @@ export type Bindings = {
 export type Variables = {
   supabase: SupabaseClient
   supabaseAdmin: SupabaseClient
-  user: {
-    sub: string
-    email?: string
-    [key: string]: any
-  }
+  user: AuthenticatedUser
 }

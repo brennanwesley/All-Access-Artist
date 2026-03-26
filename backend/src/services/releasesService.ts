@@ -8,6 +8,26 @@ import { logger, extractErrorInfo } from '../utils/logger.js'
 
 const releaseLogger = logger.child('releasesService')
 
+interface ReleaseTaskInsertRecord {
+  release_id: string
+  user_id: string
+  task_description: string
+  task_order: number
+  task_category: 'checklist' | 'timeline'
+  completed_at: string | null
+}
+
+interface ReleaseDeletionSnapshot {
+  release: {
+    id?: string
+    title?: string
+  } | null
+  deleted_at: string
+  deletion_reason: 'user_initiated'
+  user_id: string
+  snapshot_error?: string
+}
+
 export class ReleasesService {
   constructor(private supabase: SupabaseClient) {}
 
@@ -127,7 +147,7 @@ export class ReleasesService {
     const checklistTemplate = templates.find(t => t.template_name.includes('Checklist'))
     const timelineTemplate = templates.find(t => t.template_name === 'Project Timeline Tasks')
 
-    let allTaskRecords: any[] = []
+    let allTaskRecords: ReleaseTaskInsertRecord[] = []
     let taskOrderOffset = 0
 
     // Generate checklist tasks first (if template exists)
@@ -140,7 +160,7 @@ export class ReleasesService {
           user_id: userId,
           task_description: taskDescription,
           task_order: index,
-          task_category: 'checklist', // Add category to distinguish task types
+          task_category: 'checklist' as const, // Add category to distinguish task types
           completed_at: null
         }))
         
@@ -159,7 +179,7 @@ export class ReleasesService {
           user_id: userId,
           task_description: taskDescription,
           task_order: taskOrderOffset + index,
-          task_category: 'timeline', // Add category to distinguish task types
+          task_category: 'timeline' as const, // Add category to distinguish task types
           completed_at: null
         }))
         
@@ -407,7 +427,7 @@ export class ReleasesService {
     return { success: true }
   }
 
-  private async captureReleaseSnapshot(releaseId: string, userId: string) {
+  private async captureReleaseSnapshot(releaseId: string, userId: string): Promise<ReleaseDeletionSnapshot> {
     try {
       // Single optimized query with all related data
       const { data: releaseData } = await this.supabase
@@ -427,7 +447,7 @@ export class ReleasesService {
         .single()
 
       return {
-        release: releaseData,
+        release: releaseData as ReleaseDeletionSnapshot['release'],
         deleted_at: new Date().toISOString(),
         deletion_reason: 'user_initiated',
         user_id: userId
@@ -444,7 +464,7 @@ export class ReleasesService {
     }
   }
 
-  private logDeletionAsync(snapshot: any, userId: string) {
+  private logDeletionAsync(snapshot: ReleaseDeletionSnapshot, userId: string) {
     // Fire-and-forget async logging (doesn't block user response)
     setTimeout(async () => {
       try {

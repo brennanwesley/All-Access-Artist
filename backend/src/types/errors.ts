@@ -35,7 +35,7 @@ export const ErrorResponseSchema = z.object({
     severity: z.nativeEnum(ErrorSeverity),
     timestamp: z.string().datetime(),
     requestId: z.string().optional(),
-    details: z.record(z.any()).optional()
+    details: z.record(z.unknown()).optional()
   }),
   meta: z.object({
     endpoint: z.string(),
@@ -47,7 +47,7 @@ export const ErrorResponseSchema = z.object({
 // Success response schema
 export const SuccessResponseSchema = z.object({
   success: z.literal(true),
-  data: z.any(),
+  data: z.unknown(),
   meta: z.object({
     timestamp: z.string().datetime(),
     version: z.string(),
@@ -70,7 +70,7 @@ export class APIError extends Error {
   public readonly category: ErrorCategory
   public readonly severity: ErrorSeverity
   public readonly statusCode: number
-  public readonly details?: Record<string, any>
+  public readonly details?: Record<string, unknown>
   public readonly timestamp: string
 
   constructor(
@@ -79,7 +79,7 @@ export class APIError extends Error {
     category: ErrorCategory,
     severity: ErrorSeverity = ErrorSeverity.MEDIUM,
     statusCode: number = 500,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ) {
     super(message)
     this.name = 'APIError'

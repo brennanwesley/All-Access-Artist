@@ -5,7 +5,7 @@
 import { createMiddleware } from 'hono/factory'
 import { jwt } from 'hono/jwt'
 import { createClient } from '@supabase/supabase-js'
-import type { Bindings, Variables } from '../types/bindings.js'
+import type { AuthenticatedUser, Bindings, Variables } from '../types/bindings.js'
 import { logger, extractErrorInfo } from '../utils/logger.js'
 import { errorResponse } from '../utils/apiResponse.js'
 
@@ -92,11 +92,11 @@ export const supabaseAuth = createMiddleware<{ Bindings: Bindings; Variables: Va
     
     authLogger.debug('User authenticated', { userId: supabaseUser.id, email: supabaseUser.email })
     
-    const user = {
+    const user: AuthenticatedUser = {
       id: supabaseUser.id,
       sub: supabaseUser.id,
-      email: supabaseUser.email,
-      phone: supabaseUser.phone,
+      email: supabaseUser.email ?? null,
+      phone: supabaseUser.phone ?? null,
       user_metadata: supabaseUser.user_metadata,
       app_metadata: supabaseUser.app_metadata
     }

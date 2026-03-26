@@ -3,6 +3,8 @@ import { apiClient } from '@/lib/api'
 import { toast } from '@/components/ui/sonner'
 import { useAuth } from '@/contexts/AuthContext'
 import type {
+  ApiResponse,
+  BackendResponse,
   ReleaseTask,
   Song,
   LyricSection,
@@ -14,6 +16,27 @@ import type {
 // Re-export types for consumer compatibility
 export type { ReleaseTask, Song, LyricSection, LyricSectionType, LyricSheet, ReleaseDetails }
 
+const unwrapBackendResponse = <T>(
+  response: ApiResponse<BackendResponse<T>>,
+  fallbackMessage: string
+): T => {
+  if (response.error) {
+    throw new Error(response.error)
+  }
+
+  const payload = response.data
+
+  if (!payload) {
+    throw new Error(fallbackMessage)
+  }
+
+  if (!payload.success) {
+    throw new Error(payload.error.message)
+  }
+
+  return payload.data
+}
+
 // Query hook for fetching release details with proper data extraction
 export const useGetReleaseDetails = (releaseId: string) => {
   const { user } = useAuth()
@@ -22,29 +45,8 @@ export const useGetReleaseDetails = (releaseId: string) => {
     queryKey: ['release-details', releaseId, user?.id],
     queryFn: async () => {
       const response = await apiClient.getReleaseDetails(releaseId)
-      
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      // Extract nested data from backend response wrapper
-      let releaseData;
-      if (response.data?.success === true && response.data?.data) {
-        releaseData = response.data.data
-      } else if (response.data && typeof response.data === 'object' && 'title' in response.data) {
-        releaseData = response.data
-      } else {
-        releaseData = null
-      }
-      
-      // Emergency fallback: if extraction failed but we have nested data, force extract it
-      const finalData = releaseData?.title ? releaseData : response.data?.data
-      
-      if (!finalData) {
-        throw new Error('No release data found in response')
-      }
-      
-      return finalData as ReleaseDetails
+
+      return unwrapBackendResponse(response, 'No release data found in response')
     },
     enabled: !!releaseId && !!user,
   })
@@ -60,12 +62,8 @@ export const useUpdateTask = () => {
       const response = await apiClient.updateTask(taskId, {
         completed_at: completed ? new Date().toISOString() : null
       })
-      
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      return response.data
+
+      return unwrapBackendResponse(response, 'Unable to update task right now.')
     },
     onSuccess: (_, variables) => {
       // Invalidate user-specific release details cache
@@ -92,12 +90,8 @@ export const useUpdateRelease = () => {
       updateData: Partial<ReleaseDetails> 
     }) => {
       const response = await apiClient.updateRelease(releaseId, updateData)
-      
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      return response.data
+
+      return unwrapBackendResponse(response, 'Unable to update this release right now.')
     },
     onSuccess: (_, variables) => {
       // Invalidate and refetch release details to update the UI
@@ -122,12 +116,8 @@ export const useAddSong = () => {
       songData: { song_title: string; duration_seconds?: number; track_number: number } 
     }) => {
       const response = await apiClient.addSong(releaseId, songData)
-      
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      return response.data
+
+      return unwrapBackendResponse(response, 'Unable to add this song right now.')
     },
     onSuccess: (_, variables) => {
       // Invalidate and refetch release details to update the song list
@@ -151,12 +141,8 @@ export const useUpdateSong = () => {
       songData: { song_title?: string; duration_seconds?: number; track_number?: number } 
     }) => {
       const response = await apiClient.updateSong(songId, songData)
-      
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      return response.data
+
+      return unwrapBackendResponse(response, 'Unable to update this song right now.')
     },
     onSuccess: () => {
       // Invalidate and refetch release details to update the song list
@@ -177,12 +163,8 @@ export const useDeleteSong = () => {
   return useMutation({
     mutationFn: async (songId: string) => {
       const response = await apiClient.deleteSong(songId)
-      
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      return response.data
+
+      return unwrapBackendResponse(response, 'Unable to delete this song right now.')
     },
     onSuccess: () => {
       // Invalidate and refetch release details to update the song list
@@ -210,12 +192,7 @@ export const useGetLyricSheet = (songId: string | null) => {
         return null
       }
       
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      // Extract the actual lyric sheet data from the API response wrapper
-      return response.data.data as LyricSheet
+      return unwrapBackendResponse(response, 'Unable to load lyric sheet right now.')
     },
     enabled: !!songId,
     retry: false // Don't retry 404s
@@ -236,17 +213,13 @@ export const useCreateLyricSheet = () => {
         written_by: writtenBy || '',
         additional_notes: notes || ''
       })
-      
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      return response.data.data
+
+      return unwrapBackendResponse(response, 'Unable to create a lyric sheet right now.')
     },
     onSuccess: (_, variables) => {
       // Invalidate and refetch the lyric sheet sections
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
-      toast.success('Lyric section updated successfully')
+      toast.success('Lyric draft saved successfully')
     },
     onError: () => {
       toast.error('Unable to create a lyric sheet right now. Please try again.')
@@ -264,12 +237,8 @@ export const useAddLyricSection = () => {
       sectionData: { section_type: LyricSection['section_type']; content: string } 
     }) => {
       const response = await apiClient.addLyricSection(songId, sectionData)
-      
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      return response.data.data
+
+      return unwrapBackendResponse(response, 'Unable to add this lyric section right now.')
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
@@ -292,12 +261,8 @@ export const useUpdateLyricSection = () => {
       songId: string;
     }) => {
       const response = await apiClient.updateLyricSection(sectionId, sectionData)
-      
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      return response.data.data
+
+      return unwrapBackendResponse(response, 'Unable to update this lyric section right now.')
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })
@@ -316,12 +281,8 @@ export const useDeleteLyricSection = () => {
   return useMutation({
     mutationFn: async ({ sectionId }: { sectionId: string; songId: string }) => {
       const response = await apiClient.deleteLyricSection(sectionId)
-      
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      return response.data.data
+
+      return unwrapBackendResponse(response, 'Unable to delete this lyric section right now.')
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lyricSheet', variables.songId] })

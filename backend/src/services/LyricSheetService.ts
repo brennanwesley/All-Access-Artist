@@ -4,11 +4,21 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { 
-  CreateLyricSheetData, 
   UpdateLyricSheetData, 
   CreateLyricSectionData, 
   UpdateLyricSectionData 
 } from '../types/schemas.js'
+
+interface LyricSheetSectionRow {
+  section_order: number
+}
+
+interface CreateLyricSheetInput {
+  song_id: string
+  user_id: string
+  written_by?: string
+  additional_notes?: string
+}
 
 export class LyricSheetService {
   constructor(private supabase: SupabaseClient) {}
@@ -47,7 +57,8 @@ export class LyricSheetService {
 
     // Sort sections by section_order
     if (lyricSheet.lyric_sheet_sections) {
-      lyricSheet.lyric_sheet_sections.sort((a: any, b: any) => a.section_order - b.section_order)
+      const sections = lyricSheet.lyric_sheet_sections as LyricSheetSectionRow[]
+      sections.sort((a, b) => a.section_order - b.section_order)
     }
 
     return lyricSheet
@@ -58,7 +69,7 @@ export class LyricSheetService {
    * @param lyricSheetData - Data for creating the lyric sheet
    * @returns Created lyric sheet
    */
-  async createLyricSheet(lyricSheetData: CreateLyricSheetData) {
+  async createLyricSheet(lyricSheetData: CreateLyricSheetInput) {
     // Check if lyric sheet already exists for this song (user-scoped)
     const { data: existingSheets } = await this.supabase
       .from('lyric_sheets')

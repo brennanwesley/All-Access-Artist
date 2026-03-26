@@ -38,6 +38,11 @@ import type {
   CheckoutSessionResponse,
   AdminUser,
   AdminStats,
+  SupportTicket,
+  SupportTicketAdminItem,
+  SupportTicketOverview,
+  CreateSupportTicketData,
+  UpdateSupportTicketStatusData,
   OnboardingData,
   FallbackAccountResponse,
   HealthCheckResponse
@@ -433,6 +438,32 @@ class ApiClient {
 
   async getAdminStats(): Promise<ApiResponse<BackendResponse<AdminStats>>> {
     return this.makeRequest('/api/admin/stats')
+  }
+
+  // Support Ticket API
+  async getSupportTickets(): Promise<ApiResponse<BackendResponse<SupportTicket[]>>> {
+    return this.makeRequest('/api/support/tickets')
+  }
+
+  async createSupportTicket(ticketData: CreateSupportTicketData): Promise<ApiResponse<BackendResponse<SupportTicket>>> {
+    return this.makeRequest('/api/support/tickets', {
+      method: 'POST',
+      body: JSON.stringify(ticketData),
+    })
+  }
+
+  async getSupportOverview(): Promise<ApiResponse<BackendResponse<SupportTicketOverview>>> {
+    return this.makeRequest('/api/support/admin/overview')
+  }
+
+  async updateSupportTicketStatus(
+    ticketId: string,
+    ticketData: UpdateSupportTicketStatusData
+  ): Promise<ApiResponse<BackendResponse<SupportTicketAdminItem>>> {
+    return this.makeRequest(`/api/support/admin/tickets/${ticketId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(ticketData),
+    })
   }
 
   // Social Media Metrics API

@@ -17,10 +17,15 @@ This document is a simple, living guide for the next phase of work.
 1. [x] Schema and generated type reconciliation
 2. [x] Mobile-first UX polish for the core artist flows
 3. [x] Onboarding, auth, and subscription/payment hardening
-4. [ ] Operational dashboard and support-ticket tracking
-5. [ ] Backend route/service consistency and security cleanup
+4. [x] Operational dashboard and support-ticket tracking
+5. [x] Backend route/service consistency and security cleanup
 6. [ ] Analytics, notifications, and user engagement instrumentation
-7. [ ] Performance, indexing, and scalability tuning
+7. [x] Performance, indexing, and scalability tuning
+
+## Current focus
+
+- Step 6 is deferred until the remaining setup for notifications and engagement instrumentation is ready.
+- Step 7 is the active next area of work while step 6 is on hold.
 
 ## Notes
 

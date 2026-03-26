@@ -153,8 +153,6 @@ export const UpdateLabelCopySchema = CreateLabelCopySchema.partial().omit({ rele
 
 // Lyric Sheet Schemas
 export const CreateLyricSheetSchema = z.object({
-  song_id: z.string().uuid('Invalid song ID'),
-  user_id: z.string().uuid('Invalid user ID'),
   written_by: z.string().max(200, 'Written by too long').optional(),
   additional_notes: z.string().max(2000, 'Notes too long').optional()
 })
@@ -306,6 +304,23 @@ export const AdminUserListSchema = z.object({
   phone_verified: z.boolean().nullable()
 })
 
+// Support Ticket Schemas
+export const SupportTicketCategorySchema = z.enum(['billing', 'onboarding', 'technical', 'feature_request', 'account', 'other'])
+export const SupportTicketStatusSchema = z.enum(['open', 'in_progress', 'waiting_on_user', 'resolved', 'closed'])
+export const SupportTicketPrioritySchema = z.enum(['low', 'medium', 'high', 'urgent'])
+
+export const CreateSupportTicketSchema = z.object({
+  subject: z.string().min(3, 'Subject must be at least 3 characters').max(150, 'Subject too long'),
+  category: SupportTicketCategorySchema,
+  priority: SupportTicketPrioritySchema.default('medium'),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(4000, 'Description too long')
+})
+
+export const UpdateSupportTicketStatusSchema = z.object({
+  status: SupportTicketStatusSchema,
+  admin_notes: z.string().max(4000, 'Admin notes too long').optional().nullable()
+})
+
 // Export types
 export type CreateReleaseData = z.infer<typeof CreateReleaseSchema>
 export type UpdateReleaseData = z.infer<typeof UpdateReleaseSchema>
@@ -336,6 +351,8 @@ export type CreateUserProfileData = z.infer<typeof CreateUserProfileSchema>
 export type UpdateUserProfileData = z.infer<typeof UpdateUserProfileSchema>
 export type ReferralValidationData = z.infer<typeof ReferralValidationSchema>
 export type AdminUserListData = z.infer<typeof AdminUserListSchema>
+export type CreateSupportTicketData = z.infer<typeof CreateSupportTicketSchema>
+export type UpdateSupportTicketStatusData = z.infer<typeof UpdateSupportTicketStatusSchema>
 export type ApiResponse = z.infer<typeof ApiResponseSchema>
 
 // =====================================================
